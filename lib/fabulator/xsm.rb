@@ -7,6 +7,7 @@ require 'fabulator/xsm/path_expr'
 require 'fabulator/xsm/step'
 require 'fabulator/xsm/unary_expr'
 require 'fabulator/xsm/union_expr'
+require 'fabulator/xsm/literal'
 
 require 'fabulator/xsm/for_expr'
 require 'fabulator/xsm/function'

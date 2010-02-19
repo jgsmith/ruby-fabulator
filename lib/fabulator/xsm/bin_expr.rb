@@ -36,14 +36,18 @@ module Fabulator
     class AddExpr < BinExpr
       def calculate(a,b)
         return nil if a.nil? || b.nil?
-        a+b
+        r = a.to_f + b.to_f
+        r = r.to_i if r % 1.0 == 0.0
+        r
       end
     end
 
     class SubExpr < BinExpr
       def calculate(a,b)
         return nil if a.nil? || b.nil?
-        a-b
+        r = a.to_f - b.to_f
+        r = r.to_i if r % 1.0 == 0.0
+        r
       end
     end
 
@@ -84,7 +88,7 @@ module Fabulator
 
     class DivExpr < BinExpr
       def calculate(a,b)
-        return nil if b.nil? || a.nil? || ( b >= 0 && b <= 0)
+        return nil if b.nil? || a.nil?
         r = a.to_f/b.to_f
         r = r.to_i if r % 1.0 == 0.0
         r

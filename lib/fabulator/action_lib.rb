@@ -1,11 +1,43 @@
 module Fabulator
   module ActionLib
-    mattr_accessor :last_description, :action_descriptions, :namespaces, :function_descriptions, :attributes
     @@action_descriptions = {}
     @@function_descriptions = {}
     @@namespaces = {}
     @@attributes = [ ]
-    
+    @@last_description = nil
+
+    def self.last_description
+      @@last_description
+    end
+    def self.namespaces
+      @@namespaces
+    end
+    def self.action_descriptions
+      @@action_descriptions
+    end
+    def self.function_description
+      @@function_description
+    end
+    def self.attributes
+      @@attributes
+    end
+
+    def self.last_description=(x)
+      @@last_description = x
+    end
+    def self.namespaces=(x)
+      @@namespaces = x
+    end
+    def self.action_descriptions=(x)
+      @@action_descriptions = x
+    end
+    def self.function_description=(x)
+      @@function_description = x
+    end
+    def self.attributes=(x)
+      @@attributes = x
+    end
+
     def self.included(base)
       base.extend(ClassMethods)
       base.module_eval do

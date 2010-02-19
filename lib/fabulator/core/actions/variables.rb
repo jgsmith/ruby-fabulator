@@ -24,19 +24,15 @@ module Fabulator
 
     def run(context, autovivify = false)
       return [] if @name.nil?
-      Rails.logger.info("Running @name...")
       tgt = @name.run(context, true).first
-      Rails.logger.info("Finished Running @name... [#{tgt.path}]")
       src = nil
       if @select.nil?
         @actions.each do |action|
           src = action.run(context)
-          #Rails.logger.info("size of src from #{action}: #{src.nil? ? 0 : src.size}")
         end
       else
         src = @select.run(context)
       end
-      Rails.logger.info("\n\n\nsize of src: #{src.nil? ? 0 : src.size}\n\n\n")
       tgt.prune
       ret = [ ]
       if src.nil? || src.empty?
@@ -44,7 +40,6 @@ module Fabulator
         ret << tgt
       elsif src.size == 1
         tgt.copy(src.first)
-        #Rails.logger.info("Adding #{src.first.path} to #{tgt.path}")
         ret << tgt
       else
         p = tgt.parent
@@ -52,7 +47,6 @@ module Fabulator
         p.prune(p.children(nom))
         src.each do |s|
           tgt = p.create_child(nom,nil)
-          #Rails.logger.info("Adding #{s.path} to #{tgt.path}")
           tgt.copy(s)
           ret << tgt
         end

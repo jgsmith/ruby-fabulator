@@ -144,8 +144,6 @@ module_eval(<<'...end xsm_expression_parser.racc/module_eval...', 'xsm_expressio
     #end
 
     if @token.nil? && @last_token && ! @@preceding_tokens[@last_token[1]]
-      #Rails.logger.info("last token: <#{@last_token[0]}|#{@last_token[1]}>")
-      #Rails.logger.info("preceding_tokens: #{@@preceding_tokens[@last_token[1]] ? 'true' : 'false'}")
       if @source[@curpos..@curpos] == '*'
         @token = [ :STAR, '*' ]
       else
@@ -259,7 +257,6 @@ module_eval(<<'...end xsm_expression_parser.racc/module_eval...', 'xsm_expressio
           @curpos = @curpos + 1
           @token = [ :DOLLAR_QNAME, res[7] ]
         elsif !res[8].nil?
-          Rails.logger.info("op: #{res[8]} => #{@@ops[res[8]]}")
           @token = [ @@ops[res[8]] || res[8], res[8] ]
         else
           raise "Failed to parse '#{@source}' at #{@curpos}: #{@source[@curpos..@source.length-1]}"
@@ -267,7 +264,6 @@ module_eval(<<'...end xsm_expression_parser.racc/module_eval...', 'xsm_expressio
       end
     end
 
-    Rails.logger.info("Token: [#{@token[0].to_s},#{@token[1].to_s}]")
     if !@token[1].nil?
       @curpos = @curpos + @token[1].length
     end
