@@ -1,0 +1,85 @@
+module Fabulator
+  module XSM
+    class Function
+      @@function_handlers = { 
+#        'http://dh.tamu.edu/ns/fn#' => Fabulator::XSM::StdFunctions
+      }
+
+      def initialize(fname, args)
+        @function_name = fname.split(':',2)
+        @args = args
+      end
+
+      def self.register_function_handler(ns, c)
+        @@function_handlers[ns] = c
+      end
+
+      def run(context)
+        # we want to look up the function name ([namespace, local_name])
+        # and run it, or raise an error
+        fn_obj = @@function_handlers[@function_name[0]]
+        return nil if fn_obj.nil?
+
+        return fn_obj.run(@function_name[1], @args.collect{ |a| a.run(context) })
+      end
+    end
+
+    class StdFunctions
+
+      Fabulator::XSM::Function.register_function_handler(
+        'http://dh.tamu.edu/ns/fn#', self
+      )
+
+      def self.run(fn, args)
+        case fn
+          when 'node-name':
+            return args[0].select {|a| a.is_a?(Fabulator::XSM::Context) }.collect { |a| a.name }
+          when 'abs':
+            return args[0].select {|a| a.is_a?(Fabulator::XSM::Context) }.collect { |a| ac = a.clone; ac.value = Math.abs(ac.value) }
+          when 'ceiling':
+          when 'floor':
+          when 'round':
+          when 'round-half-to-even':
+          when 'round-half-to-odd':
+          when 'concat':
+          when 'string-join':
+          when 'substring':
+          when 'string-length':
+          when 'normalize-space':
+          when 'upper-case':
+          when 'lower-case':
+          when 'translate':
+          when 'escape-html-uri':
+          when 'contains':
+          when 'starts-with':
+          when 'ends-with':
+          when 'substring-before':
+          when 'substring-after':
+          when 'matches':
+          when 'replace':
+          when 'tokenize':
+          when 'resolve-uri':
+          when 'true':
+          when 'false':
+          when 'empty':
+          when 'not':
+          when 'reverse':
+          when 'zero-or-one':
+          when 'one-or-more':
+          when 'exactly-one':
+          when 'count':
+          when 'avg':
+          when 'max':
+          when 'min':
+          when 'sum':
+          when 'position':
+          when 'last':
+          when 'create-url-for':
+          when 'review-url-for':
+          when 'update-url-for':
+          when 'delete-url-for':
+        end
+      end
+    end
+  end
+end
