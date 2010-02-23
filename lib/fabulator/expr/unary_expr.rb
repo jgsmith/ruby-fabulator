@@ -1,5 +1,5 @@
 module Fabulator
-  module XSM
+  module Expr
     class UnaryExpr
       def initialize(e)
         @expr = e
@@ -12,7 +12,7 @@ module Fabulator
 
         l = l.collect { |i| i.value }.uniq - [ nil ]
 
-        return @expr.collect{|e|  res << Fabulator::XSM::Context.new(
+        return @expr.collect{|e|  res << Fabulator::Expr::Context.new(
               context.axis,
               context.roots,
               self.calculate(e),

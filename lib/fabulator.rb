@@ -1,4 +1,4 @@
-require 'fabulator/xsm'
+require 'fabulator/expr'
 require 'fabulator/action_lib'
 require 'fabulator/core/state_machine'
 require 'fabulator/core/constraint'

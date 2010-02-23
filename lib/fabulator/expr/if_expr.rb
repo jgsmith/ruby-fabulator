@@ -1,5 +1,5 @@
 module Fabulator
-  module XSM
+  module Expr
     class IfExpr
       def initialize(t, a, b)
         @test = t

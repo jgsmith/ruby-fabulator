@@ -34,7 +34,7 @@ module Fabulator
     def compile_xml(xml, c_attrs = {})
       #@test = (xml.attributes.get_attribute_ns(FAB_NS, 'test').value rescue nil)
       #if !@test.nil?
-        #p = Fabulator::XSM::ExpressionParser.new
+        #p = Fabulator::Expr::Parser.new
         #@test = p.parse(@test, xml)
       #end
 

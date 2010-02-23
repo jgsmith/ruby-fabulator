@@ -4,29 +4,40 @@
 
 == DESCRIPTION:
 
-FIX (describe your package)
+The fabulator library provides a state machine implementation of a core 
+set of semantics for building data-driven applications using a simple
+XML language coupled with an XQuery-like expression language.
 
 == FEATURES/PROBLEMS:
 
-* FIX (list of features or problems)
+* XML compilation into Ruby objects
+* XQuery-like expression language for accessing data
+* Easily extensible with XML actions and expression functions
 
 == SYNOPSIS:
 
-  FIX (code sample of usage)
+ require 'fabulator'
+
+ parser = Fabulator::XSM::ExpressionParser.new
+ context = Fabulator::XSM::Context.new_context_environment
+
+ context.set_value( '/a', some_values )
+ expr = parser.parse( 'f:sum(/a[. > 0]' )
+ result = expr.run( context )
+
+ puts "sum: #{ result.value }"
 
 == REQUIREMENTS:
 
-* FIX (list of requirements)
+This library does not depend on any other gems or libraries.
 
 == INSTALL:
 
-* FIX (sudo gem install, anything else)
+* sudo gem install fabulator
 
 == LICENSE:
 
-(The MIT License)
-
-Copyright (c) 2010 FIXME full name
+Copyright (c) 2009-2010 Texas A&M University
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the

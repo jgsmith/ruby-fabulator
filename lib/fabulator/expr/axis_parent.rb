@@ -1,5 +1,5 @@
 module Fabulator
-  module XSM
+  module Expr
     class AxisParent
       def run(context, autovivify = false)
         if context.is_a?(Array)

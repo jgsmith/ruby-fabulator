@@ -1,5 +1,5 @@
 module Fabulator
-  module XSM
+  module Expr
     class UnionExpr
       def initialize(es)
         @exprs = es

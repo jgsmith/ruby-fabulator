@@ -1,5 +1,5 @@
 module Fabulator
-  module XSM
+  module Expr
     class Context
       attr_accessor :axis, :value, :name, :roots, :vtype
 
@@ -98,6 +98,39 @@ module Fabulator
         @value.nil? && @children.empty?
       end
 
+      def set_value(p, v)
+        if p.is_a?(String) || v.is_a?(String)
+          parser = Fabulator::Expr::Parser.new
+          p = parser.parse(p) if p.is_a?(String)
+          v = parser.parse(v) if v.is_a?(String)
+        end
+        return [] if p.nil?
+        tgt = p.run(self, true).first
+        src = nil
+        if !v.nil?
+          src = v.run(self)
+        end
+        tgt.prune
+        ret = [ ]
+        if src.nil? || src.empty?
+          tgt.value = nil
+          ret << tgt
+        elsif src.size == 1
+          tgt.copy(src.first)
+          ret << tgt
+        else
+          p = tgt.parent
+          nom = tgt.name
+          p.prune(p.children(nom))
+          src.each do |s|
+            tgt = p.create_child(nom,nil)
+            tgt.copy(s)
+            ret << tgt
+          end
+        end
+        ret
+      end
+
       def merge_data(d,p = nil)
         # we have a hash or array based on root (r)
         if p.nil?
@@ -160,9 +193,8 @@ module Fabulator
       def eval_expression(selection, ns = { })
         self.push_var_ctx
         if selection.is_a?(String)
-          p = Fabulator::XSM::ExpressionParser.new
+          p = Fabulator::Expr::Parser.new
           selection = p.parse(selection, ns)
-          #Rails.logger.info("Parsed selection: #{YAML::dump(selection)}")
         end
 
         if selection.nil?
@@ -285,16 +317,13 @@ module Fabulator
 
       def run(context, autovivify = false)
         c = context.root(@axis)
-        #Rails.logger.info("RootContext.run() - axis=[#{@axis}]")
-        #Rails.logger.info("     c: [#{c}]")
-        #Rails.logger.info("   children of c: [#{c.children.collect{|cc| cc.name}.join(", ")}]")
         return [ ] if c.nil?
         return [ c ]
       end
 
       def create_node(context)
         if context.root(@axis).nil?
-          context.roots[@axis] = Fabulator::XSM::Context.new(@axis,context.roots,nil,[])
+          context.roots[@axis] = Fabulator::Expr::Context.new(@axis,context.roots,nil,[])
         end
         context.root(@axis)
       end

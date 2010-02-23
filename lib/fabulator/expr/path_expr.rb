@@ -1,5 +1,5 @@
 module Fabulator
-  module XSM
+  module Expr
     class PathExpr
       def initialize(pe, predicates, segment)
         @primary_expr = pe

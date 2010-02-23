@@ -57,9 +57,7 @@ module Fabulator
 
   class Variable
     def compile_xml(xml, c_attrs = {})
-      @select = (xml.attributes.get_attribute_ns(FAB_NS, 'select').value rescue '')
-      parser= Fabulator::XSM::ExpressionParser
-      @select = (parser.parse(@select, xml) rescue nil)
+      @select = ActionLib.get_local_attr(xml, FAB_NS, 'select', { :eval => true })
       @name = (xml.attributes.get_attribute_ns(FAB_NS, 'name').value rescue nil)
       @actions = ActionLib.compile_actions(xml, c_attrs)
       self

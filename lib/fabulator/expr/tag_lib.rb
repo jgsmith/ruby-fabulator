@@ -1,4 +1,4 @@
-module Fabulator::XSM::TagLib
+module Fabulator::Expr::TagLib
   mattr_accessor :last_description, :element_descriptions, :element_options, :namespaces
 
   @@element_descriptions = { }
@@ -23,24 +23,24 @@ module Fabulator::XSM::TagLib
 
   module ClassMethods
     def element_descriptions(hash = nil)
-      Fabulator::XSM::TagLib.element_descriptions[self.name] ||= (hash || {})
+      Fabulator::Expr::TagLib.element_descriptions[self.name] ||= (hash || {})
     end
 
     def element_options(hash = nil)
-      Fabulator::XSM::TagLib.element_options[self.name] ||= (hash || {})
+      Fabulator::Expr::TagLib.element_options[self.name] ||= (hash || {})
     end
 
     def namespace(ns)
-      Fabulator::XSM::TagLib.namespaces[ns] = self
+      Fabulator::Expr::TagLib.namespaces[ns] = self
     end
 
     def desc(text)
-      Fabulator::XSM::TagLib.last_description = RedCloth.new(Util.strip_leading_whitespace(text)).to_html
+      Fabulator::Expr::TagLib.last_description = RedCloth.new(Util.strip_leading_whitespace(text)).to_html
     end
 
     def element(name, options = {}, &block)
-      self.element_descriptions[name] = Fabulator::XSM::TagLib.last_description if Fabulator::XSM::TagLib.last_description
-      Fabulator::XSM::TagLib.last_description = nil
+      self.element_descriptions[name] = Fabulator::Expr::TagLib.last_description if Fabulator::Expr::TagLib.last_description
+      Fabulator::Expr::TagLib.last_description = nil
       self.element_options[name] = options
       define_method("element:#{name}", &block)
     end
@@ -58,9 +58,9 @@ module Fabulator::XSM::TagLib
 end
 
 module Fabulator
-  module XSM
+  module Expr
     class StandardLib
-      include Fabulator::XSM::TagLib
+      include Fabulator::Expr::TagLib
 
       namespace 'http://dh.tamu.edu/ns/xsm/1.0#'
 
@@ -68,14 +68,14 @@ module Fabulator
         root element for applications
       }
       element 'application' do |xml|
-        Fabulator::XSM::StateMachine.new(xml)
+        Fabulator::Expr::StateMachine.new(xml)
       end
 
       desc %{
         container for view information
       }
       element 'view' do |xml|
-        Fabulator::XSM::State.new(xml)
+        Fabulator::Expr::State.new(xml)
       end
     end
   end

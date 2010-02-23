@@ -1,5 +1,5 @@
 module Fabulator
-  module XSM
+  module Expr
     class Literal
       def initialize(e, t)
         @lit = e

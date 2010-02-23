@@ -1,5 +1,5 @@
 module Fabulator
-  module XSM
+  module Expr
     class Step
       def initialize(a,n)
         @axis = a
@@ -34,7 +34,7 @@ module Fabulator
       def create_node(context)
         return nil if node_text == '*'
 
-        c = Fabulator::XSM::Context.new(context.axis, context.roots, nil, [])
+        c = Fabulator::Expr::Context.new(context.axis, context.roots, nil, [])
         c.name = @node_test
         context.add_child(c)
         c

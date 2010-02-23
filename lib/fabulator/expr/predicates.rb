@@ -1,5 +1,5 @@
 module Fabulator
-  module XSM
+  module Expr
     class Predicates
       def initialize(expr,p)
         @expr = expr
@@ -14,7 +14,7 @@ module Fabulator
         return possible if @predicates.nil? || @predicates.empty?
         @predicates.each do |p|
           n_p = [ ]
-          if p.is_a?(Fabulator::XSM::IndexPredicate)
+          if p.is_a?(Fabulator::Expr::IndexPredicate)
             n_p = p.run(context).collect{ |i| possible[i-1] }
           else
             possible.each do |c|

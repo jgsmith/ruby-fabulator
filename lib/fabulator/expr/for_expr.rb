@@ -1,10 +1,10 @@
 module Fabulator
-  module XSM
+  module Expr
     class ForExpr
       def initialize(v, e)
         if v.size > 1
           @var = v.shift
-          @expr = Fabulator::XSM::ForExpr.new(v, e)
+          @expr = Fabulator::Expr::ForExpr.new(v, e)
         else
           @var = v.first
           @expr = e

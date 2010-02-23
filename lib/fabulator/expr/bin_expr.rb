@@ -1,5 +1,5 @@
 module Fabulator
-  module XSM
+  module Expr
     class BinExpr
       def initialize(left, right)
         @left = left
@@ -9,7 +9,7 @@ module Fabulator
       def expr_type
         lt = @left.expr_type
         rt = @right.expr_type
-        Fabulator::XSM::Types.unify_types([ lt, rt ])
+        Fabulator::ActionLib.unify_types([ lt, rt ])
       end
 
       def run(context, autovivify = false)

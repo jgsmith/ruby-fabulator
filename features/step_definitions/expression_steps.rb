@@ -2,13 +2,13 @@ require 'yaml'
 
 Transform /^(expression|context) \((.*)\)$/ do |n, arg|
   @namespaces ||= { }
-  @parser ||= Fabulator::XSM::ExpressionParser.new
+  @parser ||= Fabulator::Expr::Parser.new
   @parser.parse(arg, @namespaces)
 end
 
 Transform /^\[(.*)\]$/ do |arg|
   @namespaces ||= { }
-  @parser ||= Fabulator::XSM::ExpressionParser.new
+  @parser ||= Fabulator::Expr::Parser.new
   @parser.parse(arg, @namespaces)
 end
 
@@ -19,9 +19,9 @@ end
 Given 'a context' do
   @roots = { }
   @namespaces = { }
-  @data = Fabulator::XSM::Context.new('data', @roots, nil, [])
+  @data = Fabulator::Expr::Context.new('data', @roots, nil, [])
   @roots['data'] = @data
-  @parser ||= Fabulator::XSM::ExpressionParser.new
+  @parser ||= Fabulator::Expr::Parser.new
 end
 
 Given /the prefix (\S+) as "([^"]+)"/ do |p,h|

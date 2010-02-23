@@ -76,7 +76,7 @@ module Fabulator
         ret[k].merge!(v)
       end
 
-      parser = Fabulator::XSM::ExpressionParser.new
+      parser = Fabulator::Expr::Parser.new
 
       @@attributes.each do |a|
         v = xml.attributes.get_attribute_ns(a[0], a[1])
@@ -86,7 +86,7 @@ module Fabulator
           if !a[2][:expression] && v =~ /^\{(.*)\}$/
             v = (parser.parse($1) rescue nil)
           else
-            v = Fabulator::XSM::Literal.new(v)
+            v = Fabulator::Expr::Literal.new(v)
           end
           ret[a[0]][a[1]] = v
         end
@@ -115,10 +115,10 @@ module Fabulator
           e = v
         end
         if !e.nil?
-          p = Fabulator::XSM::ExpressionParser.new
+          p = Fabulator::Expr::Parser.new
           v = p.parse(e)
         else
-          v = Fabulator::XSM::Literal.new(v)
+          v = Fabulator::Expr::Literal.new(v)
         end
       end
       v
@@ -142,23 +142,18 @@ module Fabulator
       ret = send "fctn:#{nom}", args
       ret = [ ret ] unless ret.is_a?(Array)
       ret = ret.collect{ |r| 
-        if r.is_a?(Fabulator::XSM::Context) 
+        if r.is_a?(Fabulator::Expr::Context) 
           r 
         elsif r.is_a?(Hash)
           rr = [ ]
           r.each_pair do |k,v|
-            rrr = Fabulator::XSM::Context.new( 'data', context.roots, v, [])
+            rrr = context.anon_node(v)
             rrr.name = k
             rr << rrr
           end
           rr
         else
-          Fabulator::XSM::Context.new(
-            'data',
-            context.roots,
-            r,
-            []
-          )
+          context.anon_node(r)
         end
       }
       ret.flatten
