@@ -14,6 +14,7 @@ init.rb
 lib/fabulator.rb
 lib/fabulator/action_lib.rb
 lib/fabulator/context.rb
+lib/fabulator/core.rb
 lib/fabulator/core/actions.rb
 lib/fabulator/core/actions/choose.rb
 lib/fabulator/core/actions/for_each.rb

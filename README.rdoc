@@ -21,7 +21,7 @@ XML language coupled with an XQuery-like expression language.
  parser = Fabulator::XSM::ExpressionParser.new
  context = Fabulator::XSM::Context.new_context_environment
 
- context.set_value( '/a', some_values )
+ context.set_value( '/a', 'some_values' )
  expr = parser.parse( 'f:sum(/a[. > 0]' )
  result = expr.run( context )
 

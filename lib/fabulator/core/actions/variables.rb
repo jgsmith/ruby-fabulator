@@ -23,6 +23,8 @@ module Fabulator
     end
 
     def run(context, autovivify = false)
+      return @data.set_value(@name, @select)
+
       return [] if @name.nil?
       tgt = @name.run(context, true).first
       src = nil

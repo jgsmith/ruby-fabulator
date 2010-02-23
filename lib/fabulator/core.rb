@@ -1,0 +1,8 @@
+require 'fabulator/core/state_machine'
+require 'fabulator/core/constraint'
+require 'fabulator/core/filter'
+require 'fabulator/core/group'
+require 'fabulator/core/parameter'
+require 'fabulator/core/state'
+require 'fabulator/core/transition'
+require 'fabulator/core/actions'

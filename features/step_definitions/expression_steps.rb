@@ -29,11 +29,7 @@ Given /the prefix (\S+) as "([^"]+)"/ do |p,h|
 end
 
 Given /that (\[.*\]) is set to (\[.*\])/ do |l,r|
-  c = Fabulator::Core::Actions::Value.new
-  c.select = r
-  c.name = l
-
-  c.run(@data, true)
+  @data.set_value(l, r)
 end
 
 When /I run the (expression \(.*\)) in the (context \(.*\))/ do |exp, cp|

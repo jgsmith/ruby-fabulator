@@ -4,11 +4,11 @@ require 'rubygems'
 gem 'hoe', '>= 2.1.0'
 require 'hoe'
 require 'fileutils'
-require './lib/fabulator'
+require 'fabulator'
 
 Hoe.plugin :newgem
 # Hoe.plugin :website
-# Hoe.plugin :cucumberfeatures
+Hoe.plugin :cucumberfeatures
 
 # Generate all the Rake tasks
 # Run 'rake -T' to see list of generated tasks (from gem root directory)
