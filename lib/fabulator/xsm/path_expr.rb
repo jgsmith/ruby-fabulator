@@ -8,26 +8,15 @@ module Fabulator
       end
 
       def run(context, autovivify = false)
-        #Rails.logger.info("primary expr: [#{@primary_expr}]")
-        #Rails.logger.info("segment: [#{@segment}]")
-    
         if @primary_expr.nil?
           possible = [ context ]
         else
           begin
             possible = @primary_expr.run(context,autovivify).uniq
-            #Rails.logger.info("Ran primary expr")
           rescue
-            #Rails.logger.info("Setting possible to #{context}")
             possible = [ context ]
           end
         end
-        #if !@primary_expr
-        #  possible = [ context ]
-        #else
-        #  Rails.logger.info("Running primary expr #{@primary_expr}")
-        #  possible = @primary_expr.run(context, autovivify).uniq
-        #end
 
         final = [ ]
 
@@ -45,7 +34,6 @@ module Fabulator
           next if not_pass
           pos = [ e ]
           @segment.each do |s|
-            #Rails.logger.info("Running segment #{s}")
             pos = pos.collect{ |p| s.run(p, autovivify) }.flatten
           end
             

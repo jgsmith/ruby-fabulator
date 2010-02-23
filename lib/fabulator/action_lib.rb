@@ -5,6 +5,7 @@ module Fabulator
     @@namespaces = {}
     @@attributes = [ ]
     @@last_description = nil
+    @@types = { }
 
     def self.last_description
       @@last_description
@@ -20,6 +21,9 @@ module Fabulator
     end
     def self.attributes
       @@attributes
+    end
+    def self.types
+      @@types
     end
 
     def self.last_description=(x)
@@ -37,6 +41,9 @@ module Fabulator
     def self.attributes=(x)
       @@attributes = x
     end
+    def self.types=(x)
+      @@types = x
+    end
 
     def self.included(base)
       base.extend(ClassMethods)
@@ -45,6 +52,7 @@ module Fabulator
           super
           new_base.action_descriptions.merge! self.action_descriptions
           new_base.function_descriptions.merge! self.function_descriptions
+          new_base.types.merge! self.types
         end
       end
     end
@@ -54,14 +62,10 @@ module Fabulator
       attrs = self.collect_attributes(c_attrs, xml)
       xml.each_element do |e|
         ns = e.namespaces.namespace.href
-        #Rails.logger.info("Compiling <#{ns}><#{e.name}>")
         next unless Fabulator::ActionLib.namespaces.include?(ns)
         actions << Fabulator::ActionLib.namespaces[ns].compile_action(e, attrs) # rescue nil)
-        #Rails.logger.info("compile_actions: #{actions}")
       end
-      #Rails.logger.info("compile_actions: #{actions}")
       actions = actions - [ nil ]
-      #Rails.logger.info("compile_actions returning: #{actions}")
       return actions
     end
 
@@ -131,6 +135,9 @@ module Fabulator
       end
     end
 
+    def self.unify_types(ts)
+    end
+
     def run_function(context, nom, args)
       ret = send "fctn:#{nom}", args
       ret = [ ret ] unless ret.is_a?(Array)
@@ -154,7 +161,6 @@ module Fabulator
           )
         end
       }
-      #Rails.logger.info("Function #{nom} returning #{YAML::dump(ret)}")
       ret.flatten
     end
 
@@ -188,6 +194,17 @@ module Fabulator
           end
         end
         Fabulator::ActionLib.attributes << [ ns, a, options ]
+      end
+
+      def register_type(nom, options={})
+        ns = nil
+        Fabulator::ActionLib.namespaces.each_pair do |k,v|
+          if v.is_a?(self)
+            ns = k
+          end
+        end
+        Fabulator::ActionLib.types[ns] ||= {}
+        Fabulator::ActionLib.types[ns][nom] = options
       end
 
       def namespaces

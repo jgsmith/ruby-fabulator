@@ -16,7 +16,7 @@ module Fabulator
 
     class Var
       def initialize(dqname)
-        dqname =~ /^$(.*)$/
+        dqname =~ /^\$?(.*)$/
         @name = $1
       end
 

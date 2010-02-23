@@ -1,7 +1,7 @@
 module Fabulator
   module XSM
     class Context
-      attr_accessor :axis, :value, :name, :roots
+      attr_accessor :axis, :value, :name, :roots, :vtype
 
       def initialize(a,r,v,c,p = nil,f={})
         @roots = r
@@ -9,6 +9,7 @@ module Fabulator
         @children = []
         @children = @children + c if c.is_a?(Array)
         @value = v
+        @vtype = nil
         @parent = p
         @name = nil
         @e_ctx = f
@@ -18,8 +19,10 @@ module Fabulator
         self.value.to_s
       end
 
-      def anon_node(v)
-        return self.class.new(self.axis, self.roots, v, [])
+      def anon_node(v, t = nil)
+        n = self.class.new(self.axis, self.roots, v, [])
+        n.vtype = t
+        n
       end
 
       def ctx
@@ -227,6 +230,8 @@ module Fabulator
       def prune(c = nil)
         if c.nil?
           @children = [ ]
+        elsif c.is_a?(Array)
+          @children = @children - c
         else
           @children = @children - [ c ]
         end

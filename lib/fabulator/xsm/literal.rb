@@ -1,12 +1,13 @@
 module Fabulator
   module XSM
     class Literal
-      def initialize(e)
+      def initialize(e, t)
         @lit = e
+        @type = t
       end
 
       def run(context, autovivify = false)
-        return [ context.anon_node(@lit) ]
+        return [ context.anon_node(@lit, @type) ]
       end
     end
 

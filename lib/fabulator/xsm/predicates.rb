@@ -11,19 +11,34 @@ module Fabulator
         # they all return true
         result = [ ]
         possible = @expr.run(context, autovivify)
-        #Rails.logger.info("Predicates found #{possible.size} items")
         return possible if @predicates.nil? || @predicates.empty?
-        possible.each do |c|
-          @predicates.each do |p|
-            res = p.run(context)
-            if res.is_a?(Array)
-              result << c unless res.empty?
-            else
-              result << c if !!res
+        @predicates.each do |p|
+          n_p = [ ]
+          if p.is_a?(Fabulator::XSM::IndexPredicate)
+            n_p = p.run(context).collect{ |i| possible[i-1] }
+          else
+            possible.each do |c|
+              res = p.run(c)
+              if res.is_a?(Array)
+                n_p << c if !res.empty? && !!res.first.value
+              else
+                n_p << c if !!res.value
+              end
             end
           end
+          possible = n_p
         end
-        return result
+        return possible
+      end
+    end
+
+    class IndexPredicate
+      def initialize(l)
+        @indices = l
+      end
+
+      def run(context)
+        @indices.collect { |e| e.run(context).collect{ |i| i.value.to_i } }.flatten
       end
     end
   end

@@ -20,6 +20,65 @@ module Fabulator
     action 'if', If
 
     ###
+    ### core types
+    ###
+
+    register_type 'string', {
+      :ops => {
+        :plus => nil,
+        :minus => nil,
+        :mpy => nil,
+        :div => nil,
+        :mod => nil,
+      }
+    }
+
+    register_type 'numeric', {
+    }
+
+    register_type 'real', {
+      :ops => {
+        :plus => nil,
+        :minus => nil,
+        :mpy => nil,
+        :div => nil,
+        :mod => nil,
+      },
+      :converts => {
+        'string' => {
+        }
+      },
+    }
+
+    register_type 'integer', {
+      :ops => {
+        :plus => nil,
+        :minus => nil,
+        :mpy => nil,
+        :div => nil,
+        :mod => nil,
+      },
+      :converts => {
+        'string' => {
+        }
+      },
+    }
+
+    register_type 'complex', {
+      :ops => {
+        :plus => nil,
+        :minus => nil,
+        :mpy => nil,
+        :div => nil,
+        :mod => nil,
+      },
+      :converts => {
+        'string' => {
+        }
+      },
+    }
+
+    ###
     ### Numeric functions
     ###
 
@@ -55,9 +114,11 @@ module Fabulator
 
     function 'sum' do |args|
       res = 0
-      return args[1] if args.first.empty? && args.size > 1
+      return [ res ] if args.empty?
+      return args[1] if args[0].empty? && args.size > 1
 
-      args.first.each do |a|
+      args[0].each do |a|
+        #puts "adding #{YAML::dump(a)}"
         res = res + a.value.to_f
       end
       if res.floor == res

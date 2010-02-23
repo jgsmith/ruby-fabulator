@@ -6,12 +6,18 @@ module Fabulator
         @right = right
       end
 
+      def expr_type
+        lt = @left.expr_type
+        rt = @right.expr_type
+        Fabulator::XSM::Types.unify_types([ lt, rt ])
+      end
+
       def run(context, autovivify = false)
         l = @left.run(context, autovivify)
         r = @right.run(context, autovivify)
 
         l = [ l ] unless l.is_a?(Array)
-        r = [ r ] unless l.is_a?(Array)
+        r = [ r ] unless r.is_a?(Array)
 
         l = l.collect { |i| i.value }.uniq - [ nil ]
         r = r.collect { |i| i.value }.uniq - [ nil ]

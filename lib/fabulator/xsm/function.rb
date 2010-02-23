@@ -14,8 +14,18 @@ module Fabulator
         return [] if klass.nil?
         #Rails.logger.info("Running function #{@name} in #{klass}")
         return klass.run_function(
-          context, @name, @args.collect{ |arg| arg.run(context) }
+          context, @name, @args.run(context)
         )
+      end
+    end
+
+    class List
+      def initialize(args)
+        @args = args
+      end
+
+      def run(context, autovivify = false)
+        @args.collect{ |arg| arg.run(context,autovivify).flatten }
       end
     end
   end

@@ -1,35 +1,18 @@
 Feature: Simple Math
 
-  Scenario: Adding two numbers together
-   Given a context
-     And that /a is set to 2
-     And that /b is set to 1
-   When I run the expression (a + b) in the context /
-   Then I should get 1 item
-     And item 0 should be [3]
+  Scenario Outline: binary math
+    Given a context
+      And that [/a] is set to [<a>]
+      And that [/b] is set to [<b>]
+    When I run the expression (a <op> b)
+    Then I should get 1 item
+      And item 0 should be [<ans>]
 
-  Scenario: Subtracting two numbers
-   Given a context
-     And that /a is set to 2
-     And that /b is set to 1
-   When I run the expression (a - b) in the context /
-   Then I should get 1 item
-     And item 0 should be [1]
+    Examples:
+      |  a |  op | b | ans |
+      |  2 |  +  | 1 |  3  |
+      |  2 |  -  | 1 |  1  |
+      |  3 |  *  | 7 | 21  |
+      | 30 | div | 6 |  5  |
+      | 15 | mod | 4 |  3  |
 
-  Scenario: Multiplying two numbers
-   Given a context
-     And that /a is set to 3
-     And that /b is set to 7
-   When I run the expression (a * b) in the context /
-   Then I should get 1 item
-     And item 0 should be [21]
-
-  Scenario: Dividing two numbers
-   Given a context
-     And that /a is set to 30
-     And that /b is set to 6
-   When I run the expression (a div b) in the context /
-   Then I should get 1 item
-     And item 0 should be [5]
-
-   

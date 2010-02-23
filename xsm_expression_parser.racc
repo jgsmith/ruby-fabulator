@@ -21,6 +21,12 @@ rule
     | for_expr
     | quant_expr
 
+  num_expr: additive_expr
+    | range_expr
+
+  num_list: num_expr { result = [ val[0] ] }
+    | num_list COMMA num_expr { result = val[0] + [ val[2] ] }
+
   let_expr: LET DOLLAR_QNAME COLON_EQUAL expr { result = Fabulator::XSM::LetExpr.new(val[1], val[3]) }
   
 
@@ -101,7 +107,7 @@ rule
   step: axis node_test predicates { result = Fabulator::XSM::Predicates.new(Fabulator::XSM::Step.new(val[0], val[1]), val[2]) }
     #| axis LC DOLLAR_QNAME RC predicates { result = Fabulator::XSM::Predicates.new(Fabulator::XSM::Step.new(val[0], Fabulator::XSM::QName.new(val[3])), val[4]) }
     | AXIS_METHOD COLON_COLON node_test predicates { result = Fabulator::XSM::Predicates.new(Fabulator::XSM::Function.new(@namespaces, val[2], []), val[3]) }
-    | AXIS_METHOD COLON_COLON FUNCTION_NAME LP opt_args RP predicates { result = Fabulator::XSM::Predicates.new(Fabulator::XSM::Function.new(@namespaces, val[2], val[4]), val[6]) }
+    | AXIS_METHOD COLON_COLON FUNCTION_NAME list predicates { result = Fabulator::XSM::Predicates.new(Fabulator::XSM::Function.new(@namespaces, val[2], val[3]), val[4]) }
     | DOT { result = Fabulator::XSM::CurrentContext.new }
     | DOT_DOT { result = Fabulator::XSM::AncestorContext.new }
 
@@ -112,15 +118,21 @@ rule
   axis_name: AXIS_NAME COLON_COLON { result = Fabulator::XSM::Axis.new(val[0]) }
 
   predicates: { result = [ ] }
-    | predicates LB expr RB { result = val[0] + [ val[2] ] }
+    | predicates predicate { result = val[0] + [ val[1] ] }
+
+  predicate: LB expr RB { result = val[1] }
+    | LB num_list RB { result = Fabulator::XSM::IndexPredicate.new(val[1]) }
 
     #| '<' expr '>'
   primary_expr:
     DOLLAR_QNAME { result = Fabulator::XSM::Var.new(val[0]) }
     | LP expr RP { result = val[1] }
-    | LITERAL { result = Fabulator::XSM::Literal.new(val[0]) }
-    | NUMBER { result = Fabulator::XSM::Literal.new(val[0]) }
-    | FUNCTION_NAME LP opt_args RP { result = Fabulator::XSM::Function.new(@namespaces, val[0], val[2]) }
+    | list
+    | LITERAL { result = Fabulator::XSM::Literal.new(val[0], [ Fabulator::FAB_NS, 'string' ]) }
+    | NUMBER { result = Fabulator::XSM::Literal.new(val[0] =~ /\./ ? val[0].to_f : val[0].to_i, [ Fabulator::FAB_NS, val[0] =~ /\./ ? 'real' : 'integer' ]) }
+    | FUNCTION_NAME list { result = Fabulator::XSM::Function.new(@namespaces, val[0], val[1]) }
+
+  list: LP opt_args RP { result = Fabulator::XSM::List.new(val[1]) }
 
   opt_args: { result = [ ] }
     | args 

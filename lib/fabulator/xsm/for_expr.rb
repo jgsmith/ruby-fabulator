@@ -26,7 +26,7 @@ module Fabulator
       def run(context, autovivify = false)
         result = super
         result.each do |r|
-          return [ ] unless !!r.value
+          return [ context.anon_node(false) ] unless !!r.value
         end
         return [ context.anon_node(true) ]
       end
@@ -38,7 +38,7 @@ module Fabulator
         result.each do |r|
           return [ context.anon_node(true) ] if !!r.value
         end
-        return [ ]
+        return [ context.anon_node(false) ]
       end
     end
 
