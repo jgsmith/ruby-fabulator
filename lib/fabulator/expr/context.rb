@@ -15,6 +15,13 @@ module Fabulator
         @e_ctx = f
       end
 
+      def self.new_context_environment
+        r = { }
+        d = Fabulator::Expr::Context.new('data', r, nil, [])
+        r['data'] = d
+        d
+      end
+
       def to_s
         self.value.to_s
       end
