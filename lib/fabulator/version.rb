@@ -8,7 +8,7 @@ module Fabulator
 
       STRING = [MAJOR,MINOR,TINY].compact.join('.') + (PRE.nil? ? '' : PRE)
 
-      SUMMARY = "rspec #{STRING}"
+      SUMMARY = "fabulator #{STRING}"
     end
   end
 end
