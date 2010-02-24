@@ -8,7 +8,6 @@ module Fabulator
 
       def run(context, autovivify = false)
         c = context
-        #Rails.logger.info("Step #{context} : #{@node_test}")
         if !@axis.nil? && @axis != '' && context.roots.has_key?(@axis) &&
             @axis != context.axis
           c = context.roots[@axis]

@@ -27,9 +27,7 @@ module Fabulator
         l.each do |i|
           r.each do |j|
             calc = self.calculate(i,j)
-            if !calc.is_a?(Array)
-              calc = [ calc ]
-            end
+            calc = [ calc ] unless calc.is_a?(Array)
 
             res = res + calc.collect { |c| context.anon_node(c) }
           end

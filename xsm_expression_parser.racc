@@ -81,7 +81,7 @@ rule
   union_expr_x: path_expr PIPE path_expr { result = [ val[0], val[2] ] }
     | union_expr_x PIPE path_expr { result = val[0] + [ val[2] ] }
 
-  path_expr: location_path { result = Fabulator::Expr::PathExpr.new(nil, [], val[0]) }
+  path_expr: location_path { result = Fabulator::Expr::PathExpr.new(nil, [], val[0]) } #result = Fabulator::Expr::PathExpr.new(nil, [], val[0]) }
     | primary_expr predicates segment { result = Fabulator::Expr::PathExpr.new(val[0], val[1], val[2]) }
 
   segment:
@@ -104,12 +104,13 @@ rule
     | relative_location_path SLASH step { result = val[0] + [ val[2] ] }
     | relative_location_path SLASH_SLASH step { result = val[0] + [ Fabulator::Expr::AxisDescendentOrSelf.new(val[2]) ] }
 
-  step: axis node_test predicates { result = Fabulator::Expr::Predicates.new(Fabulator::Expr::Step.new(val[0], val[1]), val[2]) }
-    #| axis LC DOLLAR_QNAME RC predicates { result = Fabulator::Expr::Predicates.new(Fabulator::Expr::Step.new(val[0], Fabulator::Expr::QName.new(val[3])), val[4]) }
-    | AXIS_METHOD COLON_COLON node_test predicates { result = Fabulator::Expr::Predicates.new(Fabulator::Expr::Function.new(@namespaces, val[2], []), val[3]) }
-    | AXIS_METHOD COLON_COLON FUNCTION_NAME list predicates { result = Fabulator::Expr::Predicates.new(Fabulator::Expr::Function.new(@namespaces, val[2], val[3]), val[4]) }
+  step: axis node_test predicates { result = val[2].nil? || val[2].empty? ? Fabulator::Expr::Step.new(val[0], val[1]) : Fabulator::Expr::Predicates.new(Fabulator::Expr::Step.new(val[0], val[1]), val[2]) }
     | DOT { result = Fabulator::Expr::CurrentContext.new }
     | DOT_DOT { result = Fabulator::Expr::AncestorContext.new }
+
+    #| AXIS_METHOD COLON_COLON node_test predicates { result = Fabulator::Expr::Predicates.new(Fabulator::Expr::Function.new(@namespaces, val[2], []), val[3]) }
+    #| AXIS_METHOD COLON_COLON FUNCTION_NAME list predicates { result = Fabulator::Expr::Predicates.new(Fabulator::Expr::Function.new(@namespaces, val[2], val[3]), val[4]) }
+    #| axis LC DOLLAR_QNAME RC predicates { result = Fabulator::Expr::Predicates.new(Fabulator::Expr::Step.new(val[0], Fabulator::Expr::QName.new(val[3])), val[4]) }
 
   axis:
     | axis_name

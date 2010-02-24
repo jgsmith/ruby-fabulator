@@ -21,7 +21,8 @@ module Fabulator
       end
 
       def run(context, autovivify = false)
-        return [ context.get_var(@name) ]
+        r = context.get_var(@name)
+        return r.is_a?(Array) ? r : [ r ]
       end
     end
   end

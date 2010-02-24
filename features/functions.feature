@@ -28,3 +28,34 @@ Feature: Function calls and lists
     Then I should get 1 item
      And item 0 should be [6*6]
 
+  Scenario: Joining a range of numbers
+    Given a context
+     And the prefix f as "http://dh.tamu.edu/ns/fabulator/1.0#"
+    When I run the expression (let $i := 5; (1 .. $i))
+    Then I should get 5 item
+     And item 0 should be [1]
+     And item 1 should be [2]
+     And item 2 should be [3]
+     And item 3 should be [4]
+     And item 4 should be [5]
+
+  Scenario: Joining a range of numbers
+    Given a context
+     And the prefix f as "http://dh.tamu.edu/ns/fabulator/1.0#"
+    When I run the expression (let $i := 5; f:sum((1 .. $i)))
+    Then I should get 1 item
+     And item 0 should be [15]
+
+  Scenario: Joining a range of numbers
+    Given a context
+     And the prefix f as "http://dh.tamu.edu/ns/fabulator/1.0#"
+    When I run the expression (f:string-join( (1 .. 5), ','))
+    Then I should get 1 item
+     And item 0 should be ["1,2,3,4,5"]
+
+  Scenario: Joining a range of numbers
+    Given a context
+     And the prefix f as "http://dh.tamu.edu/ns/fabulator/1.0#"
+    When I run the expression (let $i := 5; f:string-join( (1 .. $i), ','))
+    Then I should get 1 item
+     And item 0 should be ["1,2,3,4,5"]
