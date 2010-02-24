@@ -27,7 +27,9 @@ Feature: Simple state machines
       | key   | value |
       | foo   | bar   |
     Then it should be in the 'stop' state
+     And the expression (/foo) should equal ['bar']
     When I run it with the following params:
       | key   | value |
       | foo   | bar   |
     Then it should be in the 'stop' state
+     And the expression (/foo) should equal ['bar']

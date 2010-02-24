@@ -1,9 +1,13 @@
 Given /the statemachine/ do |doc_xml|
   doc = LibXML::XML::Document.string doc_xml
 
-  context = Fabulator::Expr::Context.new_context_environment
+  @roots = { }
+  @namespaces = { }
+  @data = Fabulator::Expr::Context.new('data', @roots, nil, [])
+  @roots['data'] = @data
+  @parser ||= Fabulator::Expr::Parser.new
   @sm = Fabulator::Core::StateMachine.new.compile_xml(doc)
-  @sm.init_context(context)
+  @sm.init_context(@data)
 end
 
 When /I run it with the following params:/ do |param_table|

@@ -67,3 +67,7 @@ end
 Then /item (\d+) should be true/ do |i|
   (!!@result[i.to_i].value).should == true
 end
+
+Then /the (expression \(.*\)) should equal (\[.*\])/ do |x, y|
+  x.run(@data).first.value.should == y.run(@data).first.value
+end
