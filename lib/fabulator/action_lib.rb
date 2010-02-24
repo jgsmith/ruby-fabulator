@@ -118,7 +118,7 @@ module Fabulator
           p = Fabulator::Expr::Parser.new
           v = p.parse(e)
         else
-          v = Fabulator::Expr::Literal.new(v)
+          v = Fabulator::Expr::Literal.new(v, [ FAB_NS, 'string' ])
         end
       end
       v

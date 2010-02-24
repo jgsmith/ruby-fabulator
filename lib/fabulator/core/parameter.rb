@@ -78,12 +78,12 @@ module Fabulator
         end
       else
         items.each do |item|
-          passed = @constraints.select {|c| c.test_constraint(i) }
+          passed = @constraints.select {|c| c.test_constraint(item) }
           if passed.empty?
-            res[:invalid] << i
-            res[:messages] << [ @constraints.collect { |c| c.error_message(i) } ]
+            res[:invalid] << item
+            res[:messages] << [ @constraints.collect { |c| c.error_message(item) } ]
           else
-            res[:valid] << i
+            res[:valid] << item
           end
         end
       end

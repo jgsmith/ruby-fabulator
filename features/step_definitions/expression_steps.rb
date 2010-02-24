@@ -71,3 +71,7 @@ end
 Then /the (expression \(.*\)) should equal (\[.*\])/ do |x, y|
   x.run(@data).first.value.should == y.run(@data).first.value
 end
+
+Then /the (expression \(.*\)) should be nil/ do |x|
+  x.run(@data).first.should == nil
+end

@@ -10,7 +10,7 @@ module Fabulator
       attrs = ActionLib.collect_attributes(c_attrs, xml)
       @inverted = ActionLib.get_local_attr(xml, FAB_NS, 'invert', { :default => 'false' })
 
-      parser = Fabulator::XSM::ExpressionParser.new
+      parser = Fabulator::Expr::Parser.new
 
       if xml.name == 'value'
         @c_type = 'any'
@@ -60,7 +60,11 @@ module Fabulator
       self
     end
 
-    def test_constraint(context, params, fields)
+    def error_message(context)
+      "#{context.path} does not pass the constraint"
+    end
+
+    def test_constraint(context) #, params, fields)
       # do special ones first
       inv = (@inverted.run.first.value rescue 'false')
       inv = (inv == 'true' || inv == 'yes') ? true : false
@@ -69,7 +73,7 @@ module Fabulator
         when 'all':
           # we have enclosed constraints
           @constraints.each do |c|
-            return @sense unless c.test_constraint(params,fields)
+            return @sense unless c.test_constraint(context) #params,fields)
           end
           return !@sense
         when 'any':
@@ -79,32 +83,30 @@ module Fabulator
             end
             return @sense
           else
-            fields.each do |f|
+            #context.each do |c|
               calc_values = [ ]
               @values.each do |v|
                 if v.is_a?(String)
                   calc_values << v
                 else
-                  calc_values = calc_values + v.run(context)
+                  calc_values = calc_values + v.run(context).collect{ |i| i.value }
                 end
               end
-              return !@sense unless @values.include?(params[f])
-            end
+              return !@sense unless @values.include?(context.value)
+            #end
             return @sense
           end
         when 'range':
           fl = (@params['floor'].run(context) rescue nil)
           ce = (@params['ceiling'].run(context) rescue nil)
           if @requires == 'all'
-            fields.each do |f|
-              return !@sense if !fl.nil? && fl > params[f] || 
-                                !ce.nil? && ce < params[f]
-            end
+            return !@sense if !fl.nil? && fl > context.value || 
+                              !ce.nil? && ce < context.value
             return @sense
           else
             fields.each do |f|
-              return @sense if !fl.nil? && fl < params[f] || 
-                               !ce.nil? && ce > params[f]
+              return @sense if !fl.nil? && fl < context.value || 
+                               !ce.nil? && ce > context.value
             end
             return !@sense
           end

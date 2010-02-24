@@ -18,6 +18,7 @@ module Fabulator
             v.chomp!
             v.gsub!(/^\s*/,'')
             v.gsub!(/\s*$/,'')
+            v.gsub!(/\s+/, ' ')
             c.value = v
             filtered << c.path
           end
