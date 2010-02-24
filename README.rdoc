@@ -29,7 +29,9 @@ XML language coupled with an XQuery-like expression language.
 
 == REQUIREMENTS:
 
-This library does not depend on any other gems or libraries.
+The expression engine does not depend on any external libraries.  The
+XML framework depends on the Ruby libxml libraries at
+<http://libxml.rubyforge.org/>.
 
 == INSTALL:
 
