@@ -2,8 +2,15 @@ module Fabulator
   module Core
   class Filter
     def compile_xml(xml, c_attrs = { })
-      #@filter_type = xml.attributes.get_attribute_ns(FAB_NS, 'name').value
-      @filter_type = ActionLib.get_local_attr(xml, FAB_NS, 'name')
+      filter_type = xml.attributes.get_attribute_ns(FAB_NS, 'name').value.split(/:/, 2)
+      #filter_type = ActionLib.get_local_attr(xml, FAB_NS, 'name').split(/:/, 2)
+      if filter_type.size == 2
+        @ns = ActionLig.prefix_to_ref(xml, filter_type[0]) 
+        @name = filter_type[1]
+      else
+        @ns = FAB_NS
+        @name = filter_type[0]
+      end
       self
     end
 
@@ -11,52 +18,12 @@ module Fabulator
       # do special ones first
       items = context.is_a?(Array) ? context : [ context ]
       filtered = [ ]
-      case @filter_type.run(items.first).first.value
-        when 'trim':
-          items.each do |c|
-            v = c.value
-            v.chomp!
-            v.gsub!(/^\s*/,'')
-            v.gsub!(/\s*$/,'')
-            v.gsub!(/\s+/, ' ')
-            c.value = v
-            filtered << c.path
-          end
-        when 'downcase':
-          items.each do |c|
-            v = c.value
-            v.downcase!
-            c.value = v
-            filtered << c.path
-          end
-        when 'upcase':
-          items.each do |c|
-            v = c.value
-            v.upcase!
-            c.value = v
-            filtered << c.path
-          end
-        when 'integer':
-          items.each do |c|
-            v = c.value
-            v = v.to_i.to_s
-            c.value = v
-            filtered << c.path
-          end
-        when 'decimal':
-          items.each do |c|
-            v = c.value
-            v = v.to_f.to_s
-            c.value = v
-            filtered << c.path
-          end
-        else
-          # TODO: Decouple Fabulator from Radiant extension
-          f = FabulatorFilter.find_by_name(@type) rescue nil
-          items.each do |c|
-            f.run(context) unless f.nil?
-            filtered << c.path
-          end
+      handler = Fabulator::ActionLib.namespaces[@ns]
+
+      items.each do |c|
+        r = handler.run_filter(c, @name)
+        r = [ r ] unless r.is_a?(Array)
+        filtered = filtered + r.collect{ |c| c.path }
       end
       return filtered
     end

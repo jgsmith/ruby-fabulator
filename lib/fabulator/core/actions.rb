@@ -355,6 +355,49 @@ module Fabulator
 
     function 'last' do |args|
     end
+
+    ###
+    ### Filters
+    ###
+
+    filter 'trim' do |c|
+      v = c.value
+      v.chomp!
+      v.gsub!(/^\s*/,'')
+      v.gsub!(/\s*$/,'')
+      v.gsub!(/\s+/, ' ')
+      c.value = v
+      c
+    end
+
+    filter 'downcase' do |c|
+      v = c.value
+      v.downcase!
+      c.value = v
+      c
+    end
+
+    filter 'upcase' do |c|
+      v = c.value
+      v.upcase!
+      c.value = v
+      c
+    end
+
+    filter 'integer' do |c|
+      v = c.value
+      v = v.to_i.to_s
+      c.value = v
+      c
+    end
+
+    filter 'decimal' do |c|
+      v = c.value
+      v = v.to_f.to_s
+      c.value = v
+      c
+    end
+
   end
   end
   end

@@ -57,6 +57,12 @@ module Fabulator
       end
     end
 
+    def self.prefix_to_ref(xml, prefix)
+      x = xml.namespaces.find_by_prefix(prefix)
+      return nil if x.nil?
+      x.href
+    end
+
     def self.compile_actions(xml, c_attrs)
       actions = [ ]
       attrs = self.collect_attributes(c_attrs, xml)
@@ -167,6 +173,14 @@ module Fabulator
       ret.flatten
     end
 
+    def run_filter(context, nom)
+      send "filter:#{nom}", context
+    end
+
+    def run_constraint(context, nom)
+      send "constraint:#{nom}", context
+    end
+
     def action_descriptions(hash=nil)
       self.class.action_descriptions hash
     end
@@ -234,6 +248,14 @@ module Fabulator
         self.function_descriptions[name] = Fabulator::ActionLib.last_description if Fabulator::ActionLib.last_description
         Fabulator::ActionLib.last_description = nil
         define_method("fctn:#{name}", &block)
+      end
+
+      def filter(name, &block)
+        define_method("filter:#{name}", &block)
+      end
+
+      def constraint(name, &block)
+        define_method("constraint:#{name}", &block)
       end
 
       def compile_actions(xml, rdf_model)
