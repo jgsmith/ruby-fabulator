@@ -11,11 +11,13 @@ module Fabulator
 
   class StateMachine
     attr_accessor :states, :missing_params, :errors, :namespaces, :updated_at
+    attr_accessor :state
 
     def compile_xml(xml, c_attrs = { })
       # /statemachine/states
       @states = { }
       self.namespaces = { }
+      @state = 'start'
 
       attr = ActionLib.collect_attributes(c_attrs, xml.root)
 
@@ -50,89 +52,72 @@ module Fabulator
     end
 
     def init_context(c)
-      Rails.logger.info("init_context")
-      if @context.nil? || @context.empty?
-        # we need to initialize ourselves
-        @context = Fabulator::Context.new
-      end
-      @context.data = c
+      @context = c
       begin
-        Rails.logger.info("running actions")
         @actions.each do |q|
-          Rails.logger.info("running action #{q}")
           q.run(c)
         end
       rescue Fabulator::StateChangeException => e
-        @context.state = e
+        @state = e
       end
     end
 
     def context
-      @context
+      { :data => @context, :state => @state }
     end
 
     def context=(c)
       if c.is_a?(Fabulator::XSM::Context)
-        @context ||= Fabulator::Context.new
-        @context.context = { :state => @context.state, :data => c }
-      elsif c.is_a?(Hash)
-        @context = Fabulator::Context.new
-        @context.state = c[:state]
-        @context.data = c[:data]
-      else
         @context = c
+      elsif c.is_a?(Hash)
+        @context = c[:data]
+        @state = c[:state]
       end
     end
 
     def run(params)
-      c = self.context
-      current_state = @states[c.state]
+      current_state = @states[@state]
       return if current_state.nil?
       # select transition
       # possible get some errors
       # run transition, and move to new state as needed
-      self.run_transition(current_state.select_transition(c,params), c)
+      self.run_transition(current_state.select_transition(@context, params))
     end
 
-    def run_transition(best_transition, c)
-      current_state = @states[c.state]
+    def run_transition(best_transition)
+      return if best_transition.nil? || best_transition.empty?
+      current_state = @states[@state]
       t = best_transition[:transition]
       @missing_params = best_transition[:missing]
       @errors = best_transition[:messages]
       if @missing_params.empty? && @errors.empty?
-        c.state = t.state
+        @state = t.state
         # merge valid and context
-        #Rails.logger.info("Best transition: #{YAML::dump(best_transition)}")
         best_transition[:valid].each do |item|
           p = item.path.gsub(/^[^:]+::/, '').split('/') - [ '' ]
-          #Rails.logger.info("Adding #{item.path} at /#{p.join('/')}")
-          n = c.data.traverse_path(p, true).first
+          n = @context.traverse_path(p, true).first
           n.prune
           n.copy(item)
-          #c.data.traverse_path(p, true).copy(item)
         end
-        #Rails.logger.info("Resulting data: #{YAML::dump(c.data)}")
-        #c.merge!(best_transition[:valid])
         # run_post of state we're leaving
         begin
-          current_state.run_post(c.data)
-          t.run(c.data)
+          current_state.run_post(@context)
+          t.run(@context)
           # run_pre for the state we're going to
-          new_state = @states[c.state]
-          new_state.run_pre(c.data) if !new_state.nil?
+          new_state = @states[@state]
+          new_state.run_pre(@context) if !new_state.nil?
           jumps = 0
-          Rails.logger.info("New state: [#{new_state}]")
           while !new_state.nil? && new_state.transitions.size == 1 && new_state.transitions.first.param_names.size == 0 && jumps < 1000
             jumps = jumps + 1
-            new_state.transitions.first.run(c.data)
+            new_state.transitions.first.run(@context)
             new_state = @states[new_state.transitions.first.state]
           end
         rescue Fabulator::StateChangeException => e # catch state change
           new_state = @states[e]
           begin
             if !new_state.nil?
-              c.state = new_state.name
-              new_state.run_pre(c.data)
+              @state = new_state.name
+              new_state.run_pre(@context)
             end
           rescue Fabulator::StateChangeException => e
             new_state = @states[e] 
@@ -142,12 +127,8 @@ module Fabulator
       end
     end
 
-    def state
-      self.context.state
-    end
-
     def data
-      self.context.data
+      @context
     end
 
     def state_names

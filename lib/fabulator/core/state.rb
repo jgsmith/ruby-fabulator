@@ -32,7 +32,6 @@ module Fabulator
 
     def select_transition(context,params)
       # we need hypthetical variables here :-/
-      #Rails.logger.info("select_transition with #{YAML::dump(params)}")
       best_match = nil
       @transitions.each do |t|
         res = t.validate_params(context,params)

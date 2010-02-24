@@ -18,15 +18,14 @@ module Fabulator
       @actions = [ ]
 
       @actions = ActionLib.compile_actions(xml, attrs)
-      parser = Fabulator::XSM::ExpressionParser.new
+      parser = Fabulator::Expr::Parser.new
 
       xml.each_element do |e|
         next unless e.namespaces.namespace.href == FAB_NS
         case e.name
           when 'params':
             p_attrs = ActionLib.collect_attributes(attrs, e)
-            @select = (e.attributes.get_attribute_ns(FAB_NS, 'select').value rescue '')
-            @select = parser.parse(@select, xml)
+            @select = ActionLib.get_select(e, '/')
 
             e.each_element do |ee|
               next unless ee.namespaces.namespace.href == FAB_NS
@@ -54,13 +53,13 @@ module Fabulator
       my_params.delete('action')
       my_params.delete('controller')
       my_params.delete('id')
-      param_context = Fabulator::XSM::Context.new(
+      param_context = Fabulator::Expr::Context.new(
         'ext',
-        context.data.roots,
+        context.roots,
         nil,
         []
       )
-      context.data.roots['ext'] = param_context
+      context.roots['ext'] = param_context
       param_context.merge_data(my_params)
 
       filtered = self.apply_filters(@select.run(param_context))

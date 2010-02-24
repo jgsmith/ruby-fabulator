@@ -136,6 +136,14 @@ module Fabulator
     end
 
     def self.unify_types(ts)
+      # we want to find a single type that can represent all of the information
+      # contained in the types in ts
+      #
+      # for example, an int and a real would unify to a real
+      #   or, an int and a rational would unify to a rational
+      #
+      # worst case: unify to a string if all types can be represented
+      #    as strings
     end
 
     def run_function(context, nom, args)
