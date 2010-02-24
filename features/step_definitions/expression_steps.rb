@@ -25,6 +25,7 @@ Given 'a context' do
 end
 
 Given /the prefix (\S+) as "([^"]+)"/ do |p,h|
+  @namespaces ||= { }
   @namespaces[p] = h
 end
 
@@ -49,6 +50,26 @@ When /I run the (expression \(.*\))/ do |exp|
   @cp = @data
   #puts YAML::dump(@expr)
   @result = @expr.run(@data)
+end
+
+When /I unify the types? (.*)/ do |ts|
+  types = ts.split(/\s*,\s*/)
+  typea = types.collect { |t|
+      pn = t.split(/:/, 2)
+      [ @namespaces[pn[0]], pn[1] ]
+    }
+  @type_result = Fabulator::ActionLib.unify_types(
+    types.collect { |t|
+      pn = t.split(/:/, 2)
+      [ @namespaces[pn[0]], pn[1] ]
+    }
+  )
+end
+
+Then /I should get the type (.*)/ do |t|
+  pn = t.split(/:/, 2)
+  @type_result[0].should == @namespaces[pn[0]]
+  @type_result[1].should == pn[1]
 end
 
 Then /I should get (\d+) items?/ do |count|

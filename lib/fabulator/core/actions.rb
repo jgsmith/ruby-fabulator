@@ -44,10 +44,11 @@ module Fabulator
         :div => nil,
         :mod => nil,
       },
-      :converts => {
-        'string' => {
-        }
-      },
+      :converts => [
+        { :type => [ FAB_NS, 'string' ],
+          :weight => 1.0
+        },
+      ],
     }
 
     register_type 'integer', {
@@ -58,10 +59,14 @@ module Fabulator
         :div => nil,
         :mod => nil,
       },
-      :converts => {
-        'string' => {
+      :converts => [
+        { :type => [ FAB_NS, 'string' ],
+          :weight => 1.0
+        },
+        { :type => [ FAB_NS, 'real' ],
+          :weight => 1.0
         }
-      },
+      ],
     }
 
     register_type 'complex', {
@@ -72,10 +77,6 @@ module Fabulator
         :div => nil,
         :mod => nil,
       },
-      :converts => {
-        'string' => {
-        }
-      },
     }
 
     ###
@@ -84,30 +85,24 @@ module Fabulator
 
     function 'abs' do |args|
       res = [ ]
-      args.each do |arg|
-        arg.each do |i|
-          res << i.value.abs
-        end
+      args[0].each do |i|
+        res << i.value.to_f.abs
       end
-      res
+      res.collect { |i| i % 1 == 0 ? i.to_i : i }
     end
 
     function 'ceiling' do |args|
       res = [ ]
-      args.each do |arg|
-        arg.each do |i|
-          res << i.value.ceil
-        end
+      args[0].each do |i|
+        res << i.value.to_f.ceil.to_i
       end
       res
     end
 
     function 'floor' do |args|
       res = [ ]
-      args.each do |arg|
-        arg.each do |i|
-          res << i.value.floor
-        end
+      args[0].each do |i|
+        res << i.value.to_f.floor.to_i
       end
       res
     end

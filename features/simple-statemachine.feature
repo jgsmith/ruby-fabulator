@@ -56,7 +56,6 @@ Feature: Simple state machines
     Then it should be in the 'stop' state
      And the expression (/foo) should equal ['bar b que']
 
-  @dev
   Scenario: simple machine with a simple transition and simple value constraint
     Given the statemachine
       """

@@ -59,3 +59,36 @@ Feature: Function calls and lists
     When I run the expression (let $i := 5; f:string-join( (1 .. $i), ','))
     Then I should get 1 item
      And item 0 should be ["1,2,3,4,5"]
+
+  Scenario Outline: simple functions
+    Given a context
+     And the prefix f as "http://dh.tamu.edu/ns/fabulator/1.0#"
+    When I run the expression (f:<fctn>(<a>))
+    Then I should get 1 item
+      And item 0 should be [<ans>]
+
+    Examples:
+      | fctn     |   a  | ans |
+      | abs      |   -1 |   1 |
+      | abs      |    1 |   1 |
+      | abs      |    0 |   0 |
+      | floor    | 1.23 |   1 |
+      | ceiling  | 1.23 |   2 |
+      | sum      | (1,2) |  3 |
+      | avg      | (1,2,3) | 2 |
+      | max      | (2,3,1) | 3 |
+      | min      | (3,1,2) | 1 |
+
+  Scenario: boolean constant functions - true
+    Given a context
+     And the prefix f as "http://dh.tamu.edu/ns/fabulator/1.0#"
+    When I run the expression (f:true())
+    Then I should get 1 item
+      And item 0 should be true
+
+  Scenario: boolean constant functions - false
+    Given a context
+     And the prefix f as "http://dh.tamu.edu/ns/fabulator/1.0#"
+    When I run the expression (f:false())
+    Then I should get 1 item
+      And item 0 should be false

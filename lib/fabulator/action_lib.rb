@@ -57,6 +57,76 @@ module Fabulator
       end
     end
 
+    # returns nil if no common type can be found
+    def self.unify_types(ts)
+      # breadth-first search from all ts to find common type that
+      # we can convert to.  We have to check all levels each time
+      # in case one of the initial types becomes a common type across
+      # all ts
+
+      return nil if ts.empty? || ts.include?(nil)
+
+      # now group by types since we only need one of each type for unification
+      grouped = { }
+      ts.each do |t|
+        grouped[t.join('')] = t
+      end
+
+      grouped = grouped.values
+
+      return grouped.first if grouped.size == 1
+     
+      # now we unify based on the first two and then adding one each time
+      # until we unify all of them
+      t1 = grouped.pop
+      t2 = grouped.pop
+      self.unify_types([ self._unify_types(t1, t2) ] + grouped)
+    end
+
+    ## TODO: allow unification with values as well so we can have
+    #        conversions dependent on the value
+    # for example: strings that look like integers can convert to integers
+    def self._unify_types(t1, t2)
+      d1 = { t1.join('') => { :t => t1, :w => 1.0, :path => [] } }
+      d2 = { t2.join('') => { :t => t2, :w => 1.0, :path => [] } }
+
+      added = true
+      while added
+        added = false
+        [d1, d2].each do |d|
+          d.keys.each do |t|
+            next unless @@types[d[t][:t][0]][d[t][:t][1]].has_key?(:converts)
+            @@types[d[t][:t][0]][d[t][:t][1]][:converts].each do |conv|
+              w = d[t][:w] * conv[:weight]
+              conv_key = conv[:type].join('')
+              if d.has_key?(conv_key) 
+                if d[conv_key][:w] < w
+                  d[conv_key][:w] = w
+                  d[conv_key][:path] = d[t][:path] + [ conv[:type] ]
+                end
+              else
+                d[conv_key] = {
+                  :t => conv[:type],
+                  :w => w,
+                  :path => d[t][:path] + [ conv[:type] ]
+                }
+                added = true
+              end
+            end
+          end
+        end
+        common = d1.keys & d2.keys
+        if !common.empty?
+          return d1[common.sort_by{ |c| d1[c][:w] * d2[c][:w] / d1[c][:path].size / d2[c][:path].size }.reverse.first][:t]
+        end
+      end
+      common = d1.keys & d2.keys
+      if !common.empty? 
+        return d1[common.sort_by{ |c| d1[c][:w] * d2[c][:w] / d1[c][:path].size / d2[c][:path].size }.reverse.first][:t]
+      end
+      return nil
+    end
+
     def self.prefix_to_ref(xml, prefix)
       x = xml.namespaces.find_by_prefix(prefix)
       return nil if x.nil?
@@ -139,17 +209,6 @@ module Fabulator
       if self.class.method_defined? "action:#{e.name}"
         send "action:#{e.name}", e, Fabulator::ActionLib.collect_attributes(r, e)
       end
-    end
-
-    def self.unify_types(ts)
-      # we want to find a single type that can represent all of the information
-      # contained in the types in ts
-      #
-      # for example, an int and a real would unify to a real
-      #   or, an int and a rational would unify to a rational
-      #
-      # worst case: unify to a string if all types can be represented
-      #    as strings
     end
 
     def run_function(context, nom, args)
