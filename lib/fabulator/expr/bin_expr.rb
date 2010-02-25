@@ -6,9 +6,9 @@ module Fabulator
         @right = right
       end
 
-      def expr_type
-        lt = @left.expr_type
-        rt = @right.expr_type
+      def expr_type(context)
+        lt = @left.expr_type(context)
+        rt = @right.expr_type(context)
         Fabulator::ActionLib.unify_types([ lt, rt ])
       end
 
@@ -19,8 +19,10 @@ module Fabulator
         l = [ l ] unless l.is_a?(Array)
         r = [ r ] unless r.is_a?(Array)
 
-        l = l.collect { |i| i.value }.uniq - [ nil ]
-        r = r.collect { |i| i.value }.uniq - [ nil ]
+        union_type = self.expr_type(context)
+
+        l = l.collect { |i| i.to(union_type) }.uniq - [ nil ]
+        r = r.collect { |i| i.to(union_type) }.uniq - [ nil ]
 
         res = []
 

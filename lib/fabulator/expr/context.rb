@@ -26,6 +26,28 @@ module Fabulator
         self.value.to_s
       end
 
+      def to_h
+        r = { 
+          :name => self.name,
+          :attributes => { },
+          :children => self.children.collect { |c| c.to_h },
+        }
+
+        r[:value] = self.value if !self.value.nil?
+        r[:type] = self.vtype.join('') if !self.vtype.nil?
+
+        r
+      end
+
+      def to(t)
+        if @vtype.nil? || t.nil? || @vtype.join('') == t.join('')
+          return @value
+        end
+        # see if there's a path between @vtype and t
+        #   if so, do the conversion
+        @value
+      end
+
       def anon_node(v, t = nil)
         n = self.class.new(self.axis, self.roots, v, [])
         n.vtype = t

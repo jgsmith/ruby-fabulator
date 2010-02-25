@@ -16,14 +16,14 @@ module Fabulator
     attr_accessor :select, :name
 
     def compile_xml(xml, c_attrs = {})
-      @select = ActionLib.get_local_attr(xml, FAB_NS, 'select', { :eval => true })
+      @select = ActionLib.get_local_attr(xml, FAB_NS, 'select', { :eval => true, :default => nil })
       @name = ActionLib.get_local_attr(xml, FAB_NS, 'path', { :eval => true })
       @actions = ActionLib.compile_actions(xml, c_attrs)
       self
     end
 
     def run(context, autovivify = false)
-      return @data.set_value(@name, @select)
+      return context.set_value(@name, @select.nil? ? @actions : @select )
 
       return [] if @name.nil?
       tgt = @name.run(context, true).first
@@ -65,7 +65,7 @@ module Fabulator
       self
     end
 
-    def run(context)
+    def run(context, autovivify = false)
       return [] if @name.nil?
       res = [ ]
       if @select

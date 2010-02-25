@@ -2,6 +2,7 @@ module Fabulator
   module ActionLib
     @@action_descriptions = {}
     @@function_descriptions = {}
+    @@function_args = { }
     @@namespaces = {}
     @@attributes = [ ]
     @@last_description = nil
@@ -18,6 +19,9 @@ module Fabulator
     end
     def self.function_description
       @@function_description
+    end
+    def self.function_args
+      @@function_args
     end
     def self.attributes
       @@attributes
@@ -38,6 +42,9 @@ module Fabulator
     def self.function_description=(x)
       @@function_description = x
     end
+    def self.function_args=(x)
+      @@function_args = x
+    end
     def self.attributes=(x)
       @@attributes = x
     end
@@ -52,6 +59,7 @@ module Fabulator
           super
           new_base.action_descriptions.merge! self.action_descriptions
           new_base.function_descriptions.merge! self.function_descriptions
+          new_base.function_args.merge! self.function_args
           new_base.types.merge! self.types
         end
       end
@@ -134,14 +142,14 @@ module Fabulator
     end
 
     def self.compile_actions(xml, c_attrs)
-      actions = [ ]
+      actions = Fabulator::Expr::StatementList.new
       attrs = self.collect_attributes(c_attrs, xml)
       xml.each_element do |e|
         ns = e.namespaces.namespace.href
         next unless Fabulator::ActionLib.namespaces.include?(ns)
-        actions << Fabulator::ActionLib.namespaces[ns].compile_action(e, attrs) # rescue nil)
+        actions.add_statement(Fabulator::ActionLib.namespaces[ns].compile_action(e, attrs)) # rescue nil)
       end
-      actions = actions - [ nil ]
+      #actions = actions - [ nil ]
       return actions
     end
 
@@ -194,7 +202,7 @@ module Fabulator
           p = Fabulator::Expr::Parser.new
           v = p.parse(e)
         else
-          v = Fabulator::Expr::Literal.new(v, [ FAB_NS, 'string' ])
+          v = Fabulator::Expr::Literal.new(v, [ FAB_NS, v =~ /^\d+$/ ? 'integer' : v =~ /^\d*\.\d+$/ || v =~ /^\d+\.\d*$/ ? 'real' : 'string' ])
         end
       end
       v
@@ -247,7 +255,11 @@ module Fabulator
     def function_descriptions(hash=nil)
       self.class.function_descriptions hash
     end
-  
+
+    def function_args(hash=nil)
+      self.class.function_args hash
+    end
+
     module ClassMethods
       def inherited(subclass)
         subclass.action_descriptions.reverse_merge! self.action_descriptions
@@ -303,10 +315,15 @@ module Fabulator
         end
       end
 
-      def function(name, &block)
+      def function(name, returns = nil, takes = nil, &block)
         self.function_descriptions[name] = Fabulator::ActionLib.last_description if Fabulator::ActionLib.last_description
+        Fabulator::ActionLib.function_args[name] = { :returns => returns, :takes => takes }
         Fabulator::ActionLib.last_description = nil
         define_method("fctn:#{name}", &block)
+      end
+
+      def function_return_type(name)
+        self.function_args[name][:returns]
       end
 
       def filter(name, &block)

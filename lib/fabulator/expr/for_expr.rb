@@ -11,6 +11,10 @@ module Fabulator
         end
       end
 
+      def expr_type(context)
+        @expr.expr_type(context)
+      end
+
       def run(context, autovivify = false)
         result = [ ]
         return result if @var.nil? || @expr.nil?
@@ -23,6 +27,10 @@ module Fabulator
     end
 
     class EveryExpr < ForExpr
+      def expr_type(context)
+        [ FAB_NS, 'boolean' ]
+      end
+
       def run(context, autovivify = false)
         result = super
         result.each do |r|
@@ -33,6 +41,10 @@ module Fabulator
     end
 
     class SomeExpr < ForExpr
+      def expr_type(context)
+        [ FAB_NS, 'boolean' ]
+      end
+
       def run(context, autovivify = false)
         result = super
         result.each do |r|

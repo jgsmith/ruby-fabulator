@@ -22,7 +22,7 @@ module Fabulator
       self
     end
 
-    def run(context)
+    def run(context, autovivify = false)
       items = @select.run(context)
       context.push_var_ctx
       if !@sort.empty?
@@ -33,12 +33,8 @@ module Fabulator
       end
       res = [ ]
       items.each do |i|
-        ares = [ ]
         context.set_var(@as, i) unless @as.nil?
-        @actions.each do |a|
-          ares = a.run(i)
-        end
-        res = res + ares
+        res = res + @actions.run(i)
       end
       context.pop_var_ctx
       return res
@@ -51,7 +47,7 @@ module Fabulator
       self
     end
 
-    def run(context)
+    def run(context, autovivify = false)
       (@select.run(context).first.value.to_s rescue '')
     end
   end
@@ -64,7 +60,7 @@ module Fabulator
       self
     end
 
-    def run(context)
+    def run(context, autovivify = false)
       return [] if @select.nil?
       c = @select.run(context)
       res = [ ]
@@ -80,9 +76,7 @@ module Fabulator
         root.push_var_ctx
         root.set_var(@as, c)
       end
-      @actions.each do |action|
-        res = action.run(root)
-      end
+      res = @actions.run(root)
       if !@as.nil?
         root.pop_var_ctx
       end
@@ -98,16 +92,12 @@ module Fabulator
       self
     end
 
-    def run(context)
+    def run(context, autovivify = false)
       res = [ ]
       counter = 0
       lim = @limit.nil? ? 1000 : @limit.run(context).first.value
       while counter < @limit && (!!@test.run(context).first.value rescue false)
-        lres = [ ]
-        @actions.each do |action|
-          lres = action.run(context)
-        end
-        res = res + lres
+        res = res + @actions.run(context)
       end
       res
     end

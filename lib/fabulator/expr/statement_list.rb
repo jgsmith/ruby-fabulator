@@ -6,7 +6,7 @@ module Fabulator
       end
 
       def add_statement(s)
-        @statements << s
+        @statements << s if !s.nil?
       end
 
       def run(context, autovivify = false)

@@ -4,10 +4,10 @@ module Fabulator
   RDF_NS = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#'
   RDFA_NS = 'http://dh.tamu.edu/ns/fabulator/rdf/1.0#'
 
-  module Core
-
   class StateChangeException < Exception
   end
+
+  module Core
 
   class StateMachine
     attr_accessor :states, :missing_params, :errors, :namespaces, :updated_at
@@ -54,9 +54,7 @@ module Fabulator
     def init_context(c)
       @context = c
       begin
-        @actions.each do |q|
-          q.run(c)
-        end
+        @actions.run(c)
       rescue Fabulator::StateChangeException => e
         @state = e
       end
@@ -67,7 +65,7 @@ module Fabulator
     end
 
     def context=(c)
-      if c.is_a?(Fabulator::XSM::Context)
+      if c.is_a?(Fabulator::Expr::Context)
         @context = c
       elsif c.is_a?(Hash)
         @context = c[:data]

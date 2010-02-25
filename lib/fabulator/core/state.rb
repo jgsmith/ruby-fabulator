@@ -5,8 +5,8 @@ module Fabulator
 
     def initialize
       @transitions = []
-      @pre_actions = []
-      @post_actions = []
+      @pre_actions = nil
+      @post_actions = nil
     end
 
     def compile_xml(xml, c_attrs)
@@ -49,17 +49,13 @@ module Fabulator
 
     def run_pre(context)
       # do queries, denials, assertions in the order given
-      @pre_actions.each do |action|
-        action.run(context)
-      end
+      @pre_actions.run(context) unless @pre_actions.nil?
       return []
     end
 
     def run_post(context)
       # do queries, denials, assertions in the order given
-      @post_actions.each do |action|
-        action.run(context)
-      end
+      @post_actions.run(context) unless @post_actions.nil?
       return []
     end
   end

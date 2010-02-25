@@ -137,9 +137,7 @@ module Fabulator
 
     def run(context)
       # do queries, denials, assertions in the order given
-      @actions.each do |action|
-        action.run(context)
-      end
+      @actions.run(context)
       return []
     end
   end

@@ -1,3 +1,4 @@
+@sm
 Feature: Simple state machines
 
   Scenario: simple machine with just one state and no transitions

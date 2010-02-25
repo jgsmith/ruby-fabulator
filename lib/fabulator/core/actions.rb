@@ -25,24 +25,29 @@ module Fabulator
 
     register_type 'string', {
       :ops => {
-        :plus => nil,
-        :minus => nil,
-        :mpy => nil,
-        :div => nil,
-        :mod => nil,
+        :plus => { 
+        },
+        :minus => { 
+          :proc => Proc.new { |a,b| a.split(b).join('')} 
+        },
+        :mpy => {
+          :args => [ [ FAB_NS, 'string' ], [ FAB_NS, 'integer' ] ],
+          :proc => Proc.new { |a,b| a * b }
+        },
+        :lt => { },
+        :eq => { },
       }
-    }
-
-    register_type 'numeric', {
     }
 
     register_type 'real', {
       :ops => {
-        :plus => nil,
-        :minus => nil,
-        :mpy => nil,
-        :div => nil,
-        :mod => nil,
+        :plus => { },
+        :minus => { },
+        :mpy => { },
+        :div => { },
+        :mod => { },
+        :lt => { },
+        :eq => { },
       },
       :converts => [
         { :type => [ FAB_NS, 'string' ],
@@ -53,11 +58,13 @@ module Fabulator
 
     register_type 'integer', {
       :ops => {
-        :plus => nil,
-        :minus => nil,
-        :mpy => nil,
-        :div => nil,
-        :mod => nil,
+        :plus => { },
+        :minus => { },
+        :mpy => { },
+        :div => { },
+        :mod => { },
+        :lt => { },
+        :eq => { },
       },
       :converts => [
         { :type => [ FAB_NS, 'string' ],
@@ -69,21 +76,13 @@ module Fabulator
       ],
     }
 
-    register_type 'complex', {
-      :ops => {
-        :plus => nil,
-        :minus => nil,
-        :mpy => nil,
-        :div => nil,
-        :mod => nil,
-      },
-    }
-
     ###
     ### Numeric functions
     ###
 
-    function 'abs' do |args|
+    NUMERIC = [ FAB_NS, :numeric ]
+
+    function 'abs', NUMERIC, [ NUMERIC ] do |args|
       res = [ ]
       args[0].each do |i|
         res << i.value.to_f.abs
@@ -91,7 +90,7 @@ module Fabulator
       res.collect { |i| i % 1 == 0 ? i.to_i : i }
     end
 
-    function 'ceiling' do |args|
+    function 'ceiling', NUMERIC, [ NUMERIC ] do |args|
       res = [ ]
       args[0].each do |i|
         res << i.value.to_f.ceil.to_i
@@ -99,7 +98,7 @@ module Fabulator
       res
     end
 
-    function 'floor' do |args|
+    function 'floor', NUMERIC, [ NUMERIC ] do |args|
       res = [ ]
       args[0].each do |i|
         res << i.value.to_f.floor.to_i
@@ -107,7 +106,7 @@ module Fabulator
       res
     end
 
-    function 'sum' do |args|
+    function 'sum', NUMERIC, [ NUMERIC ] do |args|
       res = 0
       return [ res ] if args.empty?
       return args[1] if args[0].empty? && args.size > 1
@@ -123,7 +122,7 @@ module Fabulator
       end
     end
 
-    function 'avg' do |args|
+    function 'avg', NUMERIC, [ NUMERIC ] do |args|
       res = 0.0
       n = 0.0
       args.first.each do |a|
@@ -138,7 +137,7 @@ module Fabulator
       end
     end
 
-    function 'max' do |args|
+    function 'max', NUMERIC, [ NUMERIC ] do |args|
       res = nil
       args[0].each do |a|
         res = a.value.to_f if res.nil? || a.value.to_f > res
@@ -151,7 +150,7 @@ module Fabulator
       end
     end
 
-    function 'min' do |args|
+    function 'min', NUMERIC, [ NUMERIC ] do |args|
       res = nil
       args[0].each do |a|
         res = a.value.to_f if res.nil? || a.value.to_f < res
@@ -164,7 +163,7 @@ module Fabulator
       end
     end
 
-    function 'histogram' do |args|
+    function 'histogram', NUMERIC, [ NUMERIC ] do |args|
       acc = { }
       args[0].each do |a|
         acc[a.value.to_s] ||= 0
@@ -177,10 +176,14 @@ module Fabulator
     ### String functions
     ###
 
+    STRING = [ FAB_NS, 'string' ]
+    BOOLEAN = [ FAB_NS, 'boolean' ]
+    INTEGER = [ FAB_NS, 'integer' ]
+
     #
     # f:concat(node-set) => node
     #
-    function 'concat' do |args|
+    function 'concat', STRING, [ STRING ] do |args|
       return '' if args.empty? || args[0].empty?
       [ args[0].collect{ |a| a.value.to_s}.join('') ]
     end
@@ -188,7 +191,7 @@ module Fabulator
     #
     # f:string-join(node-set, joiner) => node
     #
-    function 'string-join' do |args|
+    function 'string-join', STRING, [ STRING ] do |args|
       joiner = args[1].first.value.to_s
       [ args[0].collect{|a| a.value.to_s }.join(joiner) ]
     end
@@ -197,7 +200,7 @@ module Fabulator
     # f:substring(node-set, begin)
     # f:substring(node-set, begin, length)
     #
-    function 'substring' do |args|
+    function 'substring', STRING, [ STRING, INTEGER, INTEGER ] do |args|
       first = args[1].first.value
       if args.size == 3
         last = args[2].first.value
@@ -210,7 +213,7 @@ module Fabulator
     #
     # f:string-length(node-list) => node-list
     #
-    function 'string-length' do |args|
+    function 'string-length', STRING, [ STRING ] do |args|
       args[0].collect{ |a| a.value.to_s.length }
     end
 
@@ -218,44 +221,44 @@ module Fabulator
       args[0].collect{ |a| a.value.to_s.gsub(/^\s+/, '').gsub(/\s+$/,'').gsub(/\s+/, ' ') }
     end
 
-    function 'upper-case' do |args|
+    function 'upper-case', STRING, [ STRING ] do |args|
       args[0].collect{ |a| a.value.to_s.upcase }
     end
 
-    function 'lower-case' do |args|
+    function 'lower-case', STRING, [ STRING ] do |args|
       args[0].collect{ |a| a.value.to_s.downcase }
     end
 
-    function 'split' do |args|
+    function 'split', STRING, [ STRING, STRING ] do |args|
       div = args[1].first.value
       args[0].collect{ |a| a.value.split(div) }
     end
 
-    function 'contains' do |args|
+    function 'contains', BOOLEAN, [ STRING, STRING ] do |args|
       tgt = (args[1].first.value.to_s rescue '')
       return args[0].collect{ |a| (a.value.to_s.include?(tgt) rescue false) }
     end
 
-    function 'starts-with' do |args|
+    function 'starts-with', BOOLEAN, [ STRING, STRING ] do |args|
       tgt = (args[1].first.value.to_s rescue '')
       tgt_len = tgt.size - 1
       return args[0].collect{ |a| (a.value.to_s[0,tgt_len] == tgt rescue false) }
     end
 
-    function 'ends-with' do |args|
+    function 'ends-with', BOOLEAN, [ STRING, STRING ] do |args|
       tgt = (args[1].first.value.to_s rescue '').reverse
       tgt_len = tgt.size
       return args[0].collect{ |a| (a.value.to_s[-tgt_len,-1] == tgt rescue false) }
     end
 
-    function 'substring-before' do |args|
+    function 'substring-before', STRING, [ STRING, STRING ] do |args|
       tgt = (args[1].first.value.to_s rescue '')
       return [ '' ] if tgt == ''
 
       return args[0].collect{ |a| (a.value.to_s.split(tgt,2))[0] }
     end
 
-    function 'substring-after' do |args|
+    function 'substring-after', STRING, [ STRING, STRING ] do |args|
       tgt = (args[1].first.value.to_s rescue '')
 
       return args[0].collect{ |a| a.value.to_s } if tgt == ''

@@ -1,9 +1,13 @@
 module Fabulator
   module Expr
     class Literal
-      def initialize(e, t)
+      def initialize(e, t = nil)
         @lit = e
         @type = t
+      end
+
+      def expr_type(context)
+        @type
       end
 
       def run(context, autovivify = false)
@@ -14,6 +18,15 @@ module Fabulator
     class Var
       def initialize(v)
         @var = v
+      end
+
+      def expr_type(context)
+        v = context.get_var(@var)
+        if( v.is_a?(Array) )
+          ActionLib.unify_types(v.collect{ |i| i.vtype })
+        else
+          v.vtype
+        end
       end
 
       def run(context, autovivify = false)

@@ -19,7 +19,7 @@ module Fabulator
       self
     end
 
-    def run(context)
+    def run(context, autovivify = false)
       @choices.each do |c|
         if c.run_test(context)
           return c.run(context)
@@ -32,14 +32,7 @@ module Fabulator
 
   class When
     def compile_xml(xml, c_attrs = {})
-      #@test = (xml.attributes.get_attribute_ns(FAB_NS, 'test').value rescue nil)
-      #if !@test.nil?
-        #p = Fabulator::Expr::Parser.new
-        #@test = p.parse(@test, xml)
-      #end
-
       @test = ActionLib.get_local_attr(xml, FAB_NS, 'test', { :eval => true })
-
       @actions = ActionLib.compile_actions(xml, c_attrs)
       self
     end
@@ -51,13 +44,8 @@ module Fabulator
       return true
     end
 
-    def run(context)
-      # do queries, denials, assertions in the order given
-      res = [ ]
-      @actions.each do |action|
-        res = action.run(context)
-      end
-      return res
+    def run(context, autovivify = false)
+      return @actions.run(context)
     end
   end
 
@@ -68,15 +56,11 @@ module Fabulator
       self
     end
 
-    def run(context)
+    def run(context, autovivify = false)
       return [ ] if @test.nil?
       test_res = @test.run(context).collect{ |a| !!a.value }
       return [ ] if test_res.nil? || test_res.empty? || !test_res.include?(true)
-      res = [ ]
-      @actions.each do |action|
-        res = action.run(context)
-      end
-      return res
+      return @actions.run(context)
     end
   end
   end

@@ -8,6 +8,11 @@ module Fabulator
         @args = args
       end
 
+      def expr_type(context)
+        klass = ActionLib.namespaces[@ns]
+        klass.function_return_type(@name)
+      end
+
       def run(context, autovivify = false)
         klass = ActionLib.namespaces[@ns]
         return [] if klass.nil?

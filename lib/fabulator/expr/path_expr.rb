@@ -7,6 +7,10 @@ module Fabulator
         @segment = (segment.is_a?(Array) ? segment : [ segment ]) - [nil]
       end
 
+      def expr_type(context)
+        nil
+      end
+
       def run(context, autovivify = false)
         if @primary_expr.nil?
           possible = [ context ]
