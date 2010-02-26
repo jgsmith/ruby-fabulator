@@ -88,15 +88,25 @@ module Fabulator
       # until we unify all of them
       t1 = grouped.pop
       t2 = grouped.pop
-      self.unify_types([ self._unify_types(t1, t2) ] + grouped)
+      ut = self._unify_types(t1, t2)
+      return nil if ut.nil?
+      self.unify_types([ ut[:t] ] + grouped)
+    end
+
+    def self.type_path(from, to)
+      return [] if from.nil? || to.nil? || from.join('') == to.join('')
+      ut = self._unify_types(from, to)
+      return [] if ut.nil? || ut[:t].join('') != to.join('')
+      return ut[:convert]
     end
 
     ## TODO: allow unification with values as well so we can have
     #        conversions dependent on the value
     # for example: strings that look like integers can convert to integers
     def self._unify_types(t1, t2)
-      d1 = { t1.join('') => { :t => t1, :w => 1.0, :path => [] } }
-      d2 = { t2.join('') => { :t => t2, :w => 1.0, :path => [] } }
+      return nil if t1.nil? || t2.nil?
+      d1 = { t1.join('') => { :t => t1, :w => 1.0, :path => [ t1 ], :convert => [ ] } }
+      d2 = { t2.join('') => { :t => t2, :w => 1.0, :path => [ t2 ], :convert => [ ] } }
 
       added = true
       while added
@@ -111,12 +121,14 @@ module Fabulator
                 if d[conv_key][:w] < w
                   d[conv_key][:w] = w
                   d[conv_key][:path] = d[t][:path] + [ conv[:type] ]
+                  d[conv_key][:convert] = d[t][:convert] + [ conv[:convert] ] - [nil]
                 end
               else
                 d[conv_key] = {
                   :t => conv[:type],
                   :w => w,
-                  :path => d[t][:path] + [ conv[:type] ]
+                  :path => d[t][:path] + [ conv[:type] ],
+                  :convert => d[t][:convert] + [ conv[:convert] ] - [ nil ]
                 }
                 added = true
               end
@@ -125,12 +137,12 @@ module Fabulator
         end
         common = d1.keys & d2.keys
         if !common.empty?
-          return d1[common.sort_by{ |c| d1[c][:w] * d2[c][:w] / d1[c][:path].size / d2[c][:path].size }.reverse.first][:t]
+          return d1[common.sort_by{ |c| d1[c][:w] * d2[c][:w] / d1[c][:path].size / d2[c][:path].size }.reverse.first]
         end
       end
       common = d1.keys & d2.keys
       if !common.empty? 
-        return d1[common.sort_by{ |c| d1[c][:w] * d2[c][:w] / d1[c][:path].size / d2[c][:path].size }.reverse.first][:t]
+        return d1[common.sort_by{ |c| d1[c][:w] * d2[c][:w] / d1[c][:path].size / d2[c][:path].size }.reverse.first]
       end
       return nil
     end
@@ -220,7 +232,7 @@ module Fabulator
     end
 
     def run_function(context, nom, args)
-      ret = send "fctn:#{nom}", args
+      ret = send "fctn:#{nom}", context, args
       ret = [ ret ] unless ret.is_a?(Array)
       ret = ret.collect{ |r| 
         if r.is_a?(Fabulator::Expr::Context) 
@@ -293,6 +305,12 @@ module Fabulator
         end
         Fabulator::ActionLib.types[ns] ||= {}
         Fabulator::ActionLib.types[ns][nom] = options
+
+        function nom do |ctx, args|
+          args[0].collect { |i|
+            i.anon_node(i.to([ ns, nom ]), [ ns, nom ])
+          }
+        end
       end
 
       def namespaces

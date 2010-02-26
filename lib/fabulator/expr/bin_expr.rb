@@ -19,65 +19,70 @@ module Fabulator
         l = [ l ] unless l.is_a?(Array)
         r = [ r ] unless r.is_a?(Array)
 
-        union_type = self.expr_type(context)
-
-        l = l.collect { |i| i.to(union_type) }.uniq - [ nil ]
-        r = r.collect { |i| i.to(union_type) }.uniq - [ nil ]
-
         res = []
 
         l.each do |i|
           r.each do |j|
-            calc = self.calculate(i,j)
+            ut = Fabulator::ActionLib.unify_types([ i.vtype, j.vtype ])
+            calc = self.calculate(i.to(ut).value,j.to(ut).value)
             calc = [ calc ] unless calc.is_a?(Array)
 
-            res = res + calc.collect { |c| context.anon_node(c) }
+            res = res + calc.collect { |c| context.anon_node(c, self.result_type(ut)) }
           end
         end
         return res
       end
 
+      def result_type(t)
+        t
+      end
     end
 
     class AddExpr < BinExpr
       def calculate(a,b)
         return nil if a.nil? || b.nil?
-        r = a.to_f + b.to_f
-        r = r.to_i if r % 1.0 == 0.0
-        r
+        a + b
       end
     end
 
     class SubExpr < BinExpr
       def calculate(a,b)
         return nil if a.nil? || b.nil?
-        r = a.to_f - b.to_f
-        r = r.to_i if r % 1.0 == 0.0
-        r
+        a - b
       end
     end
 
-    class LtExpr < BinExpr
+    class BoolBinExpr < BinExpr
+      def expr_type(context)
+        [ FAB_NS, 'boolean' ]
+      end
+
+      def result_type(t)
+        [ FAB_NS, 'boolean' ]
+      end
+    end
+
+    class LtExpr < BoolBinExpr
       def calculate(a,b)
         return nil if a.nil? || b.nil?
         a < b
       end
     end
 
-    class LteExpr < BinExpr
+    class LteExpr < BoolBinExpr
       def calculate(a,b)
         return nil if a.nil? || b.nil?
         a <= b
       end
     end
 
-    class EqExpr < BinExpr
+    class EqExpr < BoolBinExpr
       def calculate(a,b)
-        a.to_s == b.to_s
+        a == b
       end
     end
 
-    class NeqExpr < BinExpr
+    class NeqExpr < BoolBinExpr
       def calculate(a,b)
         a != b
       end
@@ -86,31 +91,33 @@ module Fabulator
     class MpyExpr < BinExpr
       def calculate(a,b)
         return nil if a.nil? || b.nil?
-        r = a.to_f*b.to_f
-        return r.to_i if r % 1.0 == 0.0
-        return r
+        a * b
       end
     end
 
     class DivExpr < BinExpr
       def calculate(a,b)
         return nil if b.nil? || a.nil?
-        r = a.to_f/b.to_f
-        r = r.to_i if r % 1.0 == 0.0
-        r
+        a / b
       end
     end
 
     class ModExpr < BinExpr
       def calculate(a,b)
         return nil if a.nil? || b.nil?
-        r = a.to_f % b.to_f
-        r = r.to_i if r % 1.0 == 0.0
-        r
+        a % b
       end
     end
 
     class RangeExpr < BinExpr
+      def expr_type(context)
+        [ FAB_NS, 'numeric' ]
+      end
+
+      def result_type(t)
+        [ FAB_NS, 'numeric' ]
+      end
+
       def calculate(a,b)
         return nil if a.nil? || b.nil?
         if a < b

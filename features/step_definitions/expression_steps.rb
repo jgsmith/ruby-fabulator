@@ -77,8 +77,8 @@ Then /I should get (\d+) items?/ do |count|
 end
 
 Then /item (\d+) should be (\[.*\])/ do |i,t|
-  test = t.run(@cp).first.value
-  @result[i.to_i].value.to_s.should == test.to_s
+  test = t.run(@cp).first.to_s
+  @result[i.to_i].value.to_s.should == test
 end
 
 Then /item (\d+) should be false/ do |i|

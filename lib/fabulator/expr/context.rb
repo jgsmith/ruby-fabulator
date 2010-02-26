@@ -13,6 +13,14 @@ module Fabulator
         @parent = p
         @name = nil
         @e_ctx = f
+
+        if @value.is_a?(String)
+          @vtype = [ FAB_NS, 'string' ]
+        elsif @value.is_a?(Numeric)
+          @vtype = [ FAB_NS, 'numeric' ]
+        elsif @value.is_a?(TrueClass) || @value.is_a?(FalseClass)
+          @vtype = [ FAB_NS, 'boolean' ]
+        end
       end
 
       def self.new_context_environment
@@ -23,7 +31,7 @@ module Fabulator
       end
 
       def to_s
-        self.value.to_s
+        self.to([ FAB_NS, 'string' ]).value
       end
 
       def to_h
@@ -41,11 +49,18 @@ module Fabulator
 
       def to(t)
         if @vtype.nil? || t.nil? || @vtype.join('') == t.join('')
-          return @value
+          return self.anon_node(@value, @vtype)
         end
         # see if there's a path between @vtype and t
         #   if so, do the conversion
-        @value
+        #   otherwise, return nil
+        path = Fabulator::ActionLib.type_path(@vtype, t)
+        return self.anon_node(nil,nil) if path.empty?
+        v = @value
+        path.each do |p|
+          v = p.call(v)
+        end
+        return self.anon_node(v, t)
       end
 
       def anon_node(v, t = nil)
