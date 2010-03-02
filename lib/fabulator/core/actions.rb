@@ -26,7 +26,7 @@ module Fabulator
     register_type 'boolean', {
       :ops => {
       },
-      :converts => [
+      :to => [
         { :type => [ FAB_NS, 'string' ],
           :weight => 1.0,
           :convert => Proc.new { |i| i.value ? 'true' : '' }
@@ -52,7 +52,7 @@ module Fabulator
         :lt => { },
         :eq => { },
       },
-      :converts => [
+      :to => [
         { :type => [ FAB_NS, 'boolean' ],
           :weight => 0.0001,
           :convert => Proc.new { |s| !(s.value.nil? || s.value == '' || s.value =~ /\s*/) }
@@ -61,7 +61,7 @@ module Fabulator
     }
 
     register_type 'uri', {
-      :converts => [
+      :to => [
         { :type => [ FAB_NS, 'string' ],
           :weight => 1.0,
           :convert => Proc.new { |u| u.get_attribute('namespace').value + u.get_attribute('name').value }
@@ -79,7 +79,7 @@ module Fabulator
         :lt => { },
         :eq => { },
       },
-      :converts => [
+      :to => [
         { :type => [ FAB_NS, 'string' ],
           :weight => 1.0,
           :convert => Proc.new { |n| (n.value % 1 == 0 ? n.value.to_i : n.value.to_d).to_s }
