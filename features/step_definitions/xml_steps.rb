@@ -3,7 +3,7 @@ Given /the statemachine/ do |doc_xml|
 
   @roots = { }
   @namespaces = { }
-  @data = Fabulator::Expr::Context.new('data', @roots, nil, [])
+  @data = Fabulator::Expr::Node.new('data', @roots, nil, [])
   @roots['data'] = @data
   @parser ||= Fabulator::Expr::Parser.new
   @sm = Fabulator::Core::StateMachine.new.compile_xml(doc)

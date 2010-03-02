@@ -231,25 +231,33 @@ module Fabulator
       end
     end
 
-    def run_function(context, nom, args)
-      ret = send "fctn:#{nom}", context, args
+    def run_function(context, ns, nom, args)
+      ret = send "fctn:#{nom}", context, args, ns
       ret = [ ret ] unless ret.is_a?(Array)
       ret = ret.collect{ |r| 
-        if r.is_a?(Fabulator::Expr::Context) 
+        if r.is_a?(Fabulator::Expr::Node) 
           r 
         elsif r.is_a?(Hash)
           rr = [ ]
           r.each_pair do |k,v|
-            rrr = context.anon_node(v)
+            rrr = context.anon_node(v, self.function_return_type(nom))
             rrr.name = k
             rr << rrr
           end
           rr
         else
-          context.anon_node(r)
+          context.anon_node(r, self.function_return_type(nom))
         end
       }
       ret.flatten
+    end
+
+    def function_return_type(name)
+      (self.function_descriptions[name][:returns] rescue nil)
+    end
+
+    def function_args
+      @function_args ||= { }
     end
 
     def run_filter(context, nom)
@@ -275,10 +283,15 @@ module Fabulator
     module ClassMethods
       def inherited(subclass)
         subclass.action_descriptions.reverse_merge! self.action_descriptions
+        subclass.function_descriptions.reverse_merge! self.function_descriptions
         super
       end
       
       def action_descriptions(hash = nil)
+        Fabulator::ActionLib.action_descriptions[self.name] ||= (hash ||{})
+      end
+
+      def function_descriptions(hash = nil)
         Fabulator::ActionLib.action_descriptions[self.name] ||= (hash ||{})
       end
     
@@ -306,9 +319,9 @@ module Fabulator
         Fabulator::ActionLib.types[ns] ||= {}
         Fabulator::ActionLib.types[ns][nom] = options
 
-        function nom do |ctx, args|
+        function nom do |ctx, args, nss|
           args[0].collect { |i|
-            i.anon_node(i.to([ ns, nom ]), [ ns, nom ])
+            i.to([ ns, nom ])
           }
         end
       end
@@ -334,14 +347,11 @@ module Fabulator
       end
 
       def function(name, returns = nil, takes = nil, &block)
-        self.function_descriptions[name] = Fabulator::ActionLib.last_description if Fabulator::ActionLib.last_description
-        Fabulator::ActionLib.function_args[name] = { :returns => returns, :takes => takes }
+        self.function_descriptions[name] = { :returns => returns, :takes => takes }
+        self.function_descriptions[name][:description] = Fabulator::ActionLib.last_description if Fabulator::ActionLib.last_description
+        #self.function_args[name] = { :return => returns, :takes => takes }
         Fabulator::ActionLib.last_description = nil
         define_method("fctn:#{name}", &block)
-      end
-
-      def function_return_type(name)
-        self.function_args[name][:returns]
       end
 
       def filter(name, &block)

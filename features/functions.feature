@@ -1,3 +1,4 @@
+@func
 Feature: Function calls and lists
 
   Scenario: Adding two numbers together as a union

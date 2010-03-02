@@ -1,8 +1,8 @@
 module Fabulator
   module Expr
     class Predicates
-      def initialize(expr,p)
-        @expr = expr
+      def initialize(axis,p)
+        @axis = axis
         @predicates = p
       end
 
@@ -10,7 +10,7 @@ module Fabulator
         # we want to run through all of the predicates and return true if
         # they all return true
         result = [ ]
-        possible = @expr.run(context, autovivify)
+        possible = @axis.run(context, autovivify)
         return possible if @predicates.nil? || @predicates.empty?
         @predicates.each do |p|
           n_p = [ ]
@@ -38,7 +38,7 @@ module Fabulator
       end
 
       def run(context)
-        @indices.collect { |e| e.run(context).collect{ |i| i.value.to_i } }.flatten
+        @indices.collect { |e| e.run(context).collect{ |i| i.to([FAB_NS, 'numeric']).value.to_i } }.flatten
       end
     end
   end

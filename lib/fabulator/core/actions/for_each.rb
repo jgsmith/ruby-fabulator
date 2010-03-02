@@ -69,7 +69,7 @@ module Fabulator
         if c.size == 1
           root = c.first
         else
-          root = Fabulator::Expr::Context.new('data', context.roots, nil, c)
+          root = Fabulator::Expr::Node.new('data', context.roots, nil, c)
         end
       else
         root = context

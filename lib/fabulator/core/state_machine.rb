@@ -65,7 +65,7 @@ module Fabulator
     end
 
     def context=(c)
-      if c.is_a?(Fabulator::Expr::Context)
+      if c.is_a?(Fabulator::Expr::Node)
         @context = c
       elsif c.is_a?(Hash)
         @context = c[:data]

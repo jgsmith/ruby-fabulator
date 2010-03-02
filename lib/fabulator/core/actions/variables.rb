@@ -24,36 +24,6 @@ module Fabulator
 
     def run(context, autovivify = false)
       return context.set_value(@name, @select.nil? ? @actions : @select )
-
-      return [] if @name.nil?
-      tgt = @name.run(context, true).first
-      src = nil
-      if @select.nil?
-        @actions.each do |action|
-          src = action.run(context)
-        end
-      else
-        src = @select.run(context)
-      end
-      tgt.prune
-      ret = [ ]
-      if src.nil? || src.empty?
-        tgt.value = nil
-        ret << tgt
-      elsif src.size == 1
-        tgt.copy(src.first)
-        ret << tgt
-      else
-        p = tgt.parent
-        nom = tgt.name
-        p.prune(p.children(nom))
-        src.each do |s|
-          tgt = p.create_child(nom,nil)
-          tgt.copy(s)
-          ret << tgt
-        end
-      end
-      ret
     end
   end
 

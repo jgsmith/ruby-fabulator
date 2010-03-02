@@ -1,7 +1,7 @@
 module Fabulator
   module Expr
-    class Context
-      attr_accessor :axis, :value, :name, :roots, :vtype
+    class Node
+      attr_accessor :axis, :value, :name, :roots, :vtype, :attributes
 
       def initialize(a,r,v,c,p = nil,f={})
         @roots = r
@@ -13,6 +13,7 @@ module Fabulator
         @parent = p
         @name = nil
         @e_ctx = f
+        @attributes = [ ]
 
         if @value.is_a?(String)
           @vtype = [ FAB_NS, 'string' ]
@@ -23,9 +24,24 @@ module Fabulator
         end
       end
 
+      def set_attribute(k, v)
+        if v.is_a?(Fabulator::Expr::Node)
+          v = v.clone
+        else
+          v = Fabulator::Expr::Node.new(self.axis, self.roots, v, [], self)
+        end
+        v.name = k
+        @attributes.delete_if{|a| a.name == k }
+        @attributes << v
+      end
+
+      def get_attribute(k)
+        (@attributes.select{ |a| a.name == k }.first rescue nil)
+      end
+
       def self.new_context_environment
         r = { }
-        d = Fabulator::Expr::Context.new('data', r, nil, [])
+        d = Fabulator::Expr::Node.new('data', r, nil, [])
         r['data'] = d
         d
       end
@@ -56,11 +72,17 @@ module Fabulator
         #   otherwise, return nil
         path = Fabulator::ActionLib.type_path(@vtype, t)
         return self.anon_node(nil,nil) if path.empty?
-        v = @value
+        v = self
         path.each do |p|
-          v = p.call(v)
+          vv = p.call(v)
+          if vv.is_a?(Fabulator::Expr::Node)
+            v = vv
+          else
+            v = self.anon_node(vv)
+          end
         end
-        return self.anon_node(v, t)
+        v.vtype = t
+        return v
       end
 
       def anon_node(v, t = nil)
@@ -106,6 +128,7 @@ module Fabulator
 
       def copy(c)
         @value = c.value
+        @vtype = c.vtype
         c.children.each do |cc|
           pos = self.children(cc.name)
           if pos.size == 1
@@ -120,6 +143,7 @@ module Fabulator
       def clone()
         node = self.class.new(@axis, @roots, self.value, [], nil)
         node.name = self.name
+        node.attributes = self.attributes.collect { |a| a.clone }
         node
       end
 
@@ -367,7 +391,7 @@ module Fabulator
 
       def create_node(context)
         if context.root(@axis).nil?
-          context.roots[@axis] = Fabulator::Expr::Context.new(@axis,context.roots,nil,[])
+          context.roots[@axis] = Fabulator::Expr::Node.new(@axis,context.roots,nil,[])
         end
         context.root(@axis)
       end

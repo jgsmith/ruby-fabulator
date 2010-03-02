@@ -27,7 +27,8 @@ module Fabulator
             calc = self.calculate(i.to(ut).value,j.to(ut).value)
             calc = [ calc ] unless calc.is_a?(Array)
 
-            res = res + calc.collect { |c| context.anon_node(c, self.result_type(ut)) }
+            rut = self.result_type(ut)
+            res = res + calc.collect { |c| context.anon_node(c, rut) }
           end
         end
         return res

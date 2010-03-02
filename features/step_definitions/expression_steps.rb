@@ -19,7 +19,7 @@ end
 Given 'a context' do
   @roots = { }
   @namespaces = { }
-  @data = Fabulator::Expr::Context.new('data', @roots, nil, [])
+  @data = Fabulator::Expr::Node.new('data', @roots, nil, [])
   @roots['data'] = @data
   @parser ||= Fabulator::Expr::Parser.new
 end
@@ -77,8 +77,9 @@ Then /I should get (\d+) items?/ do |count|
 end
 
 Then /item (\d+) should be (\[.*\])/ do |i,t|
-  test = t.run(@cp).first.to_s
-  @result[i.to_i].value.to_s.should == test
+  test = t.run(@cp).first
+   #puts "Result: #{@result[i.to_i].to_s.class.to_s}"
+  @result[i.to_i].to_s.should == test.to_s
 end
 
 Then /item (\d+) should be false/ do |i|

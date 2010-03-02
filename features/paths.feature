@@ -1,3 +1,4 @@
+@paths
 Feature: Path expressions
 
   Scenario: Finding the numbers

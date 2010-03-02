@@ -53,7 +53,7 @@ module Fabulator
       my_params.delete('action')
       my_params.delete('controller')
       my_params.delete('id')
-      param_context = Fabulator::Expr::Context.new(
+      param_context = Fabulator::Expr::Node.new(
         'ext',
         context.roots,
         nil,

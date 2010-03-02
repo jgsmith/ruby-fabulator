@@ -112,17 +112,17 @@ rule
     | relative_location_path SLASH step { result = val[0] + [ val[2] ] }
     | relative_location_path SLASH_SLASH step { result = val[0] + [ Fabulator::Expr::AxisDescendentOrSelf.new(val[2]) ] }
 
-  step: axis node_test predicates { result = val[2].nil? || val[2].empty? ? Fabulator::Expr::Step.new(val[0], val[1]) : Fabulator::Expr::Predicates.new(Fabulator::Expr::Step.new(val[0], val[1]), val[2]) }
+  step: axis predicates { result = val[1].nil? || val[1].empty? ? val[0] : Fabulator::Expr::Predicates.new(val[0], val[1]) }
     | DOT { result = Fabulator::Expr::CurrentContext.new }
-    | DOT_DOT { result = Fabulator::Expr::AncestorContext.new }
+    | DOT_DOT { result = Fabulator::Expr::AxisParent.new }
 
     #| AXIS_METHOD COLON_COLON node_test predicates { result = Fabulator::Expr::Predicates.new(Fabulator::Expr::Function.new(@namespaces, val[2], []), val[3]) }
     #| AXIS_METHOD COLON_COLON FUNCTION_NAME list predicates { result = Fabulator::Expr::Predicates.new(Fabulator::Expr::Function.new(@namespaces, val[2], val[3]), val[4]) }
     #| axis LC DOLLAR_QNAME RC predicates { result = Fabulator::Expr::Predicates.new(Fabulator::Expr::Step.new(val[0], Fabulator::Expr::QName.new(val[3])), val[4]) }
 
-  axis:
-    | axis_name
-    | AT { result = Fabulator::Expr::Axis.new('attribute')  }
+  axis: node_test { result = Fabulator::Expr::AxisChild.new(val[0]) }
+    | axis_name node_test { result = Fabulator::Expr::Axis.new(val[0], val[1]) }
+    | AT node_test { result = Fabulator::Expr::AxisAttribute.new(val[1]) }
 
   axis_name: AXIS_NAME COLON_COLON { result = Fabulator::Expr::Axis.new(val[0]) }
 

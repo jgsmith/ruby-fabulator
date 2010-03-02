@@ -29,11 +29,11 @@ module Fabulator
       :converts => [
         { :type => [ FAB_NS, 'string' ],
           :weight => 1.0,
-          :convert => Proc.new { |i| i ? 'true' : '' }
+          :convert => Proc.new { |i| i.value ? 'true' : '' }
         },
         { :type => [ FAB_NS, 'numeric' ],
           :weight => 1.0,
-          :convert => Proc.new{ |i| Rational.new(i ? 1 : 0, 1) }
+          :convert => Proc.new{ |i| Rational.new(i.value ? 1 : 0, 1) }
         },
       ]
     }
@@ -55,9 +55,18 @@ module Fabulator
       :converts => [
         { :type => [ FAB_NS, 'boolean' ],
           :weight => 0.0001,
-          :convert => Proc.new { |s| !(s.nil? || s == '' || s =~ /\s*/) }
+          :convert => Proc.new { |s| !(s.value.nil? || s.value == '' || s.value =~ /\s*/) }
         },
       ],
+    }
+
+    register_type 'uri', {
+      :converts => [
+        { :type => [ FAB_NS, 'string' ],
+          :weight => 1.0,
+          :convert => Proc.new { |u| u.get_attribute('namespace').value + u.get_attribute('name').value }
+        }
+      ]
     }
 
     register_type 'numeric', {
@@ -73,11 +82,11 @@ module Fabulator
       :converts => [
         { :type => [ FAB_NS, 'string' ],
           :weight => 1.0,
-          :convert => Proc.new { |n| n.to_s }
+          :convert => Proc.new { |n| (n.value % 1 == 0 ? n.value.to_i : n.value.to_d).to_s }
         },
         { :type => [ FAB_NS, 'boolean' ],
           :weight => 0.0001,
-          :convert => Proc.new { |n| n != 0 }
+          :convert => Proc.new { |n| n.value != 0 }
         },
       ],
     }
@@ -89,31 +98,25 @@ module Fabulator
 
     NUMERIC = [ FAB_NS, 'numeric' ]
 
-    function 'abs', NUMERIC, [ NUMERIC ] do |ctx, args|
-      res = [ ]
-      args[0].each do |i|
-        res << i.value.abs
-      end
-      res.collect { |i| i % 1 == 0 ? i.to_i : i }
+    function 'abs', NUMERIC, [ NUMERIC ] do |ctx, args, ns|
+      args[0].collect { |i|
+        i.value.abs
+      }
     end
 
-    function 'ceiling', NUMERIC, [ NUMERIC ] do |ctx, args|
-      res = [ ]
-      args[0].each do |i|
-        res << i.value.to_d.ceil.to_r
-      end
-      res
+    function 'ceiling', NUMERIC, [ NUMERIC ] do |ctx, args, ns|
+      args[0].collect { |i|
+        i.value.to_d.ceil.to_r
+      }
     end
 
-    function 'floor', NUMERIC, [ NUMERIC ] do |ctx, args|
-      res = [ ]
-      args[0].each do |i|
-        res << i.value.to_d.floor.to_r
-      end
-      res
+    function 'floor', NUMERIC, [ NUMERIC ] do |ctx, args, ns|
+      args[0].collect { |i|
+        i.value.to_d.floor.to_r
+      }
     end
 
-    function 'sum', NUMERIC, [ NUMERIC ] do |ctx, args|
+    function 'sum', NUMERIC, [ NUMERIC ] do |ctx, args, ns|
       res = 0
       return [ res ] if args.empty?
       return args[1] if args[0].empty? && args.size > 1
@@ -125,7 +128,7 @@ module Fabulator
       [ res ]
     end
 
-    function 'avg', NUMERIC, [ NUMERIC ] do |ctx, args|
+    function 'avg', NUMERIC, [ NUMERIC ] do |ctx, args, ns|
       res = 0.0
       n = 0.0
       args.first.each do |a|
@@ -140,37 +143,29 @@ module Fabulator
       end
     end
 
-    function 'max', NUMERIC, [ NUMERIC ] do |ctx, args|
+    function 'max', NUMERIC, [ NUMERIC ] do |ctx, args, ns|
       res = nil
       args[0].each do |a|
         res = a.value.to_f if res.nil? || a.value.to_f > res
       end
 
-      if res.floor == res
-        [res.to_i]
-      else
-        [res]
-      end
+      [res]
     end
 
-    function 'min', NUMERIC, [ NUMERIC ] do |ctx, args|
+    function 'min', NUMERIC, [ NUMERIC ] do |ctx, args, ns|
       res = nil
       args[0].each do |a|
         res = a.value.to_f if res.nil? || a.value.to_f < res
       end
 
-      if res.floor == res
-        [res.to_i]
-      else
-        [res]
-      end
+      [res]
     end
 
-    function 'histogram', NUMERIC, [ NUMERIC ] do |ctx, args|
+    function 'histogram', NUMERIC, [ NUMERIC ] do |ctx, args, ns|
       acc = { }
       args[0].each do |a|
-        acc[a.value.to_s] ||= 0
-        acc[a.value.to_s] = acc[a.value.to_s] + 1
+        acc[a.to_s] ||= 0
+        acc[a.to_s] = acc[a.to_s] + 1
       end
       acc
     end
@@ -185,7 +180,7 @@ module Fabulator
     #
     # f:concat(node-set) => node
     #
-    function 'concat', STRING, [ STRING ] do |ctx, args|
+    function 'concat', STRING, [ STRING ] do |ctx, args, ns|
       return '' if args.empty? || args[0].empty?
       [ args[0].collect{ |a| a.value.to_s}.join('') ]
     end
@@ -193,7 +188,7 @@ module Fabulator
     #
     # f:string-join(node-set, joiner) => node
     #
-    function 'string-join', STRING, [ STRING ] do |ctx, args|
+    function 'string-join', STRING, [ STRING ] do |ctx, args, ns|
       joiner = args[1].first.value.to_s
       [ args[0].collect{|a| a.value.to_s }.join(joiner) ]
     end
@@ -202,7 +197,7 @@ module Fabulator
     # f:substring(node-set, begin)
     # f:substring(node-set, begin, length)
     #
-    function 'substring', STRING, [ STRING, NUMERIC, NUMERIC ] do |ctx, args|
+    function 'substring', STRING, [ STRING, NUMERIC, NUMERIC ] do |ctx, args, ns|
       first = args[1].first.value
       if args.size == 3
         last = args[2].first.value
@@ -215,52 +210,52 @@ module Fabulator
     #
     # f:string-length(node-list) => node-list
     #
-    function 'string-length', STRING, [ STRING ] do |ctx, args|
+    function 'string-length', STRING, [ STRING ] do |ctx, args, ns|
       args[0].collect{ |a| a.value.to_s.length }
     end
 
-    function 'normalize-space' do |ctx, args|
+    function 'normalize-space', STRING do |ctx, args, ns|
       args[0].collect{ |a| a.value.to_s.gsub(/^\s+/, '').gsub(/\s+$/,'').gsub(/\s+/, ' ') }
     end
 
-    function 'upper-case', STRING, [ STRING ] do |ctx, args|
+    function 'upper-case', STRING, [ STRING ] do |ctx, args, ns|
       args[0].collect{ |a| a.value.to_s.upcase }
     end
 
-    function 'lower-case', STRING, [ STRING ] do |ctx, args|
+    function 'lower-case', STRING, [ STRING ] do |ctx, args, ns|
       args[0].collect{ |a| a.value.to_s.downcase }
     end
 
-    function 'split', STRING, [ STRING, STRING ] do |ctx, args|
+    function 'split', STRING, [ STRING, STRING ] do |ctx, args, ns|
       div = args[1].first.value
       args[0].collect{ |a| a.value.split(div) }
     end
 
-    function 'contains', BOOLEAN, [ STRING, STRING ] do |ctx, args|
+    function 'contains', BOOLEAN, [ STRING, STRING ] do |ctx, args, ns|
       tgt = (args[1].first.value.to_s rescue '')
       return args[0].collect{ |a| (a.value.to_s.include?(tgt) rescue false) }
     end
 
-    function 'starts-with', BOOLEAN, [ STRING, STRING ] do |ctx, args|
+    function 'starts-with', BOOLEAN, [ STRING, STRING ] do |ctx, args, ns|
       tgt = (args[1].first.value.to_s rescue '')
       tgt_len = tgt.size - 1
       return args[0].collect{ |a| (a.value.to_s[0,tgt_len] == tgt rescue false) }
     end
 
-    function 'ends-with', BOOLEAN, [ STRING, STRING ] do |ctx, args|
+    function 'ends-with', BOOLEAN, [ STRING, STRING ] do |ctx, args, ns|
       tgt = (args[1].first.value.to_s rescue '').reverse
       tgt_len = tgt.size
       return args[0].collect{ |a| (a.value.to_s[-tgt_len,-1] == tgt rescue false) }
     end
 
-    function 'substring-before', STRING, [ STRING, STRING ] do |ctx, args|
+    function 'substring-before', STRING, [ STRING, STRING ] do |ctx, args, ns|
       tgt = (args[1].first.value.to_s rescue '')
       return [ '' ] if tgt == ''
 
       return args[0].collect{ |a| (a.value.to_s.split(tgt,2))[0] }
     end
 
-    function 'substring-after', STRING, [ STRING, STRING ] do |ctx, args|
+    function 'substring-after', STRING, [ STRING, STRING ] do |ctx, args, ns|
       tgt = (args[1].first.value.to_s rescue '')
 
       return args[0].collect{ |a| a.value.to_s } if tgt == ''
@@ -273,28 +268,28 @@ module Fabulator
     ### Regexes
     ###
 
-    function 'matches' do |ctx, args|
+    function 'matches' do |ctx, args, ns|
     end
 
-    function 'replace' do |ctx, args|
+    function 'replace' do |ctx, args, ns|
     end
 
-    function 'tokenize' do |ctx, args|
+    function 'tokenize' do |ctx, args, ns|
     end
 
     ###
     ### Boolean
     ###
 
-    function 'true' do |ctx, args|
+    function 'true', BOOLEAN do |ctx, args, ns|
       return [ ctx.anon_node( true, [ FAB_NS, 'boolean' ] ) ]
     end
 
-    function 'false' do |ctx, args|
+    function 'false', BOOLEAN do |ctx, args, ns|
       return [ ctx.anon_node( false, [ FAB_NS, 'boolean' ] ) ]
     end
 
-    function 'not' do |ctx, args|
+    function 'not', BOOLEAN do |ctx, args, ns|
       return args[0].collect{ |a| !a.value }
     end
 
@@ -302,15 +297,15 @@ module Fabulator
     ### data node functions
     ###
 
-    function 'name' do |ctx, args|
+    function 'name', STRING do |ctx, args, ns|
       return args[0].collect{|a| a.name || '' }
     end
 
-    function 'root' do |ctx, args|
+    function 'root' do |ctx, args, ns|
       return args[0].collect{|a| a.root }
     end
 
-    function 'lang' do |ctx, args|
+    function 'lang', STRING do |ctx, args, ns|
       # we want to track language for rdf purposes?
     end
 
@@ -318,43 +313,58 @@ module Fabulator
     ### Sequences
     ###
 
-    function 'empty' do |ctx, args|
+    function 'empty', BOOLEAN do |ctx, args, ns|
       return [ args[0].empty? ]
     end
 
-    function 'exists' do |ctx, args|
+    function 'exists', BOOLEAN do |ctx, args, ns|
       return [ !args[0].empty? ]
     end
 
-    function 'reverse' do |ctx, args|
+    function 'reverse' do |ctx, args, ns|
       return args[0].reverse
     end
 
-    function 'zero-or-one' do |ctx, args|
+    function 'zero-or-one', BOOLEAN do |ctx, args, ns|
       return [ args[0].size <= 1 ]
     end
 
-    function 'one-or-more' do |ctx, args|
+    function 'one-or-more', BOOLEAN do |ctx, args, ns|
       return [ args[0].size >= 1 ]
     end
 
-    function 'zero-or-one' do |ctx, args|
+    function 'zero-or-one', BOOLEAN do |ctx, args, ns|
       return [ args[0].size == 1 ]
     end
 
-    function 'count' do |ctx, args|
-      return [ args[0].size ]
+    function 'count', NUMERIC do |ctx, args, ns|
+      return [ args[0].size.to_d.to_r ]
     end
 
     ###
     ### Context
     ###
 
-    function 'position' do |ctx, args|
+    function 'position', NUMERIC do |ctx, args, ns|
     end
 
-    function 'last' do |ctx, args|
+    function 'last', BOOLEAN do |ctx, args, ns|
     end
+
+    ###
+    ### URIs
+    ###
+ 
+    function 'uri-prefix', STRING do |ctx, args, ns|
+      res = [ ]
+      args[0].each do |p|
+        prefix = p.to([FAB_NS, 'string']).value
+        # resolve prefix to href
+        res << ctx.anon_node( ns[prefix], [FAB_NS, 'string']) if ns[prefix]
+      end
+      res
+    end
+      
 
     ###
     ### Filters

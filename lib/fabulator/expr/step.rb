@@ -33,7 +33,7 @@ module Fabulator
       def create_node(context)
         return nil if node_text == '*'
 
-        c = Fabulator::Expr::Context.new(context.axis, context.roots, nil, [])
+        c = Fabulator::Expr::Node.new(context.axis, context.roots, nil, [])
         c.name = @node_test
         context.add_child(c)
         c
