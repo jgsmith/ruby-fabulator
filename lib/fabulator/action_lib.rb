@@ -7,6 +7,7 @@ module Fabulator
     @@attributes = [ ]
     @@last_description = nil
     @@types = { }
+    @@axes = { }
 
     def self.last_description
       @@last_description
@@ -28,6 +29,9 @@ module Fabulator
     end
     def self.types
       @@types
+    end
+    def self.axes
+      @@axes
     end
 
     def self.last_description=(x)
@@ -51,6 +55,9 @@ module Fabulator
     def self.types=(x)
       @@types = x
     end
+    def self.axes=(x)
+      @@axes = x
+    end
 
     def self.included(base)
       base.extend(ClassMethods)
@@ -63,6 +70,10 @@ module Fabulator
           new_base.types.merge! self.types
         end
       end
+    end
+
+    def self.find_op(t,o)
+      (@@types[t[0]][t[1]][:ops][o] rescue nil)
     end
 
     # returns nil if no common type can be found
@@ -357,6 +368,10 @@ module Fabulator
             i.to([ ns, nom ])
           }
         end
+      end
+
+      def axis(nom, &block)
+        Fabulator::ActionLib.axes[nom] = block
       end
 
       def namespaces

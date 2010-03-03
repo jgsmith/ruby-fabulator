@@ -224,12 +224,9 @@ module Fabulator
         else
           root_context = root_context.first
         end
-        #Rails.logger.info("Merge Path: #{root_context.path}")
-        #Rails.logger.info("Merging into #{root_context.path rescue '*'}: #{YAML::dump(d)}")
         if d.is_a?(Array)
           node_name = root_context.name
           root_context = root_context.parent
-          #Rails.logger.info("Array context: #{root_context.path} / #{node_name}")
           # get rid of empty children so we don't have problems later
           root_context.children.each do |c|
             if c.children.size == 0 && c.name == node_name && c.value.nil?
@@ -242,14 +239,11 @@ module Fabulator
           end
         elsif d.is_a?(Hash)
           d.each_pair do |k,v|
-            #Rails.logger.info("Merging [#{k}]")
             bits = k.split('.')
             c = root_context.traverse_path(bits,true).first
-            #Rails.logger.info("Possibly created path: #{c.path}")
             if v.is_a?(Hash) || v.is_a?(Array)
               c.merge_data(v)
             else
-              #Rails.logger.info("Set value: #{c.path} == #{v}")
               c.value = v
             end
           end
@@ -320,10 +314,12 @@ module Fabulator
       end
 
       def children(n = nil)
+        op = ActionLib.find_op(@vtype, :children)
+        possible = op.nil? ? @children : op.call(self)
         if n.nil?
-          @children
+          possible
         else
-          @children.select{|c| c.name == n }
+          possible.select{|c| c.name == n }
         end
       end
 
@@ -384,7 +380,14 @@ module Fabulator
       end
 
       def run(context, autovivify = false)
-        c = context.root(@axis)
+        c = nil
+        if @axis.is_a?(String)
+          c = context.root(@axis)
+        elsif !@axis.nil?
+          c = @axis.run(context, autovivify).first
+        else
+          c = context.root
+        end
         return [ ] if c.nil?
         return [ c ]
       end

@@ -1,12 +1,44 @@
 module Fabulator
   module Expr
+    class Axis
+      def initialize(axis, n = nil)
+        case axis
+          when 'attribute':
+            @axis = AxisAttribute.new(n)
+          when 'child':
+            @axis = AxisChild.new(n)
+          when 'child-or-self':
+          when 'descendent':
+          when 'descendent-or-self':
+            @axis = AxisDescendentOrSelf.new(n)
+          when 'parent':
+            @axis = AxisParent.new(n)
+          else
+            @root = axis
+            @axis = n.nil? ? nil : AxisChild.new(n)
+        end
+      end
+
+      def run(context, autovivify = false)
+        if @root.nil? || @root == ''
+          return @axis.run(context, autovivify)
+        else
+          if context.roots[@root].nil? && !Fabulator::ActionLib.axes[@root].nil?
+            context.roots[@root] = Fabulator::ActionLib.axes[@root].call(context)
+          end
+          return context.roots[@root].nil? ? [ ] : 
+                                @axis.nil? ? [ context.roots[@root] ] : 
+                                             [ @axis.run(context.roots[@root]) ]
+        end
+      end
+    end
+
     class AxisChild
       def initialize(n)
         @node_test = n
       end
 
       def run(context, autovivify = false)
-        c = context
         if @node_test.is_a?(String)
           n = @node_test
         else
@@ -14,11 +46,11 @@ module Fabulator
         end
         return [ ] if n.nil?
         if n == '*'
-          possible = c.children
+          possible = context.children
         else
-          possible = c.children.select{ |cc| cc.name == n }
+          possible = context.children(n)
           if possible.empty? && autovivify
-            possible = c.traverse_path([ n ], true)
+            possible = context.traverse_path([ n ], true)
           end
         end
         return possible
