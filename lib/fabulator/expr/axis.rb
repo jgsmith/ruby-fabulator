@@ -42,7 +42,7 @@ module Fabulator
         if @node_test.is_a?(String)
           n = @node_test
         else
-          n = (@node_test.run(context).last.value rescue nil)
+          n = (@node_test.run(context).last.to_s rescue nil)
         end
         return [ ] if n.nil?
         if n == '*'
@@ -98,8 +98,14 @@ module Fabulator
       def run(context, autovivify = false)
         res = [ ]
         context = [ context ] unless context.is_a?(Array)
-        if @name == 'type'
-          res = context.collect { |c|
+          
+        res = context.collect { |c|
+          if @name.is_a?(String)
+            nom = @name
+          else
+            nom = (@name.run(c).last.to_s rescue nil)
+          end
+          if nom == 'type'
             if c.vtype.nil?
               nil
             else
@@ -111,12 +117,10 @@ module Fabulator
               n.vtype = [ FAB_NS, 'uri' ]
               n
             end
-          }
-        else
-          res = context.collect { |c|
-            c.get_attribute(@name)
-          }
-        end
+          else
+            c.get_attribute(nom)
+          end
+        }
         res - [ nil ]
       end
     end

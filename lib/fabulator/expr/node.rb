@@ -257,6 +257,7 @@ module Fabulator
         if selection.is_a?(String)
           p = Fabulator::Expr::Parser.new
           selection = p.parse(selection, ns)
+Rails.logger.info(YAML::dump(selection))
         end
 
         if selection.nil?

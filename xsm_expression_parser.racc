@@ -150,6 +150,7 @@ rule
     | args COMMA expr { result = val[0] + [ val[2] ] }
 
   node_test: QNAME
+    | NUMBER { result = val[0].to_s }
     | LC expr RC { result = val[1] }
     | STAR
 

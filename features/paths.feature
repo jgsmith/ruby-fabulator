@@ -38,3 +38,20 @@ Feature: Path expressions
     Then I should get 2 items
       And item 0 should be [5]
       And item 1 should be [9]
+
+  Scenario: Using an expression to name a node test
+    Given a context
+      And that [/a] is set to [1 .. 10]
+      And that [/b] is set to ['a']
+    When I run the expression (/{/b}[. mod 2 = 1][3,5])
+    Then I should get 2 items
+      And item 0 should be [5]
+      And item 1 should be [9]
+
+  Scenario: Using an expression to name a node test
+    Given a context
+      And that [/a] is set to [1 .. 10]
+    When I run the expression (/{'a'}[. mod 2 = 1][3,5])
+    Then I should get 2 items
+      And item 0 should be [5]
+      And item 1 should be [9]
