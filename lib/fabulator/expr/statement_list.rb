@@ -17,6 +17,33 @@ module Fabulator
         return result
       end
     end
+
+    class WithExpr
+      def initialize(e,w)
+        @expr = e
+        @with = w
+      end
+
+      def run(context, autovivify = false)
+        result = @expr.run(context, autovivify)
+        result.each do |r|
+          @with.run(r, true)
+        end
+        result
+      end
+    end
+
+    class DataSet
+      def initialize(p,v)
+        @path = p
+        @value = v
+      end
+
+      def run(context, autovivify = false)
+        context.set_value(@path, @value)
+        [ context ]
+      end
+    end
   end
 end
 

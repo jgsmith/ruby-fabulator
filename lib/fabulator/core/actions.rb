@@ -29,25 +29,25 @@ module Fabulator
       :to => [
         { :type => [ FAB_NS, 'string' ],
           :weight => 1.0,
-          :convert => Proc.new { |i| i.value ? 'true' : '' }
+          :convert => lambda { |i| i.value ? 'true' : '' }
         },
         { :type => [ FAB_NS, 'numeric' ],
           :weight => 1.0,
-          :convert => Proc.new{ |i| Rational.new(i.value ? 1 : 0, 1) }
+          :convert => lambda{ |i| Rational.new(i.value ? 1 : 0, 1) }
         },
       ]
     }
 
     register_type 'string', {
       :ops => {
-        :plus => { 
-        },
+        #:plus => {
+        #},
         :minus => { 
-          :proc => Proc.new { |a,b| a.split(b).join('')} 
+          :proc => lambda { |a,b| a.split(b).join('')} 
         },
         :mpy => {
           :args => [ [ FAB_NS, 'string' ], [ FAB_NS, 'integer' ] ],
-          :proc => Proc.new { |a,b| a * b }
+          :proc => lambda { |a,b| a * b }
         },
         :lt => { },
         :eq => { },
@@ -55,7 +55,11 @@ module Fabulator
       :to => [
         { :type => [ FAB_NS, 'boolean' ],
           :weight => 0.0001,
-          :convert => Proc.new { |s| !(s.value.nil? || s.value == '' || s.value =~ /\s*/) }
+          :convert => lambda { |s| !(s.value.nil? || s.value == '' || s.value =~ /\s*/) }
+        },
+        { :type => [ FAB_NS, 'html' ],
+          :weight => 1.0,
+          :convert => lambda { |s| s.value.gsub(/&/, '&amp;').gsub(/</, '&lt;') }
         },
       ],
     }
@@ -64,29 +68,29 @@ module Fabulator
       :to => [
         { :type => [ FAB_NS, 'string' ],
           :weight => 1.0,
-          :convert => Proc.new { |u| u.get_attribute('namespace').value + u.get_attribute('name').value }
+          :convert => lambda { |u| u.get_attribute('namespace').value + u.get_attribute('name').value }
         }
       ]
     }
 
     register_type 'numeric', {
       :ops => {
-        :plus => { },
-        :minus => { },
-        :mpy => { },
-        :div => { },
-        :mod => { },
-        :lt => { },
-        :eq => { },
+        #:plus => { },
+        #:minus => { },
+        #:mpy => { },
+        #:div => { },
+        #:mod => { },
+        #:lt => { },
+        #:eq => { },
       },
       :to => [
         { :type => [ FAB_NS, 'string' ],
           :weight => 1.0,
-          :convert => Proc.new { |n| (n.value % 1 == 0 ? n.value.to_i : n.value.to_d).to_s }
+          :convert => lambda { |n| (n.value % 1 == 0 ? n.value.to_i : n.value.to_d).to_s }
         },
         { :type => [ FAB_NS, 'boolean' ],
           :weight => 0.0001,
-          :convert => Proc.new { |n| n.value != 0 }
+          :convert => lambda { |n| n.value != 0 }
         },
       ],
     }
@@ -117,13 +121,22 @@ module Fabulator
     end
 
     function 'sum', NUMERIC, [ NUMERIC ] do |ctx, args, ns|
-      res = 0
+      res = ActionLib.find_op(args[0].first.vtype, :zero)
+      res = 0 if res.nil?
       return [ res ] if args.empty?
       return args[1] if args[0].empty? && args.size > 1
 
-      args[0].each do |a|
-        #puts "adding #{YAML::dump(a)}"
-        res = res + a.value
+      op = ActionLib.find_op(args[0].first.vtype, :plus)
+
+      if op.nil? || op[:proc].nil?
+        args[0].each do |a|
+          #puts "adding #{YAML::dump(a)}"
+          res = res + a.value
+        end
+      else
+        args[0].each do |a|
+          res = op[:proc].call(res, a)
+        end
       end
       [ res ]
     end
@@ -210,57 +223,57 @@ module Fabulator
     #
     # f:string-length(node-list) => node-list
     #
-    function 'string-length', STRING, [ STRING ] do |ctx, args, ns|
-      args[0].collect{ |a| a.value.to_s.length }
+    function 'string-length', NUMERIC, [ STRING ] do |ctx, args, ns|
+      args[0].collect{ |a| a.to_s.length }
     end
 
     function 'normalize-space', STRING do |ctx, args, ns|
-      args[0].collect{ |a| a.value.to_s.gsub(/^\s+/, '').gsub(/\s+$/,'').gsub(/\s+/, ' ') }
+      args[0].collect{ |a| a.to_s.gsub(/^\s+/, '').gsub(/\s+$/,'').gsub(/\s+/, ' ') }
     end
 
     function 'upper-case', STRING, [ STRING ] do |ctx, args, ns|
-      args[0].collect{ |a| a.value.to_s.upcase }
+      args[0].collect{ |a| a.to_s.upcase }
     end
 
     function 'lower-case', STRING, [ STRING ] do |ctx, args, ns|
-      args[0].collect{ |a| a.value.to_s.downcase }
+      args[0].collect{ |a| a.to_s.downcase }
     end
 
     function 'split', STRING, [ STRING, STRING ] do |ctx, args, ns|
-      div = args[1].first.value
-      args[0].collect{ |a| a.value.split(div) }
+      div = args[1].first.to_s
+      args[0].collect{ |a| a.to_s.split(div) }
     end
 
     function 'contains', BOOLEAN, [ STRING, STRING ] do |ctx, args, ns|
-      tgt = (args[1].first.value.to_s rescue '')
-      return args[0].collect{ |a| (a.value.to_s.include?(tgt) rescue false) }
+      tgt = (args[1].first.to_s rescue '')
+      return args[0].collect{ |a| (a.to_s.include?(tgt) rescue false) }
     end
 
     function 'starts-with', BOOLEAN, [ STRING, STRING ] do |ctx, args, ns|
-      tgt = (args[1].first.value.to_s rescue '')
+      tgt = (args[1].first.to_s rescue '')
       tgt_len = tgt.size - 1
-      return args[0].collect{ |a| (a.value.to_s[0,tgt_len] == tgt rescue false) }
+      return args[0].collect{ |a| (a.to_s[0,tgt_len] == tgt rescue false) }
     end
 
     function 'ends-with', BOOLEAN, [ STRING, STRING ] do |ctx, args, ns|
-      tgt = (args[1].first.value.to_s rescue '').reverse
+      tgt = (args[1].first.to_s rescue '').reverse
       tgt_len = tgt.size
-      return args[0].collect{ |a| (a.value.to_s[-tgt_len,-1] == tgt rescue false) }
+      return args[0].collect{ |a| (a.to_s[-tgt_len,-1] == tgt rescue false) }
     end
 
     function 'substring-before', STRING, [ STRING, STRING ] do |ctx, args, ns|
-      tgt = (args[1].first.value.to_s rescue '')
+      tgt = (args[1].first.to_s rescue '')
       return [ '' ] if tgt == ''
 
       return args[0].collect{ |a| (a.value.to_s.split(tgt,2))[0] }
     end
 
     function 'substring-after', STRING, [ STRING, STRING ] do |ctx, args, ns|
-      tgt = (args[1].first.value.to_s rescue '')
+      tgt = (args[1].first.to_s rescue '')
 
-      return args[0].collect{ |a| a.value.to_s } if tgt == ''
+      return args[0].collect{ |a| a.to_s } if tgt == ''
 
-      return args[0].collect{ |a| a.value.to_s.include?(tgt) ? (a.value.to_s.split(tgt))[-1] : "" }
+      return args[0].collect{ |a| a.to_s.include?(tgt) ? (a.to_s.split(tgt))[-1] : "" }
     end
     
 
@@ -276,6 +289,30 @@ module Fabulator
 
     function 'tokenize' do |ctx, args, ns|
     end
+
+    function 'keep' do |ctx, args, ns|
+      # args[0] - strings to operate on
+      # args[1] - char classes to keep: alpha, numeric, space, punctuation, control
+      # we replace with 'space' if no args[2]
+      replacement = args.size > 2 ? args[2].first.to_s : ' '
+      classes = args[1].collect { |a|
+        case a.to_s
+          when 'alpha': 'a-zA-Z'
+          when 'lower': 'a-z'
+          when 'upper': 'A-Z'
+          when 'numeric': '0-9'
+          when 'space': ' '
+          when 'punctuation': ''
+          when 'control': ''
+          else ''
+        end
+      }.join('')
+
+      args[0].collect{ |a|
+        a.to_s.gsub(/[^#{classes}]+/, replacement)
+      }
+    end
+      
 
     ###
     ### Boolean

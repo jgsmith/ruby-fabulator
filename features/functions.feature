@@ -25,7 +25,7 @@ Feature: Function calls and lists
   Scenario: Adding number of elements in a histogram, part 2
     Given a context
      And the prefix f as "http://dh.tamu.edu/ns/fabulator/1.0#"
-    When I run the expression (let $i := (1 .. 6) + (1 .. 6); f:sum(f:histogram($i)))
+    When I run the expression (let $i := (1 .. 6) + (1 .. 6); f:sum(f:histogram($i)/*))
     Then I should get 1 item
      And item 0 should be [6*6]
 
@@ -93,3 +93,17 @@ Feature: Function calls and lists
     When I run the expression (f:false())
     Then I should get 1 item
       And item 0 should be false
+
+  Scenario: Replacing unwanted characters in a string
+    Given a context
+     And the prefix f as "http://dh.tamu.edu/ns/fabulator/1.0#"
+    When I run the expression (f:keep("foo bar baz! ter", ('alpha', 'space', 'numeric')))
+    Then I should get 1 item
+      And item 0 should be ['foo bar baz  ter']
+
+  Scenario: Replacing unwanted characters in a string
+    Given a context
+     And the prefix f as "http://dh.tamu.edu/ns/fabulator/1.0#"
+    When I run the expression (f:keep("foo bar baz! ter", ('alpha', 'numeric')))
+    Then I should get 1 item
+      And item 0 should be ['foo bar baz ter']

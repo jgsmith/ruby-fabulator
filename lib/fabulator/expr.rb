@@ -18,3 +18,10 @@ require 'fabulator/expr/predicates'
 require 'fabulator/expr/step'
 
 require 'fabulator/expr/statement_list'
+
+module Fabulator
+  module Expr
+    class ParserError < StandardError
+    end
+  end
+end

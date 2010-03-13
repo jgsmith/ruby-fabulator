@@ -124,7 +124,7 @@ module Fabulator
         added = false
         [d1, d2].each do |d|
           d.keys.each do |t|
-            if @@types[d[t][:t][0]][d[t][:t][1]].has_key?(:to)
+            if (@@types[d[t][:t][0]][d[t][:t][1]].has_key?(:to) rescue false)
               @@types[d[t][:t][0]][d[t][:t][1]][:to].each do |conv|
                 w = d[t][:w] * conv[:weight]
                 conv_key = conv[:type].join('')
@@ -282,11 +282,11 @@ module Fabulator
         if r.is_a?(Fabulator::Expr::Node) 
           r 
         elsif r.is_a?(Hash)
-          rr = [ ]
+          rr = context.anon_node(nil, nil)
           r.each_pair do |k,v|
             rrr = context.anon_node(v, self.function_return_type(nom))
             rrr.name = k
-            rr << rrr
+            rr.add_child(rrr)
           end
           rr
         else
@@ -400,6 +400,21 @@ module Fabulator
         #self.function_args[name] = { :return => returns, :takes => takes }
         Fabulator::ActionLib.last_description = nil
         define_method("fctn:#{name}", &block)
+      end
+
+      def function_decl(name, expr, ns)
+        parser = Fabulator::Expr::Parser.new
+        fctn_body = parser.parse(expr, ns)
+
+        function name do |ctx, args, ns|
+          ctx.push_var_ctx
+          args.size.times do |i|
+            ctx.set_var((i+1).to_s, args[i])
+          end
+          res = fctn_body.run(ctx)
+          ctx.pop_var_ctx
+          res
+        end
       end
 
       def filter(name, &block)

@@ -86,8 +86,12 @@ module Fabulator
       end
 
       def anon_node(v, t = nil)
-        n = self.class.new(self.axis, self.roots, v, [])
-        n.vtype = t
+        if v.is_a?(Array)
+          n = self.class.new(self.axis, self.roots, nil, v.collect{ |vv| self.anon_node(vv, t) })
+        else
+          n = self.class.new(self.axis, self.roots, v, [])
+          n.vtype = t unless t.nil?
+        end
         n
       end
 

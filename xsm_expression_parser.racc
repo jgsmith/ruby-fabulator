@@ -20,6 +20,15 @@ rule
     | if_expr
     | for_expr
     | quant_expr
+    | with_expr
+
+  with_expr: expr WITH expr_set_list { result = Fabulator::Expr::WithExpr(val[0], val[2]) }
+
+  expr_set_list: expr_set { result = Fabulator::Expr::StatementList.new; result.add_statement(val[0]) }
+    | expr_set_list COMMA expr_set { result = val[0]; result.add_statement(val[2]) }
+
+  expr_set: relative_location_path COLON_EQUAL expr { result = Fabulator::Expr::DataSet(val[0], val[2]) }
+    | absolute_location_path COLON_EQUAL expr { result = Fabulator::Expr::DataSet(val[0], val[2]) }
 
   num_expr: additive_expr
     | range_expr
@@ -28,7 +37,6 @@ rule
     | num_list COMMA num_expr { result = val[0] + [ val[2] ] }
 
   let_expr: LET DOLLAR_QNAME COLON_EQUAL expr { result = Fabulator::Expr::LetExpr.new(val[1], val[3]) }
-  
 
   if_expr: IF LP expr RP THEN expr ELSE expr { result = Fabulator::Expr::IfExpr.new(val[2], val[5], val[7]) }
     | IF LP expr RP THEN expr { result = Fabulator::Expr::IfExpr.new(val[2], val[5], nil) }
@@ -166,6 +174,8 @@ end
     @source = t
     @curpos = 0
     @namespaces = { }
+    @line = 0
+    @col = 0
 
     if xml.nil?
       @namespaces = { }
@@ -188,6 +198,11 @@ end
     do_parse
   end
 
+  def on_error(*args)
+    raise Fabulator::Expr::ParserError.new("unable to parse '#{args[1]}' near line #{@line}, column #{@col}")
+  end
+
+
   @@regex = {
     :simple_tokens => %r{\.\.|::|!=|>=|<=|\/\/|:=|\.|@|[*]|\(|\)|\[|\]|\{|\}|\/|\||\+|-|=|>|<|&|,|;},
     :ncname => %r{(?:[a-zA-Z_][-a-zA-Z0-9_.]*)},
@@ -201,6 +216,7 @@ end
   @@regex[:name_colon_star] = %r{(#{@@regex[:ncname]}:\*)}
   @@regex[:qname] = %r{((?:#{@@regex[:ncname]}:)?#{@@regex[:ncname]})}
   @@regex[:dollar_qname] = %r{\$#{@@regex[:qname]}}
+  @@regex[:dollar_int] = %r{\$([0-9]+)}
   @@regex[:function_name] = %r{#{@@regex[:qname]}\s*(?=\([^:])}
 
   @@ops = {
@@ -241,7 +257,7 @@ end
     == & && ||
   }.split(/\s*/), '[', ',', '$' ].each { |t| @@preceding_tokens[t] = true }
 
-  @@regex[:general] = Regexp.compile(%{^(?:#{@@regex[:function_name]}|#{@@regex[:axis]}|#{@@regex[:name_colon_star]}|#{@@regex[:qname]}|('[^']*'|"[^"]*")|#{@@regex[:number]}|#{@@regex[:dollar_qname]}|(#{@@regex[:simple_tokens]}))})
+  @@regex[:general] = Regexp.compile(%{^(?:#{@@regex[:function_name]}|#{@@regex[:axis]}|#{@@regex[:name_colon_star]}|#{@@regex[:qname]}|('[^']*'|"[^"]*")|#{@@regex[:number]}|#{@@regex[:dollar_qname]}|#{@@regex[:dollar_int]}|(#{@@regex[:simple_tokens]}))})
 
   def next_token  
     @token = nil
@@ -250,6 +266,10 @@ end
     while @curpos < @source.length && @source[@curpos..@curpos] =~ /\s/ do
       if @source[@curpos..@curpos] =~ /\n/
         new_line = new_line + 1
+        @line = @line + 1
+        @col = 0
+      else
+        @col = @col + 1
       end
       @curpos = @curpos + 1
       white_space = white_space + 1
@@ -262,16 +282,20 @@ end
     if @curpos < @source.length && @source[@curpos..@curpos+1] == '(:'
       comment_depth = 1
       @curpos = @curpos + 2
+      @col = @col + 2
       while comment_depth > 0 && @curpos < @source.length
         if @source[@curpos..@curpos+1] == '(:'
           comment_depth = comment_depth + 1
           @curpos = @curpos + 1
+          @col = @col + 1
         end
         if @source[@curpos..@curpos+1] == ':)'
           comment_depth = comment_depth - 1
           @curpos = @curpos + 1
+          @col = @col + 1
         end
         @curpos = @curpos + 1
+        @col = @col + 1
       end
       white_space = white_space + 1
     end
@@ -279,6 +303,10 @@ end
     while @curpos < @source.length && @source[@curpos..@curpos] =~ /\s/ do
       if @source[@curpos..@curpos] =~ /\n/
         new_line = new_line + 1
+        @line = @line + 1
+        @col = 0
+      else
+        @col = @col + 1
       end
       @curpos = @curpos + 1
       white_space = white_space + 1
@@ -399,15 +427,26 @@ end
         elsif !res[5].nil?
           s = res[5]
           s = s[1..s.length-2]
+          @curpos = @curpos + s.length
+          @col = @col + s.length
+          s.gsub!(/\\n/, "\n")
+          @curpos = @curpos - s.length
+          @col = @col - s.length
           @token = [ :LITERAL, s ]
           @curpos = @curpos + 2  # the quotes
+          @col = @col + 2
         elsif !res[6].nil?
           @token = [ :NUMBER, res[6] ]
         elsif !res[7].nil?
           @curpos = @curpos + 1
+          @col = @col + 1
           @token = [ :DOLLAR_QNAME, res[7] ]
         elsif !res[8].nil?
-          @token = [ @@ops[res[8]] || res[8], res[8] ]
+          @curpos = @curpos + 1
+          @col = @col + 1
+          @token = [ :DOLLAR_QNAME, res[8] ]
+        elsif !res[9].nil?
+          @token = [ @@ops[res[9]] || res[9], res[9] ]
         else
           raise "Failed to parse '#{@source}' at #{@curpos}: #{@source[@curpos..@source.length-1]}"
         end
@@ -416,6 +455,7 @@ end
 
     if !@token[1].nil?
       @curpos = @curpos + @token[1].length
+      @col = @col + @token[1].length
     end
     @last_token = @token
     return @token
