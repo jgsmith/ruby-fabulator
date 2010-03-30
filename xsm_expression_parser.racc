@@ -22,13 +22,14 @@ rule
     | quant_expr
     | with_expr
 
-  with_expr: expr WITH expr_set_list { result = Fabulator::Expr::WithExpr(val[0], val[2]) }
+  with_expr: expr WITH expr_set_list { result = Fabulator::Expr::WithExpr.new(val[0], val[2]) }
 
   expr_set_list: expr_set { result = Fabulator::Expr::StatementList.new; result.add_statement(val[0]) }
     | expr_set_list COMMA expr_set { result = val[0]; result.add_statement(val[2]) }
 
-  expr_set: relative_location_path COLON_EQUAL expr { result = Fabulator::Expr::DataSet(val[0], val[2]) }
-    | absolute_location_path COLON_EQUAL expr { result = Fabulator::Expr::DataSet(val[0], val[2]) }
+  expr_set: path_expr COLON_EQUAL expr { result = Fabulator::Expr::DataSet.new(val[0], val[2]) }
+
+    #| absolute_location_path COLON_EQUAL expr { result = Fabulator::Expr::DataSet.new(val[0], val[2]) }
 
   num_expr: additive_expr
     | range_expr
@@ -421,6 +422,8 @@ end
               @token = [ :THEN, 'then' ]
             when 'else':
               @token = [ :ELSE, 'else' ]
+            when 'with':
+              @token = [ :WITH, 'with' ]
             else
               @token = [ :QNAME, res[4] ]
           end

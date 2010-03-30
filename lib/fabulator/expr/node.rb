@@ -177,27 +177,32 @@ module Fabulator
           v = parser.parse(v) if v.is_a?(String)
         end
         return [] if p.nil?
-        tgt = p.run(self, true).first
-        src = nil
-        if !v.nil?
-          src = v.run(self)
-        end
-        tgt.prune
+        p = [ p ] if !p.is_a?(Array)
         ret = [ ]
-        if src.nil? || src.empty?
-          tgt.value = nil
-          ret << tgt
-        elsif src.size == 1
-          tgt.copy(src.first)
-          ret << tgt
-        else
-          p = tgt.parent
-          nom = tgt.name
-          p.prune(p.children(nom))
-          src.each do |s|
-            tgt = p.create_child(nom,nil)
-            tgt.copy(s)
-            ret << tgt
+        p.each do |pp|
+          tgts = pp.run(self, true)
+          src = nil
+          if !v.nil?
+            src = v.run(self)
+          end
+          tgts.each do |tgt|
+            tgt.prune
+            if src.nil? || src.empty?
+              tgt.value = nil
+              ret << tgt
+            elsif src.size == 1
+              tgt.copy(src.first)
+              ret << tgt
+            else
+              pp = tgt.parent
+              nom = tgt.name
+              pp.prune(pp.children(nom))
+              src.each do |s|
+                tgt = pp.create_child(nom,nil)
+                tgt.copy(s)
+                ret << tgt
+              end
+            end
           end
         end
         ret

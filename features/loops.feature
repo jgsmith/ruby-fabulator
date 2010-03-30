@@ -31,3 +31,23 @@ Feature: Loops
    When I run the expression (f:sum(for $i in 1 to 3, $j in 2 to 4 return $i*$j))
    Then I should get 1 item
      And item 0 should be [54]
+
+ @with
+ Scenario: 'For' with annotation
+   Given a context
+     And the prefix f as "http://dh.tamu.edu/ns/fabulator/1.0#"
+   When I run the expression (for $i in 1 to 3 return $i with ./line := 4)
+   Then I should get 3 items
+     And item 0 should be [1]
+     And item 1 should be [2]
+     And item 2 should be [3]
+
+ @with
+ Scenario: 'For' with annotation
+   Given a context
+     And the prefix f as "http://dh.tamu.edu/ns/fabulator/1.0#"
+   When I run the expression ((for $i in 1 to 3 return $i with ./line := 4)/line)
+   Then I should get 3 items
+     And item 0 should be [4]
+     And item 1 should be [4]
+     And item 2 should be [4]
