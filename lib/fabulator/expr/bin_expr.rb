@@ -24,11 +24,16 @@ module Fabulator
         l.each do |i|
           r.each do |j|
             ut = Fabulator::ActionLib.unify_types([ i.vtype, j.vtype ])
-            calc = self.calculate(i.to(ut).value,j.to(ut).value)
+            op = ActionLib.find_op(ut, self.op)
+            if(op && op[:proc])
+              calc = op[:proc].call(i.to(ut), j.to(ut))
+            else
+              calc = self.calculate(i.to(ut).value,j.to(ut).value)
+            end
             calc = [ calc ] unless calc.is_a?(Array)
 
             rut = self.result_type(ut)
-            res = res + calc.collect { |c| context.anon_node(c, rut) }
+            res = res + calc.collect { |c| c.is_a?(Fabulator::Expr::Node) ? c : context.anon_node(c, rut) }
           end
         end
         return res
@@ -40,6 +45,10 @@ module Fabulator
     end
 
     class AddExpr < BinExpr
+      def op
+        :plus
+      end
+
       def calculate(a,b)
         return nil if a.nil? || b.nil?
         a + b
@@ -47,6 +56,10 @@ module Fabulator
     end
 
     class SubExpr < BinExpr
+      def op
+        :minus
+      end
+
       def calculate(a,b)
         return nil if a.nil? || b.nil?
         a - b
@@ -64,6 +77,10 @@ module Fabulator
     end
 
     class LtExpr < BoolBinExpr
+      def op
+        :lt
+      end
+
       def calculate(a,b)
         return nil if a.nil? || b.nil?
         a < b
@@ -71,6 +88,10 @@ module Fabulator
     end
 
     class LteExpr < BoolBinExpr
+      def op
+        :lte
+      end
+
       def calculate(a,b)
         return nil if a.nil? || b.nil?
         a <= b
@@ -78,18 +99,30 @@ module Fabulator
     end
 
     class EqExpr < BoolBinExpr
+      def op
+        :eq
+      end
+
       def calculate(a,b)
         a == b
       end
     end
 
     class NeqExpr < BoolBinExpr
+      def op
+        :neq
+      end
+
       def calculate(a,b)
         a != b
       end
     end
 
     class MpyExpr < BinExpr
+      def op
+        :times
+      end
+
       def calculate(a,b)
         return nil if a.nil? || b.nil?
         a * b
@@ -97,6 +130,10 @@ module Fabulator
     end
 
     class DivExpr < BinExpr
+      def op
+        :div
+      end
+
       def calculate(a,b)
         return nil if b.nil? || a.nil?
         a / b
@@ -104,6 +141,10 @@ module Fabulator
     end
 
     class ModExpr < BinExpr
+      def op
+        :mod
+      end
+
       def calculate(a,b)
         return nil if a.nil? || b.nil?
         a % b
@@ -111,6 +152,10 @@ module Fabulator
     end
 
     class RangeExpr < BinExpr
+      def op
+        :range
+      end
+
       def expr_type(context)
         [ FAB_NS, 'numeric' ]
       end

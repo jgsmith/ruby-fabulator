@@ -102,13 +102,13 @@ module Fabulator
 
     NUMERIC = [ FAB_NS, 'numeric' ]
 
-    function 'abs', NUMERIC, [ NUMERIC ] do |ctx, args, ns|
+    function 'abs' do |ctx, args, ns|
       args[0].collect { |i|
         i.value.abs
       }
     end
 
-    function 'ceiling', NUMERIC, [ NUMERIC ] do |ctx, args, ns|
+    function 'ceiling' do |ctx, args, ns|
       args[0].collect { |i|
         i.value.to_d.ceil.to_r
       }
@@ -120,8 +120,11 @@ module Fabulator
       }
     end
 
-    function 'sum', NUMERIC, [ NUMERIC ] do |ctx, args, ns|
-      res = ActionLib.find_op(args[0].first.vtype, :zero)
+    function 'sum' do |ctx, args, ns|
+      zero = ActionLib.find_op(args[0].first.vtype, :zero)
+      if(zero && zero[:proc])
+        res = zero[:proc].call(ctx)
+      end
       res = 0 if res.nil?
       return [ res ] if args.empty?
       return args[1] if args[0].empty? && args.size > 1
@@ -130,7 +133,6 @@ module Fabulator
 
       if op.nil? || op[:proc].nil?
         args[0].each do |a|
-          #puts "adding #{YAML::dump(a)}"
           res = res + a.value
         end
       else

@@ -11,9 +11,7 @@ module Fabulator
 
       def expr_type(context)
         klass = ActionLib.namespaces[@ns]
-        rt = klass.function_return_type(@name)
-        puts "expr_type for #{@name} => #{(rt[1] rescue 'nil')}"
-        rt
+        (klass.function_return_type(@name) rescue nil)
       end
 
       def run(context, autovivify = false)

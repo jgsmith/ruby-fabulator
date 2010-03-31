@@ -64,8 +64,11 @@ module Fabulator
       end
 
       def to(t)
-        if @vtype.nil? || t.nil? || @vtype.join('') == t.join('')
+        if @vtype.nil? || t.nil?
           return self.anon_node(@value, @vtype)
+        end
+        if @vtype.join('') == t.join('')
+          return self
         end
         # see if there's a path between @vtype and t
         #   if so, do the conversion
@@ -110,7 +113,7 @@ module Fabulator
       end
 
       def get_var(n)
-        return parent.get_var(n,v) if @parent && @parent != self
+        return @roots['data'].get_var(n) if @roots['data'] && @roots['data'] != self
         @e_ctx[:vars] ||= [ ]
         @e_ctx[:vars].each do |vs|
           return vs[n] if vs.has_key?(n)
@@ -119,13 +122,13 @@ module Fabulator
       end
 
       def push_var_ctx
-        return parent.push_var_ctx if @parent && @parent != self
+        return @roots['data'].push_var_ctx if @roots['data'] && @roots['data'] != self
         @e_ctx[:vars] ||= [ ]
         @e_ctx[:vars].unshift { }
       end
 
       def pop_var_ctx
-        return parent.pop_var_ctx if @parent && @parent != self
+        return @roots['data'].pop_var_ctx if @roots['data'] && @roots['data'] != self
         @e_ctx[:vars] ||= [ ]
         @e_ctx[:vars].shift
       end
@@ -144,16 +147,18 @@ module Fabulator
         end
       end
 
-      def clone()
-        node = self.class.new(@axis, @roots, self.value, [], nil)
+      def clone(deep = false)
+        node = self.anon_node(self.value, self.vtype)
         node.name = self.name
-        node.attributes = self.attributes.collect { |a| a.clone }
+        node.attributes = self.attributes.collect { |a| a.clone(deep) }
+        node.copy(self) if deep
         node
       end
 
-      def create_child(n,v = nil)
+      def create_child(n,v = nil,t=nil)
         node = self.class.new(@axis, @roots, v, [], self)
         node.name = n
+        node.vtype = t unless t.nil?
         @children << node
         node
       end
@@ -266,7 +271,6 @@ module Fabulator
         if selection.is_a?(String)
           p = Fabulator::Expr::Parser.new
           selection = p.parse(selection, ns)
-Rails.logger.info(YAML::dump(selection))
         end
 
         if selection.nil?
@@ -291,7 +295,7 @@ Rails.logger.info(YAML::dump(selection))
           set = [ ]
           current.each do |cc|
             if c.is_a?(String)
-              cset = cc.children.select{|c3| c3.name == c }
+              cset = cc.children(c) # .select{|c3| c3.name == c }
             else
               #Rails.logger.info("running: [#{c}]")
               cc.push_var_ctx

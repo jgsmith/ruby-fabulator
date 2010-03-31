@@ -46,9 +46,9 @@ module Fabulator
         end
         return [ ] if n.nil?
         if n == '*'
-          possible = context.children
+          possible = context.is_a?(Array) ? context.collect{|c| c.children}.flatten : context.children
         else
-          possible = context.children(n)
+          possible = context.is_a?(Array) ? context.collect{|c| c.children(n)}.flatten : context.children(n)
           if possible.empty? && autovivify
             possible = context.traverse_path([ n ], true)
           end
