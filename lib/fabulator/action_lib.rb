@@ -218,13 +218,23 @@ module Fabulator
 
       parser = Fabulator::Expr::Parser.new
 
+      spaces = { }
+      xml.namespaces.each do |ns|
+        spaces[ns.prefix] = ns.href
+      end
+      begin
+        spaces[''] = xml.namespaces.default.href
+      rescue
+      end
+
+
       @@attributes.each do |a|
         v = xml.attributes.get_attribute_ns(a[0], a[1])
         if !v.nil?
           ret[a[0]] = {} if ret[a[0]].nil?
           v = v.value
           if !a[2][:expression] && v =~ /^\{(.*)\}$/
-            v = (parser.parse($1) rescue nil)
+            v = (parser.parse($1, spaces) rescue nil)
           else
             v = Fabulator::Expr::Literal.new(v)
           end
@@ -256,9 +266,18 @@ module Fabulator
         end
         if !e.nil?
           p = Fabulator::Expr::Parser.new
-          v = p.parse(e)
+          spaces = { }
+          xml.namespaces.each do |ns|
+            spaces[ns.prefix] = ns.href
+          end
+          begin
+            spaces[''] = xml.namespaces.default.href
+          rescue
+          end
+
+          v = p.parse(e, spaces)
         else
-          v = Fabulator::Expr::Literal.new(v, [ FAB_NS, v =~ /^\d+$/ ? 'integer' : v =~ /^\d*\.\d+$/ || v =~ /^\d+\.\d*$/ ? 'real' : 'string' ])
+          v = Fabulator::Expr::Literal.new(v, [ FAB_NS, v =~ /^\d+$/ ? 'numeric' : v =~ /^\d*\.\d+$/ || v =~ /^\d+\.\d*$/ ? 'numeric' : 'string' ])
         end
       end
       v
