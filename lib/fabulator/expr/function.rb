@@ -32,5 +32,20 @@ module Fabulator
         @args.collect{ |arg| arg.run(context,autovivify).flatten }
       end
     end
+
+    class Tuple
+      def initialize(args)
+        @args = args
+      end
+
+      def run(context, autovivify = false)
+        items = @args.collect{ |arg| arg.run(context,autovivify).flatten }.flatten
+        ret = context.anon_node(nil, [ FAB_NS, 'tuple' ])
+        ret.value = items
+        ret.vtype = [ FAB_NS, 'tuple' ]
+        ret.set_attribute('size', items.size)
+        [ ret ]
+      end
+    end
   end
 end

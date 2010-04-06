@@ -63,19 +63,24 @@ rule
     | additive_expr EQ additive_expr { result = Fabulator::Expr::EqExpr.new(val[0], val[2]) }
     | additive_expr NEQ additive_expr { result = Fabulator::Expr::NeqExpr.new(val[0], val[2]) }
 
+  tuple: LP LB args RB RP { result = Fabulator::Expr::Tuple.new(val[2]) }
+
+#    | LT args GT { result = Fabulator::Expr::Tuple.new(val[1]) }
+
   relational_expr: additive_expr
     | additive_expr LT additive_expr { result = Fabulator::Expr::LtExpr.new(val[0], val[2]) }
     | additive_expr GT additive_expr { result = Fabulator::Expr::LtExpr.new(val[2], val[0]) }
     | additive_expr LTE additive_expr { result = Fabulator::Expr::LteExpr.new(val[0], val[2]) }
     | additive_expr GTE additive_expr { result = Fabulator::Expr::LteExpr.new(val[2], val[0]) }
-    | additive_expr LT additive_expr LT additive_expr { result = Fabulator::Expr::Between.new(val[2], val[0], val[4]) }
-    | additive_expr LT additive_expr LTE additive_expr { }
-    | additive_expr LTE additive_expr LT additive_expr { }
-    | additive_expr LTE additive_expr LTE additive_expr { }
-    | additive_expr GT additive_expr GT additive_expr { result = Fabulator::Expr::Between.new(val[2], val[4], val[0]) }
-    | additive_expr GT additive_expr GTE additive_expr { }
-    | additive_expr GTE additive_expr GT additive_expr { }
-    | additive_expr GTE additive_expr GTE additive_expr { }
+
+#    | additive_expr LT additive_expr LT additive_expr { result = Fabulator::Expr::Between.new(val[2], val[0], val[4]) }
+#    | additive_expr LT additive_expr LTE additive_expr { }
+#    | additive_expr LTE additive_expr LT additive_expr { }
+#    | additive_expr LTE additive_expr LTE additive_expr { }
+#    | additive_expr GT additive_expr GT additive_expr { result = Fabulator::Expr::Between.new(val[2], val[4], val[0]) }
+#    | additive_expr GT additive_expr GTE additive_expr { }
+#    | additive_expr GTE additive_expr GT additive_expr { }
+#    | additive_expr GTE additive_expr GTE additive_expr { }
 
   range_expr: additive_expr DOT_DOT additive_expr { result = Fabulator::Expr::RangeExpr.new(val[0], val[2]) }
     | additive_expr TO additive_expr { result = Fabulator::Expr::RangeExpr.new(val[0], val[2]) }
@@ -146,11 +151,13 @@ rule
     DOLLAR_QNAME { result = Fabulator::Expr::Var.new(val[0]) }
     | LP expr RP { result = val[1] }
     | list
+    | tuple
     | LITERAL { result = Fabulator::Expr::Literal.new(val[0], [ Fabulator::FAB_NS, 'string' ]) }
     | NUMBER { result = Fabulator::Expr::Literal.new(val[0] =~ /\./ ? val[0].to_d.to_r : val[0].to_i.to_r, [ Fabulator::FAB_NS, 'numeric' ]) }
     | FUNCTION_NAME list { result = Fabulator::Expr::Function.new(@namespaces, val[0], val[1]) }
 
   list: LP opt_args RP { result = Fabulator::Expr::List.new(val[1]) }
+
 
   opt_args: { result = [ ] }
     | args 
@@ -200,7 +207,7 @@ end
   end
 
   def on_error(*args)
-    raise Fabulator::Expr::ParserError.new("unable to parse '#{args[1]}' near line #{@line}, column #{@col}")
+    raise Fabulator::Expr::ParserError.new("unable to parse '#{args[1]}' near line #{@line + 1}, column #{@col}")
   end
 
 
