@@ -63,6 +63,22 @@ module Fabulator
       return @actions.run(context)
     end
   end
+
+  class Goto  
+    def compile_xml(xml, c_attrs = {})
+      @test = ActionLib.get_local_attr(xml, FAB_NS, 'test', { :eval => true })
+      @state = ActionLib.get_local_attr(xml, FAB_NS, 'view')   
+      self
+    end
+
+    def run(context, autovivify = false)
+      raise Fabulator::StateChangeException, @state, caller if @test.nil?
+      test_res = @test.run(context).collect{ |a| !!a.value }
+      return [ ] if test_res.nil? || test_res.empty? || !test_res.include?(true)
+      raise Fabulator::StateChangeException, @state, caller
+    end
+  end
+
   end
   end
 end

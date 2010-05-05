@@ -29,6 +29,28 @@ Feature: Function calls and lists
     Then I should get 1 item
      And item 0 should be [6*6]
 
+  Scenario: Histogram of text
+    Given a context
+     And the prefix f as "http://dh.tamu.edu/ns/fabulator/1.0#"
+    When I run the expression (let $t := "The quick brown fox jumped over the brown spotted cow"; f:histogram(f:split($t, " ")/*)/brown)
+    Then I should get 1 item
+     And item 0 should be [2]
+
+  Scenario: Histogram of text
+    Given a context
+     And the prefix f as "http://dh.tamu.edu/ns/fabulator/1.0#"
+    When I run the expression (let $t := f:lower-case("The quick brown fox jumped over the brown spotted cow"); f:consolidate( (f:histogram(f:split($t, " ")/*), f:histogram(f:split($t, " ")/*)) )/brown)
+    Then I should get 1 item
+     And item 0 should be [4]
+
+  @hist
+  Scenario: Histogram of text with attributes
+    Given a context
+     And the prefix f as "http://dh.tamu.edu/ns/fabulator/1.0#"
+    When I run the expression (let $t := f:lower-case("The quick brown fox jumped over the brown spotted cow"); f:consolidate( ( (f:histogram(f:split($t, " ")/*) with ./*/@line := 1), (f:histogram(f:split($t, " ")/*) with ./*/@line := 2)) )/brown)
+    Then I should get 1 item
+     And item 0 should be [4]
+
   Scenario: Joining a range of numbers
     Given a context
      And the prefix f as "http://dh.tamu.edu/ns/fabulator/1.0#"

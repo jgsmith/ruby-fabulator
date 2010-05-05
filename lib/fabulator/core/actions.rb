@@ -18,6 +18,7 @@ module Fabulator
     action 'considering', Considering
     action 'variable', Variable
     action 'if', If
+    action 'go-to', Goto
 
     ###
     ### core types
@@ -94,7 +95,6 @@ module Fabulator
         },
       ],
     }
-
 
     ###
     ### Numeric functions
@@ -176,7 +176,7 @@ module Fabulator
       [res]
     end
 
-    function 'histogram', NUMERIC, [ NUMERIC ] do |ctx, args, ns|
+    function 'histogram' do |ctx, args, ns|
       acc = { }
       args[0].each do |a|
         acc[a.to_s] ||= 0
@@ -185,6 +185,30 @@ module Fabulator
       acc
     end
 
+    function 'consolidate' do |ctx, args, ns|
+      acc = { }
+      attrs = { }
+      args[0].each do |a|
+        a.children.each do |c|
+          acc[c.name] ||= 0
+          acc[c.name] = acc[c.name] + c.value
+          attrs[c.name] ||= { }
+          c.attributes.each do |a|
+            attrs[c.name][a.name] ||= [ ]
+            attrs[c.name][a.name] << a.value
+          end
+        end
+      end
+
+      ret = ctx.anon_node(nil)
+      acc.each_pair do |tok, cnt|
+        t = ret.create_child(tok, cnt, [FAB_NS, 'numeric'])
+        attrs[tok].each_pair do |a, vs|
+          t.add_attribute(a, vs.flatten)
+        end
+      end
+      ret
+    end
     ###
     ### String functions
     ###

@@ -50,6 +50,7 @@ When /I run the (expression \(.*\))/ do |exp|
   @cp = @data
   #puts YAML::dump(@expr)
   @result = @expr.run(@data)
+  #puts YAML::dump(@result)
 end
 
 When /I unify the types? (.*)/ do |ts|
@@ -91,7 +92,11 @@ Then /item (\d+) should be true/ do |i|
 end
 
 Then /the (expression \(.*\)) should equal (\[.*\])/ do |x, y|
-  x.run(@data).first.value.should == y.run(@data).first.value
+  a = x.run(@data)
+  b = y.run(@data)
+  #puts YAML::dump(a)
+  #x.run(@data).first.value.to_s.should == y.run(@data).first.value.to_s
+  a.first.value.should == b.first.value
 end
 
 Then /the (expression \(.*\)) should be nil/ do |x|

@@ -62,42 +62,17 @@ module Fabulator
       context.roots['ext'] = param_context
       param_context.merge_data(my_params)
 
-      filtered = self.apply_filters(@select.run(param_context))
+      filtered = self.apply_filters(@select.nil? ? param_context : @select.run(param_context))
 
       # 'filtered' has a list of all parameters that have been passed through
       # some kind of filter -- not necessarily ones that have passed a
       # constraint
 
-      res = self.apply_constraints(@select.run(param_context))
+      res = self.apply_constraints(@select.nil? ? param_context : @select.run(param_context))
 
-#      @groups.each do |g|
-#        if !g.test_constraints(f_p)
-#          # remove fields constrained by g
-#          res[:invalid] = res[:invalid] + g.param_names
-#          # need to get errors
-#        end
-#      end
-
-#      @params.each do |p|
-#        if !p.test_constraints(param_context)
-#          res[:invalid] = res[:invalid] + p.names
-#        end
-#      end
-
-#      if @select == ''
-#        res[:valid] = f_p
-#      else
-#        res[:valid] = { }
-#        f_p.each_pair do |k,v|
-#          res[:valid][@select + k] = v
-#        end
-#      end
-      #res[:valid] = param_context.paths
-      #res[:unknown] = param_context.paths
       res[:unknown] = [ ]
 
       res[:invalid].uniq!
-#      res[:invalid] = res[:invalid].collect{|k| @select + k}
       res[:invalid].each do |k|
         res[:valid].delete(k.path)
         res[:unknown].delete(k.path)

@@ -118,10 +118,15 @@ module Fabulator
               n
             end
           else
-            c.get_attribute(nom)
+            t = c.get_attribute(nom)
+            if(t.nil? && autovivify)
+              c.set_attribute(nom, nil)
+              t = c.get_attribute(nom)
+            end
+            t
           end
         }
-        res - [ nil ]
+        res = res - [ nil ]
       end
     end
   end
