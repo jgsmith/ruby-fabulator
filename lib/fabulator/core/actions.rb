@@ -372,6 +372,10 @@ module Fabulator
       # we want to track language for rdf purposes?
     end
 
+    function 'path' do |ctx, args, ns|
+      return args[0].collect{|a| a.path }
+    end
+
     ###
     ### Sequences
     ###
