@@ -15,11 +15,11 @@ module Fabulator
         if @primary_expr.nil?
           possible = [ context ]
         else
-          begin
+          #begin
             possible = @primary_expr.run(context,autovivify).uniq
-          rescue
-            possible = [ context ]
-          end
+          #rescue
+          #  possible = [ context ]
+          #end
         end
 
         final = [ ]

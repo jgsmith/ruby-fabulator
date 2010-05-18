@@ -377,7 +377,11 @@ module Fabulator
     end
 
     function 'dump' do |ctx, args, ns|
-      return YAML::dump(args.collect{ |a| a.to_h })
+      args.collect{ |a| 
+        YAML::dump(
+          a.is_a?(Array) ? a.collect{ |aa| aa.to_h } : a.to_h 
+        ) 
+      }
     end
 
     ###

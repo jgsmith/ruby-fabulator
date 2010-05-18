@@ -8,10 +8,11 @@ module Fabulator
       def to_h
         r = { 
           :name => self.name,
-          :attributes => { },
-          :children => self.children.collect { |c| c.to_h },
+        #  :attributes => { },
         }
 
+        cs = self.children.collect { |c| c.to_h }
+        r[:children] = cs unless cs.empty?
         r[:value] = self.value if !self.value.nil?
         r[:type] = self.vtype.join('') if !self.vtype.nil?
 
