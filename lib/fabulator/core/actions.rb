@@ -376,6 +376,10 @@ module Fabulator
       return args[0].collect{|a| a.path }
     end
 
+    function 'dump' do |ctx, args, ns|
+      return YAML::dump(args.collect{ |a| a.to_h })
+    end
+
     ###
     ### Sequences
     ###
