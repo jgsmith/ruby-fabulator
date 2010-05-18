@@ -405,7 +405,7 @@ module Fabulator
     end
 
     function 'count', NUMERIC do |ctx, args, ns|
-      return [ args[0].size.to_d.to_r ]
+      return [ args[0].size ]
     end
 
     ###
