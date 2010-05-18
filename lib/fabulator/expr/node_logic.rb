@@ -6,15 +6,14 @@ module Fabulator
       end
 
       def to_h
-        r = { 
-          :name => self.name,
+        r = { }
         #  :attributes => { },
-        }
 
+        r[:name] = self.name unless self.name.nil?
         cs = self.children.collect { |c| c.to_h }
         r[:children] = cs unless cs.empty?
-        r[:value] = self.value if !self.value.nil?
-        r[:type] = self.vtype.join('') if !self.vtype.nil?
+        r[:value] = self.value unless self.value.nil?
+        r[:type] = self.vtype.join('') unless self.vtype.nil?
 
         r
       end
@@ -208,6 +207,7 @@ module Fabulator
           while !p.parent.nil? && p.parent != self
             p = p.parent
           end
+          self.roots[a] = p unless a.nil? || a == ''
           return p
         else
           self.roots[a.nil? ? self.axis : a]
