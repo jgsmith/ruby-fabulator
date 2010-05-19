@@ -188,6 +188,7 @@ module Fabulator
     function 'consolidate' do |ctx, args, ns|
       acc = { }
       attrs = { }
+      children = { }
       args[0].each do |a|
         a.children.each do |c|
           acc[c.name] ||= 0
@@ -197,6 +198,8 @@ module Fabulator
             attrs[c.name][a.name] ||= [ ]
             attrs[c.name][a.name] << a.value
           end
+          children[c.name] ||= [ ]
+          children[c.name] += c.children
         end
       end
 
@@ -205,6 +208,9 @@ module Fabulator
         t = ret.create_child(tok, cnt, [FAB_NS, 'numeric'])
         attrs[tok].each_pair do |a, vs|
           t.set_attribute(a, vs.flatten)
+        end
+        children[tok].each do |child|
+          t.add_child(child.clone)
         end
       end
       ret
