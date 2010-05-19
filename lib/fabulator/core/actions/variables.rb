@@ -8,7 +8,7 @@ module Fabulator
     end
 
     def run(context, autovivify = false)
-      @select.run(context)
+      @select.run(context, autovivify)
     end
   end
 
@@ -39,10 +39,10 @@ module Fabulator
       return [] if @name.nil?
       res = [ ]
       if @select
-        res = @select.run(context)
+        res = @select.run(context, autovivify)
       elsif !@actions.empty?
         @actions.each do |a|
-          res = a.run(context)
+          res = a.run(context, autovivify)
         end
       end
       context.set_var(@name, res)

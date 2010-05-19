@@ -426,12 +426,13 @@ module Fabulator
         fctn_body = parser.parse(expr, ns)
 
         function name do |ctx, args, ns|
-          ctx.push_var_ctx
-          args.size.times do |i|
-            ctx.set_var((i+1).to_s, args[i])
+          res = nil
+          ctx.in_context do
+            args.size.times do |i|
+              ctx.set_var((i+1).to_s, args[i])
+            end
+            res = fctn_body.run(ctx)
           end
-          res = fctn_body.run(ctx)
-          ctx.pop_var_ctx
           res
         end
       end

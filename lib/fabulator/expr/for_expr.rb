@@ -62,12 +62,14 @@ module Fabulator
       end
 
       def each_binding(context, autovivify = false, &block)
-        context.push_var_ctx
-        @expr.run(context, autovivify).each do |e|
-          context.set_var(@var_name, e)
-          yield context
+        context.in_context do
+          @expr.run(context, autovivify).each do |e|
+            #context.in_context do
+              context.set_var(@var_name, e)
+              yield context
+            #end
+          end
         end
-        context.pop_var_ctx
       end
     end
   end

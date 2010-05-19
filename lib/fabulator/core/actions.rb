@@ -204,7 +204,7 @@ module Fabulator
       acc.each_pair do |tok, cnt|
         t = ret.create_child(tok, cnt, [FAB_NS, 'numeric'])
         attrs[tok].each_pair do |a, vs|
-          t.add_attribute(a, vs.flatten)
+          t.set_attribute(a, vs.flatten)
         end
       end
       ret

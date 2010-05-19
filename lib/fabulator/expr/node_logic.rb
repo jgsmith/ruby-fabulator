@@ -78,6 +78,17 @@ module Fabulator
         @e_ctx[:vars].shift
       end
 
+      def in_context(&block)
+        self.push_var_ctx
+        r = nil
+        begin
+          r = yield
+        ensure
+          self.pop_var_ctx
+        end
+        r
+      end
+
       def path
         if self.parent.nil? || self.parent == self
           return self.axis + '::'
@@ -174,7 +185,7 @@ module Fabulator
               cset = cc.children(c)
             else
               cc.push_var_ctx
-              cset = c.run(cc)
+              cset = c.run(cc, autovivify)
               cc.pop_var_ctx
             end
             if cset.nil? || cset.empty?

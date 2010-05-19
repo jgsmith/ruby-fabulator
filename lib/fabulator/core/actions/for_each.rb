@@ -24,19 +24,20 @@ module Fabulator
 
     def run(context, autovivify = false)
       items = @select.run(context)
-      context.push_var_ctx
-      if !@sort.empty?
-        items = items.sort_by{ |i| 
-          context.set_var(@as, i) unless @as.nil? 
-          @sort.collect{|s| s.run(i) }.join("\0") 
-        }
+      res = nil
+      context.in_context do
+        if !@sort.empty?
+          items = items.sort_by{ |i| 
+            context.set_var(@as, i) unless @as.nil? 
+            @sort.collect{|s| s.run(i) }.join("\0") 
+          }
+        end
+        res = [ ]
+        items.each do |i|
+          context.set_var(@as, i) unless @as.nil?
+          res = res + @actions.run(i)
+        end
       end
-      res = [ ]
-      items.each do |i|
-        context.set_var(@as, i) unless @as.nil?
-        res = res + @actions.run(i)
-      end
-      context.pop_var_ctx
       return res
     end
   end
@@ -71,14 +72,13 @@ module Fabulator
         else
           root = Fabulator::Expr::Node.new('data', context.roots, nil, c)
         end
+        res = @actions.run(root)
       else
         root = context
-        root.push_var_ctx
-        root.set_var(@as, c)
-      end
-      res = @actions.run(root)
-      if !@as.nil?
-        root.pop_var_ctx
+        root.in_context do
+          root.set_var(@as, c)
+          res = @actions.run(root)
+        end
       end
       res
     end

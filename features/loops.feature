@@ -20,11 +20,13 @@ Feature: Loops
    Then I should get 1 items
      And item 0 should be false
 
+ @for
  Scenario: 'For' with two variables
    Given a context
    When I run the expression (for $i in 1 .. 3, $j in 2 to 4 return $i*$j)
    Then I should get 9 items
 
+ @for
  Scenario: 'For' within a sum
    Given a context
      And the prefix f as "http://dh.tamu.edu/ns/fabulator/1.0#"
