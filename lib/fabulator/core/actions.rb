@@ -181,7 +181,7 @@ module Fabulator
 
     function 'histogram' do |ctx, args, ns|
       acc = { }
-      args[0].each do |a|
+      args.flatten.each do |a|
         acc[a.to_s] ||= 0
         acc[a.to_s] = acc[a.to_s] + 1
       end
