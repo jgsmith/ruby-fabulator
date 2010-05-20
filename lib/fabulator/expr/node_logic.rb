@@ -32,7 +32,12 @@ module Fabulator
         return self.anon_node(nil,nil) if path.empty?
         v = self
         path.each do |p|
-          vv = p.call(v)
+          vv = nil
+          begin
+            vv = p.call(v)
+          rescue => e
+            raise "Converting to #{t[1]} raised #{e}"
+          end
           if vv.is_a?(Fabulator::Expr::Node)
             v = vv
           else
