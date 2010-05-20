@@ -64,20 +64,6 @@ module Fabulator
         n
       end
 
-#      def copy(c)
-#        @value = c.value
-#        @vtype = c.vtype
-#        c.children.each do |cc|
-#          pos = self.children(cc.name)
-#          if pos.size == 1
-#            pos.first.copy(cc)
-#          else
-#            n = self.create_child(cc.name, cc.value)
-#            n.copy(cc)
-#          end
-#        end
-#      end
-
       def clone(deep = false)
         node = self.anon_node(self.value, self.vtype)
         node.name = self.name

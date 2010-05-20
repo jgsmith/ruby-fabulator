@@ -295,7 +295,13 @@ module Fabulator
     end
 
     def run_function(context, ns, nom, args)
-      ret = send "fctn:#{nom}", context, args, ns
+      ret = []
+
+      begin
+        ret = send "fctn:#{nom}", context, args, ns
+      rescue => e
+        raise "function #{nom} raised #{e}"
+      end
       ret = [ ret ] unless ret.is_a?(Array)
       ret = ret.collect{ |r| 
         if r.is_a?(Fabulator::Expr::Node) 

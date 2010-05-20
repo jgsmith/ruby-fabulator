@@ -259,19 +259,19 @@ module Fabulator
     # f:string-length(node-list) => node-list
     #
     function 'string-length', NUMERIC, [ STRING ] do |ctx, args, ns|
-      args[0].collect{ |a| a.to_s.length }
+      args.flatten.collect{ |a| a.to_s.length }
     end
 
     function 'normalize-space', STRING do |ctx, args, ns|
-      args[0].collect{ |a| a.to_s.gsub(/^\s+/, '').gsub(/\s+$/,'').gsub(/\s+/, ' ') }
+      args.flatten.collect{ |a| a.to_s.gsub(/^\s+/, '').gsub(/\s+$/,'').gsub(/\s+/, ' ') }
     end
 
     function 'upper-case', STRING, [ STRING ] do |ctx, args, ns|
-      args.collect{ |a| a.is_a?(Array) ? a.collect{ |aa| aa.to_s.upcase } : a.to_s.upcase }
+      args.flatten.collect{ |a| a.to_s.upcase }
     end
 
     function 'lower-case', STRING, [ STRING ] do |ctx, args, ns|
-      args.collect{ |a| a.is_a?(Array) ? a.collect{ |aa| aa.to_s.downcase } : a.to_s.downcase }
+      args.flatten.collect{ |a| a.to_s.downcase }
     end
 
     function 'split', STRING, [ STRING, STRING ] do |ctx, args, ns|
