@@ -98,7 +98,7 @@ module Fabulator
         if self.parent.nil? || self.parent == self
           return self.axis + '::'
         else
-          return self.parent.path + '/' + self.name
+          return self.parent.path + '/' + (self.is_attribute? ? '@' : '') + self.name
         end
       end
 
