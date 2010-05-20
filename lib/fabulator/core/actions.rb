@@ -96,6 +96,9 @@ module Fabulator
       ],
     }
 
+    register_type 'expression', {
+    }
+
     ###
     ### Numeric functions
     ###
@@ -264,11 +267,11 @@ module Fabulator
     end
 
     function 'upper-case', STRING, [ STRING ] do |ctx, args, ns|
-      args[0].collect{ |a| a.to_s.upcase }
+      args.collect{ |a| a.is_a?(Array) ? a.collect{ |aa| aa.to_s.upcase } : a.to_s.upcase }
     end
 
     function 'lower-case', STRING, [ STRING ] do |ctx, args, ns|
-      args[0].collect{ |a| a.to_s.downcase }
+      args.collect{ |a| a.is_a?(Array) ? a.collect{ |aa| aa.to_s.downcase } : a.to_s.downcase }
     end
 
     function 'split', STRING, [ STRING, STRING ] do |ctx, args, ns|
@@ -387,6 +390,15 @@ module Fabulator
         YAML::dump(
           a.is_a?(Array) ? a.collect{ |aa| aa.to_h } : a.to_h 
         ) 
+      }
+    end
+
+    function 'eval' do |ctx, args, ns|
+      p = Fabulator::Expr::Parser.new
+      args.collect{ |a|
+        e = a.to_s
+        pe = e.nil? ? nil : p.parse(e,ns)
+        pe.nil? ? [] : pe.run(ctx)
       }
     end
 
