@@ -298,7 +298,14 @@ module Fabulator
       ret = []
 
       begin
-        ret = send "fctn:#{nom}", context, args, ns
+        case self.function_run_type(nom)
+        when :mapping
+          ret = args.flatten.collect { |a| send "fctn:#{nom}", context, a, ns }
+        when :reduction
+          ret = send "fctn:#{nom}", context, args.flatten, ns
+        else
+          ret = send "fctn:#{nom}", context, args, ns
+        end
       rescue => e
         raise "function #{nom} raised #{e}"
       end
@@ -323,6 +330,10 @@ module Fabulator
 
     def function_return_type(name)
       (self.function_descriptions[name][:returns] rescue nil)
+    end
+
+    def function_run_type(name)
+      (self.function_descriptions[name][:type] rescue nil)
     end
 
     def function_args
@@ -427,18 +438,16 @@ module Fabulator
         define_method("fctn:#{name}", &block)
       end
 
-      def reduction(name, returns = nil, takes = nil, &block)
-        self.function_descriptions[name] = { :returns => returns, :takes => takes, :type => :reduction }
+      def reduction(name, opts = {}, &block)
+        self.function_descriptions[name] = { :type => :reduction }.merge(opts)
         self.function_descriptions[name][:description] = Fabulator::ActionLib.last_description if Fabulator::ActionLib.last_description
-        #self.function_args[name] = { :return => returns, :takes => takes }
         Fabulator::ActionLib.last_description = nil
         define_method("fctn:#{name}", &block)
       end
 
-      def mapping(name, returns = nil, takes = nil, &block)
-        self.function_descriptions[name] = { :returns => returns, :takes => takes, :type => :mapping }
+      def mapping(name, opts = {}, &block)
+        self.function_descriptions[name] = { :type => :mapping }.merge(opts)
         self.function_descriptions[name][:description] = Fabulator::ActionLib.last_description if Fabulator::ActionLib.last_description
-        #self.function_args[name] = { :return => returns, :takes => takes }
         Fabulator::ActionLib.last_description = nil
         define_method("fctn:#{name}", &block)
       end
