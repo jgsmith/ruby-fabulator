@@ -64,6 +64,17 @@ module Fabulator
     end
   end
 
+  class Block
+    def compile_xml(xml, c_attrs = {})
+      @actions = ActionLib.compile_actions(xml, c_attrs)
+      self
+    end
+
+    def run(context, autovivify = false)
+       return @actions.run(context,autovivify)
+    end
+  end
+
   class Goto  
     def compile_xml(xml, c_attrs = {})
       @test = ActionLib.get_local_attr(xml, FAB_NS, 'test', { :eval => true })
@@ -76,6 +87,58 @@ module Fabulator
       test_res = @test.run(context).collect{ |a| !!a.value }
       return [ ] if test_res.nil? || test_res.empty? || !test_res.include?(true)
       raise Fabulator::StateChangeException, @state, caller
+    end
+  end
+
+  class Catch
+    def compile_xml(xml, c_attrs = {})
+      @test = ActionLib.get_local_attr(xml, FAB_NS, 'test', { :eval => true })
+      @as = ActionLib.get_local_attr(xml, FAB_NS, 'as')
+      @actions = ActionLib.compile_actions(xml, c_attrs)
+      self
+    end
+
+    def run_test(context)
+      return true if @test.nil?
+      context.in_context do
+        context.set_ctx_var(@as, context) if @as
+        result = @test.run(context).collect{ |a| !!a.value }
+        return false if result.nil? || result.empty? || !result.include?(true)
+        return true
+      end
+    end
+
+    def run(context, autovivify = false)
+      context.in_context do
+        context.set_ctx_var(@as, context) if @as
+        return @actions.run(context)
+      end
+    end
+  end
+
+  class Raise
+    def compile_xml(xml, c_attrs={})
+      @test = ActionLib.get_local_attr(xml, FAB_NS, 'test', { :eval => true })
+      @select = ActionLib.get_local_attr(xml, FAB_NS, 'select', { :eval => true })
+      @actions = ActionLib.compile_actions(xml, c_attrs)
+      self
+    end
+
+    def run(context, autovivify = false)
+      if !@test.nil?
+        test_res = @test.run(context).collect{ |a| !!a.value }
+        return [ ] if test_res.nil? || test_res.empty? || !test_res.include?(true)
+      end
+      res = [ ]
+      if @select.nil? && !@actions.nil?
+        res = @actions.run(context, autovivify)
+      elsif !@select.nil?
+        res = @select.run(context, autovivify)
+      end
+
+      return [ ] if res.empty?
+
+      raise Fabulator::Expr::Exception.new(res.first)
     end
   end
 

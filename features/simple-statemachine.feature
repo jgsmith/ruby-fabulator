@@ -85,3 +85,63 @@ Feature: Simple state machines
       | foo   | bar   |
     Then it should be in the 'stop' state
      And the expression (/foo) should equal ['bar']
+
+  Scenario: simple machine with a <ensure />
+    Given the statemachine
+      """
+        <f:application xmlns:f="http://dh.tamu.edu/ns/fabulator/1.0#">
+          <f:value f:path="/foo" f:select="'bar'" />
+          <f:ensure>
+            <f:value f:path="/foo" f:select="'baz'" />
+          </f:ensure>
+        </f:application>
+      """
+    Then it should be in the 'start' state
+     And the expression (/foo) should equal ['baz']
+
+  Scenario: simple machine with a <catch />
+    Given the statemachine
+      """
+        <f:application xmlns:f="http://dh.tamu.edu/ns/fabulator/1.0#">
+          <f:value f:path="/foo" f:select="'bar'" />
+          <f:ensure>
+            <f:value f:path="/foo" f:select="'baz'" />
+          </f:ensure>
+          <f:raise f:select="'yay'" />
+          <f:catch>
+            <f:value f:path="/foo" f:select="'boo'" />
+          </f:catch>
+        </f:application>
+      """
+    Then it should be in the 'start' state
+     And the expression (/foo) should equal ['baz']
+
+  Scenario: simple machine with a <div />
+    Given the statemachine
+      """
+        <f:application xmlns:f="http://dh.tamu.edu/ns/fabulator/1.0#">
+          <f:value f:path="/foo" f:select="'bar'" />
+          <f:div>
+            <f:value f:path="/foo" f:select="'baz'" />
+          </f:div>
+        </f:application>
+      """
+    Then it should be in the 'start' state
+     And the expression (/foo) should equal ['baz']
+
+  Scenario: simple machine with a <div /> and <ensure />
+    Given the statemachine
+      """
+        <f:application xmlns:f="http://dh.tamu.edu/ns/fabulator/1.0#">
+          <f:value f:path="/foo" f:select="'bar'" />
+          <f:div>
+            <f:value f:path="/foo" f:select="'baz'" />
+          </f:div>
+          <f:ensure>
+            <f:value f:path="/foo" f:select="'boo'" />
+          </f:ensure>
+        </f:application>
+      """
+    Then it should be in the 'start' state
+     And the expression (/foo) should equal ['boo']
+

@@ -19,6 +19,9 @@ module Fabulator
     action 'variable', Variable
     action 'if', If
     action 'go-to', Goto
+    action 'raise', Raise
+    action 'div', Block
+    action 'catch', Catch
 
     ###
     ### core types

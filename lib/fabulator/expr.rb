@@ -24,5 +24,13 @@ module Fabulator
   module Expr
     class ParserError < StandardError
     end
+
+    class Exception < StandardError
+      attr_accessor :node
+
+      def initialize(n)
+        @node = n
+      end
+    end
   end
 end

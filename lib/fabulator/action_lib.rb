@@ -203,7 +203,13 @@ module Fabulator
       xml.each_element do |e|
         ns = e.namespaces.namespace.href
         next unless Fabulator::ActionLib.namespaces.include?(ns)
-        actions.add_statement(Fabulator::ActionLib.namespaces[ns].compile_action(e, attrs)) # rescue nil)
+        if ns == FAB_NS && e.name == 'ensure'
+          actions.add_ensure(self.compile_actions(e, attrs))
+        elsif ns == FAB_NS && e.name == 'catch'
+          actions.add_catch(Fabulator::ActionLib.namespaces[ns].compile_action(e,attrs))
+        else
+          actions.add_statement(Fabulator::ActionLib.namespaces[ns].compile_action(e, attrs)) # rescue nil)
+        end
       end
       #actions = actions - [ nil ]
       return actions
