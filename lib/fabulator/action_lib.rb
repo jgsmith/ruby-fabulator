@@ -427,6 +427,22 @@ module Fabulator
         define_method("fctn:#{name}", &block)
       end
 
+      def reduction(name, returns = nil, takes = nil, &block)
+        self.function_descriptions[name] = { :returns => returns, :takes => takes, :type => :reduction }
+        self.function_descriptions[name][:description] = Fabulator::ActionLib.last_description if Fabulator::ActionLib.last_description
+        #self.function_args[name] = { :return => returns, :takes => takes }
+        Fabulator::ActionLib.last_description = nil
+        define_method("fctn:#{name}", &block)
+      end
+
+      def mapping(name, returns = nil, takes = nil, &block)
+        self.function_descriptions[name] = { :returns => returns, :takes => takes, :type => :mapping }
+        self.function_descriptions[name][:description] = Fabulator::ActionLib.last_description if Fabulator::ActionLib.last_description
+        #self.function_args[name] = { :return => returns, :takes => takes }
+        Fabulator::ActionLib.last_description = nil
+        define_method("fctn:#{name}", &block)
+      end
+
       def function_decl(name, expr, ns)
         parser = Fabulator::Expr::Parser.new
         fctn_body = parser.parse(expr, ns)

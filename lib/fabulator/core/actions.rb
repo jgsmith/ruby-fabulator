@@ -105,25 +105,25 @@ module Fabulator
 
     NUMERIC = [ FAB_NS, 'numeric' ]
 
-    function 'abs' do |ctx, args, ns|
+    mapping 'abs' do |ctx, args, ns|
       args[0].collect { |i|
         i.value.abs
       }
     end
 
-    function 'ceiling' do |ctx, args, ns|
+    mapping 'ceiling' do |ctx, args, ns|
       args[0].collect { |i|
         i.value.to_d.ceil.to_r
       }
     end
 
-    function 'floor', NUMERIC, [ NUMERIC ] do |ctx, args, ns|
+    mapping 'floor', NUMERIC, [ NUMERIC ] do |ctx, args, ns|
       args[0].collect { |i|
         i.value.to_d.floor.to_r
       }
     end
 
-    function 'sum' do |ctx, args, ns|
+    reduction 'sum' do |ctx, args, ns|
       zero = ActionLib.find_op(args[0].first.vtype, :zero)
       if(zero && zero[:proc])
         res = zero[:proc].call(ctx)
@@ -146,7 +146,7 @@ module Fabulator
       [ res ]
     end
 
-    function 'avg', NUMERIC, [ NUMERIC ] do |ctx, args, ns|
+    reduction 'avg', NUMERIC, [ NUMERIC ] do |ctx, args, ns|
       res = 0.0
       n = 0.0
       args.first.each do |a|
@@ -161,7 +161,7 @@ module Fabulator
       end
     end
 
-    function 'max', NUMERIC, [ NUMERIC ] do |ctx, args, ns|
+    reduction 'max', NUMERIC, [ NUMERIC ] do |ctx, args, ns|
       res = nil
       args[0].each do |a|
         res = a.value.to_f if res.nil? || a.value.to_f > res
@@ -170,7 +170,7 @@ module Fabulator
       [res]
     end
 
-    function 'min', NUMERIC, [ NUMERIC ] do |ctx, args, ns|
+    reduction 'min', NUMERIC, [ NUMERIC ] do |ctx, args, ns|
       res = nil
       args[0].each do |a|
         res = a.value.to_f if res.nil? || a.value.to_f < res
@@ -179,7 +179,7 @@ module Fabulator
       [res]
     end
 
-    function 'histogram' do |ctx, args, ns|
+    mapping 'histogram' do |ctx, args, ns|
       acc = { }
       args.flatten.each do |a|
         acc[a.to_s] ||= 0
@@ -188,7 +188,7 @@ module Fabulator
       acc
     end
 
-    function 'consolidate' do |ctx, args, ns|
+    reduction 'consolidate' do |ctx, args, ns|
       acc = { }
       attrs = { }
       children = { }
@@ -228,7 +228,7 @@ module Fabulator
     #
     # f:concat(node-set) => node
     #
-    function 'concat', STRING, [ STRING ] do |ctx, args, ns|
+    reduction 'concat', STRING, [ STRING ] do |ctx, args, ns|
       return '' if args.empty? || args[0].empty?
       [ args[0].collect{ |a| a.value.to_s}.join('') ]
     end
@@ -258,19 +258,19 @@ module Fabulator
     #
     # f:string-length(node-list) => node-list
     #
-    function 'string-length', NUMERIC, [ STRING ] do |ctx, args, ns|
+    mapping 'string-length', NUMERIC, [ STRING ] do |ctx, args, ns|
       args.flatten.collect{ |a| a.to_s.length }
     end
 
-    function 'normalize-space', STRING do |ctx, args, ns|
+    mapping 'normalize-space', STRING do |ctx, args, ns|
       args.flatten.collect{ |a| a.to_s.gsub(/^\s+/, '').gsub(/\s+$/,'').gsub(/\s+/, ' ') }
     end
 
-    function 'upper-case', STRING, [ STRING ] do |ctx, args, ns|
+    mapping 'upper-case', STRING, [ STRING ] do |ctx, args, ns|
       args.flatten.collect{ |a| a.to_s.upcase }
     end
 
-    function 'lower-case', STRING, [ STRING ] do |ctx, args, ns|
+    mapping 'lower-case', STRING, [ STRING ] do |ctx, args, ns|
       args.flatten.collect{ |a| a.to_s.downcase }
     end
 
@@ -361,7 +361,7 @@ module Fabulator
       return [ ctx.anon_node( false, [ FAB_NS, 'boolean' ] ) ]
     end
 
-    function 'not', BOOLEAN do |ctx, args, ns|
+    mapping 'not', BOOLEAN do |ctx, args, ns|
       return args[0].collect{ |a| !a.value }
     end
 
@@ -369,23 +369,23 @@ module Fabulator
     ### data node functions
     ###
 
-    function 'name', STRING do |ctx, args, ns|
+    mapping 'name', STRING do |ctx, args, ns|
       return args[0].collect{|a| a.name || '' }
     end
 
-    function 'root' do |ctx, args, ns|
+    mapping 'root' do |ctx, args, ns|
       return args[0].collect{|a| a.root }
     end
 
-    function 'lang', STRING do |ctx, args, ns|
+    mapping 'lang', STRING do |ctx, args, ns|
       # we want to track language for rdf purposes?
     end
 
-    function 'path' do |ctx, args, ns|
+    mapping 'path' do |ctx, args, ns|
       return args[0].collect{|a| a.path }
     end
 
-    function 'dump' do |ctx, args, ns|
+    mapping 'dump' do |ctx, args, ns|
       args.collect{ |a| 
         YAML::dump(
           a.is_a?(Array) ? a.collect{ |aa| aa.to_h } : a.to_h 
@@ -393,7 +393,7 @@ module Fabulator
       }
     end
 
-    function 'eval' do |ctx, args, ns|
+    mapping 'eval' do |ctx, args, ns|
       p = Fabulator::Expr::Parser.new
       args.collect{ |a|
         e = a.to_s
@@ -406,31 +406,31 @@ module Fabulator
     ### Sequences
     ###
 
-    function 'empty', BOOLEAN do |ctx, args, ns|
+    mapping 'empty', BOOLEAN do |ctx, args, ns|
       return [ args[0].empty? ]
     end
 
-    function 'exists', BOOLEAN do |ctx, args, ns|
+    mapping 'exists', BOOLEAN do |ctx, args, ns|
       return [ !args[0].empty? ]
     end
 
-    function 'reverse' do |ctx, args, ns|
+    mapping 'reverse' do |ctx, args, ns|
       return args[0].reverse
     end
 
-    function 'zero-or-one', BOOLEAN do |ctx, args, ns|
+    mapping 'zero-or-one', BOOLEAN do |ctx, args, ns|
       return [ args[0].size <= 1 ]
     end
 
-    function 'one-or-more', BOOLEAN do |ctx, args, ns|
+    mapping 'one-or-more', BOOLEAN do |ctx, args, ns|
       return [ args[0].size >= 1 ]
     end
 
-    function 'zero-or-one', BOOLEAN do |ctx, args, ns|
+    mapping 'zero-or-one', BOOLEAN do |ctx, args, ns|
       return [ args[0].size == 1 ]
     end
 
-    function 'count', NUMERIC do |ctx, args, ns|
+    mapping 'count', NUMERIC do |ctx, args, ns|
       return [ args[0].size ]
     end
 
@@ -448,7 +448,7 @@ module Fabulator
     ### URIs
     ###
  
-    function 'uri-prefix', STRING do |ctx, args, ns|
+    mapping 'uri-prefix', STRING do |ctx, args, ns|
       res = [ ]
       args[0].each do |p|
         prefix = p.to([FAB_NS, 'string']).value
