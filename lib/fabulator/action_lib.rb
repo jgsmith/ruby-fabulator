@@ -294,7 +294,7 @@ module Fabulator
       end
     end
 
-    def run_function(context, ns, nom, args)
+    def run_function(context, ns, nom, args, depth=0)
       ret = []
 
       begin
@@ -330,6 +330,10 @@ module Fabulator
 
     def function_return_type(name)
       (self.function_descriptions[name][:returns] rescue nil)
+    end
+
+    def function_run_scaling(name)
+      (self.function_descriptions[name][:scaling] rescue nil)
     end
 
     def function_run_type(name)
