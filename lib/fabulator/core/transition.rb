@@ -1,28 +1,39 @@
 module Fabulator
   module Core
   class Transition
-    attr_accessor :state, :validations
+    attr_accessor :state, :validations, :tags
+
+    def initialize
+      @state = nil
+      @tags = nil
+      @groups = { }
+      @params = [ ]
+      @actions = nil
+    end
 
     def compile_xml(xml, c_attrs = { })
-      # manage validations without Lua, if we can
-      # only use Lua if we have to
-      # model data as RDF?
-      # worry about data transformation later
+      inheriting = !@state.nil?
 
-      @state = xml.attributes.get_attribute_ns(FAB_NS, 'view').value
+      if !inheriting
+        @state = xml.attributes.get_attribute_ns(FAB_NS, 'view').value
+        @tags = (xml.attributes.get_attribute_ns(FAB_NS, 'tag').value rescue '').split(/\s+/)
+      end
 
       attrs = ActionLib.collect_attributes(c_attrs, xml)
 
-      @groups = { }
-      @params = [ ]
-      @actions = [ ]
-
-      @actions = ActionLib.compile_actions(xml, attrs)
+        # TODO: figure out some way to reference inherited actions
+        #   figure out 'super' vs. 'inner' -- only supporting 'super'
+        #   for now
+      ActionLib.with_super(@actions) do
+        t = ActionLib.compile_actions(xml, attrs)
+        @actions = t if @actions.nil? || !t.is_noop?
+      end
       parser = Fabulator::Expr::Parser.new
 
       xml.each_element do |e|
         next unless e.namespaces.namespace.href == FAB_NS
         case e.name
+# TODO: handle parameters when inheriting
           when 'params':
             p_attrs = ActionLib.collect_attributes(attrs, e)
             @select = ActionLib.get_select(e, '/')
@@ -31,11 +42,19 @@ module Fabulator
               next unless ee.namespaces.namespace.href == FAB_NS
               case ee.name
                 when 'group':
-                  g = Group.new.compile_xml(ee, p_attrs)
-                  @params << g
+                  if !inheriting
+                    g = Group.new.compile_xml(ee, p_attrs)
+                    @params << g
+                  else
+                    tags = (ee.attributes.get_attribute_ns(FAB_NS, 'tag').value rescue '').split(/\s+/)
+                  end
                 when 'param':
-                  p = Parameter.new.compile_xml(ee, p_attrs)
-                  @params << p
+                  if !inheriting
+                    p = Parameter.new.compile_xml(ee, p_attrs)
+                    @params << p
+                  else
+                    tags = (ee.attributes.get_attribute_ns(FAB_NS, 'tag').value rescue '').split(/\s+/)
+                  end
               end
             end
         end

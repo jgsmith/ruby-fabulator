@@ -22,6 +22,7 @@ module Fabulator
     action 'raise', Raise
     action 'div', Block
     action 'catch', Catch
+    action 'super', Super
 
     ###
     ### core types
@@ -407,7 +408,7 @@ module Fabulator
     end
 
     function 'reverse' do |ctx, args, ns|
-      args.reverse.collect{ |a| a.is_a?(Array) ? a.reverse : a }
+      args.flatten.reverse
     end
 
     mapping 'zero-or-one' do |ctx, arg, ns|

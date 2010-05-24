@@ -68,17 +68,17 @@ module Fabulator
       elsif @all_constraints
         @constraints.each do |c|
           items.each do |item|
-            if c.test_constraint(i)
-              res[:valid] << i
-            else
-              res[:invalid] << i
-              res[:messages] << c.error_message(i)
+            r = c.test_constraint(i)
+            res[:valid] += r[0]
+            if !r[1].empty?
+              res[:invalid] += r[1]
+              res[:messages] += r[1].collect{ |i| c.error_message(i) }
             end
           end
         end
       else
         items.each do |item|
-          passed = @constraints.select {|c| c.test_constraint(item) }
+          passed = @constraints.select {|c| c.test_constraint(item)[1].empty? }
           if passed.empty?
             res[:invalid] << item
             res[:messages] << [ @constraints.collect { |c| c.error_message(item) } ]
@@ -92,17 +92,18 @@ module Fabulator
     end
 
     def test_constraints(context)
-      return true if @constraints.empty?
+      me = context.traverse_path(@name)
+      return [ [ me.path ], [] ] if @constraints.empty?
       if @all_constraints
         @constraints.each do |c|
-          return false unless c.test_constraint(context.traverse_path(@name))
+          return [ [], [ me.path ] ] unless c.test_constraint(me)[1].empty?
         end
-        return true
+        return [ [ me.path ], [] ]
       else
         @constraints.each do |c|
-          return true if c.test_constraint(context.traverse_path(@name))
+          return [ [ me.path ], [] ] if c.test_constraint(me)
         end
-        return false
+        return [ [], [ me ] ]
       end
     end
   end

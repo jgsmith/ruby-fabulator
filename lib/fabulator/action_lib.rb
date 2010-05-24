@@ -197,6 +197,18 @@ module Fabulator
       x.href
     end
 
+    def self.with_super(s, &block)
+      @@super ||= []  # not thread safe :-/
+      @@super.unshift(s)
+      yield
+      @@super.shift
+    end
+
+    def self.current_super
+      return nil if @@super.nil? || @@super.empty?
+      return @@super.first
+    end
+
     def self.compile_actions(xml, c_attrs)
       actions = Fabulator::Expr::StatementList.new
       attrs = self.collect_attributes(c_attrs, xml)
@@ -316,19 +328,19 @@ module Fabulator
         raise "function #{nom} raised #{e}"
       end
       ret = [ ret ] unless ret.is_a?(Array)
-      ret = ret.collect{ |r| 
+      ret = ret.flatten.collect{ |r| 
         if r.is_a?(Fabulator::Expr::Node) 
           r 
         elsif r.is_a?(Hash)
           rr = context.anon_node(nil, nil)
           r.each_pair do |k,v|
-            rrr = context.anon_node(v, self.function_return_type(nom))
+            rrr = context.anon_node(v) #, self.function_return_type(nom))
             rrr.name = k
             rr.add_child(rrr)
           end
           rr
         else
-          context.anon_node(r, self.function_return_type(nom))
+          context.anon_node(r) #, self.function_return_type(nom))
         end
       }
       ret.flatten
@@ -355,7 +367,11 @@ module Fabulator
     end
 
     def run_constraint(context, nom)
-      send "constraint:#{nom}", context
+      if send("constraint:#{nom}", context) 
+        [ [ context.path ], [] ] 
+      else
+        [ [], [ context.path ] ]
+      end
     end
 
     def action_descriptions(hash=nil)

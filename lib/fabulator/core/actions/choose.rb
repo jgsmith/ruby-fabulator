@@ -134,11 +134,30 @@ module Fabulator
         res = @actions.run(context, autovivify)
       elsif !@select.nil?
         res = @select.run(context, autovivify)
+      else
+        raise context   # default if <raise/> with no attributes
       end
 
       return [ ] if res.empty?
 
       raise Fabulator::Expr::Exception.new(res.first)
+    end
+  end
+
+  class Super
+    def compile_xml(xml, c_attrs={})
+      @select = ActionLib.get_local_attr(xml, FAB_NS, 'select', { :eval => true })
+      @actions = ActionLib.current_super
+    end
+
+    def run(context, autovivify = false)
+      return [] if @actions.nil?
+
+      new_context = @select.run(context,autovivify)
+
+      new_context = [ new_context ] unless new_context.is_a?(Array)
+
+      new_context.collect { |c| @actions.run(c, autovivify) }.flatten
     end
   end
 

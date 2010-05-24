@@ -64,24 +64,30 @@ module Fabulator
       "#{context.path} does not pass the constraint"
     end
 
-    def test_constraint(context) #, params, fields)
+    def test_constraint(context)
       # do special ones first
       inv = (@inverted.run.first.value rescue 'false')
       inv = (inv == 'true' || inv == 'yes') ? true : false
       @sense = !inv
+      @sense = !inv ? Proc.new { |r| r } : Proc.new { |r| r.reverse }
+      @not_sense = inv ? Proc.new { |r| r } : Proc.new { |r| r.reverse }
       case @c_type
         when 'all':
           # we have enclosed constraints
           @constraints.each do |c|
-            return @sense unless c.test_constraint(context) #params,fields)
+            r = c.test_constraint(context)
+            return @sense.call(r) unless r[1].empty?
+            #return @sense unless c.test_constraint(context) #params,fields)
           end
-          return !@sense
+          return @not_sense.call(r)
         when 'any':
           if @values.empty?
             @constraints.each do |c|
-              return !@sense if c.test_constraint(params,fields)
+              r = c.test_constraint(context)
+              return @not_sense.call(r) if r[1].empty?
+              #return !@sense if c.test_constraint(params,fields)
             end
-            return @sense
+            return @sense.call(r)
           else
             #context.each do |c|
               calc_values = [ ]
@@ -92,29 +98,29 @@ module Fabulator
                   calc_values = calc_values + v.run(context).collect{ |i| i.value }
                 end
               end
-              return !@sense unless @values.include?(context.value)
+              return @not_sense.call([ [ context.path ], []]) unless @values.include?(context.value)
             #end
-            return @sense
+            return @sense.call([ [ context.path ], [] ])
           end
         when 'range':
           fl = (@params['floor'].run(context) rescue nil)
           ce = (@params['ceiling'].run(context) rescue nil)
           if @requires == 'all'
-            return !@sense if !fl.nil? && fl > context.value || 
-                              !ce.nil? && ce < context.value
-            return @sense
+            return @not_sense.call([ [ context.path ], [] ]) if !fl.nil? && fl > context.value || 
+                                                    !ce.nil? && ce < context.value
+            return @sense.call([ [ context.path ], [] ])
           else
             fields.each do |f|
-              return @sense if !fl.nil? && fl < context.value || 
+              return @sense.call([ [ context.path ], [] ]) if !fl.nil? && fl < context.value || 
                                !ce.nil? && ce > context.value
             end
-            return !@sense
+            return @not_sense.call( [ [ context.path ], [] ] )
           end
         else
-          c = FabulatorConstraint.find_by_name(@c_type) rescue nil
-          return @sense if c.nil?
-          return @sense if c.run_constraint(context)
-          return !@sense
+          #c = FabulatorConstraint.find_by_name(@c_type) rescue nil
+          #return @sense if c.nil?
+          #return @sense if c.run_constraint(context)
+          return @not_sense.call([ [ context.path ], [] ] )
       end
     end
   end

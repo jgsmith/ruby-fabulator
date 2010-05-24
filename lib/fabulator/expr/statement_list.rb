@@ -19,6 +19,10 @@ module Fabulator
         @catches << s
       end
 
+      def is_noop?
+        @statements.empty? && @ensures.empty?
+      end
+
       def run(context, autovivify = false)
         result = [ ]
         begin

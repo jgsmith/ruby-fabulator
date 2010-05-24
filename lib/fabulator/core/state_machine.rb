@@ -1,3 +1,5 @@
+require 'yaml'
+
 module Fabulator
   FAB_NS='http://dh.tamu.edu/ns/fabulator/1.0#'
   RDFS_NS = 'http://www.w3.org/2000/01/rdf-schema#'
@@ -13,21 +15,29 @@ module Fabulator
     attr_accessor :states, :missing_params, :errors, :namespaces, :updated_at
     attr_accessor :state
 
-    def compile_xml(xml, c_attrs = { })
+    def compile_xml(xml, c_attrs = { }, callbacks = { })
       # /statemachine/states
-      @states = { }
-      self.namespaces = { }
+      @states ||= { }
+      self.namespaces = { } if self.namespaces.nil?
       @state = 'start'
 
       attr = ActionLib.collect_attributes(c_attrs, xml.root)
 
-      @actions = ActionLib.compile_actions(xml.root, {})
+      ActionLib.with_super(@actions) do
+        p_actions = ActionLib.compile_actions(xml.root, {})
+        @actions = p_actions if @actions.nil? || !p_actions.is_noop?
+      end
+
       xml.root.each_element do |child|
         next unless child.namespaces.namespace.href == FAB_NS
         case child.name
           when 'view':
-            cs = State.new.compile_xml(child, attr)
-            @states[cs.name] = cs
+            nom = (child.attributes.get_attribute_ns(FAB_NS, 'name').value rescue nil)
+            if !@states[nom].nil?
+              @states[nom].compile_xml(child, attr)
+            else
+              @states[nom] = State.new.compile_xml(child, attr)
+            end
         end
       end
 
@@ -45,6 +55,10 @@ module Fabulator
         @states['start'] = s
       end
       self
+    end
+
+    def clone
+      YAML::load( YAML::dump( self ) )
     end
 
     def namespaces 

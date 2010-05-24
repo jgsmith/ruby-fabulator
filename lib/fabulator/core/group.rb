@@ -1,15 +1,20 @@
 module Fabulator
   module Core
   class Group
-    attr_accessor :name, :params
-    def compile_xml(xml, c_attrs)
-      @select = ActionLib.get_local_attr(xml, FAB_NS, 'select', { :eval => true })
+    attr_accessor :name, :params, :tags
 
-      attrs = ActionLib.collect_attributes(c_attrs, xml)
+    def initialize
       @params = { }
       @constraints = [ ]
       @filter = [ ]
       @required_params = [ ]
+      @tags = [ ]
+    end
+
+    def compile_xml(xml, c_attrs)
+      @select = ActionLib.get_local_attr(xml, FAB_NS, 'select', { :eval => true })
+
+      attrs = ActionLib.collect_attributes(c_attrs, xml)
       xml.each_element do |e|
         next unless e.namespaces.namespace.href == FAB_NS
 
@@ -32,12 +37,12 @@ module Fabulator
     end
 
     def apply_filters(context)
-      roots = @select.nil? ? [ context ] : @select.run(context)
+      roots = self.get_context(context)
       filtered = [ ]
 
       roots.each do |root|
         @params.each do |param|
-          p_ctx = param.get_context(context)
+          p_ctx = param.get_context(root)
           if !p_ctx.nil? && !p_ctx.empty?
             p_ctx.each do |p|
               @filters.each do |f|
@@ -52,25 +57,31 @@ module Fabulator
     end
 
     def get_context(context)
-      @select.run(context)
+      @select.nil? ? [ context ] : @select.run(context)
     end
 
-    def test_constraints(params)
-      fields = self.param_names
-      @params.keys.each do |p|
-        return false unless @params[p].test_constraints(params[@name])
+    def test_constraints(context)
+      passed = [ ]
+      failed = [ ]
+      roots = self.get_context(context)
+      roots.each do |root|
+        @params.each do |param|
+          p_ctx = param.get_context(root)
+          if !p_ctx.nil? && !p_ctx.empty?
+            p_ctx.each do |p|
+              @constraints.each do |c|
+                r = c.test_constraint(p)
+                passed += r[0]
+                failed += r[1]
+              end
+            end
+          end
+        end
       end
-
-      return true if @constraints.empty?
-
-      if @all_constraints
-        @constraints.each do |c|
-          return false unless c.test_constraints(params[@name], fields)
-        end
+      if failed.empty?
+        return [ passed.unique, [] ]
       else
-        @constraints.each do |c|
-          return true if c.test_constraints(params[@name], fields)
-        end
+        return [ (passed - failed).unique, failed ]
       end
     end
   end

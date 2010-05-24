@@ -11,16 +11,36 @@ module Fabulator
 
     def compile_xml(xml, c_attrs)
       @name = xml.attributes.get_attribute_ns(FAB_NS, 'name').value
+      inheriting = !@transitions.empty?
       attrs = ActionLib.collect_attributes(c_attrs, xml)
       xml.each_element do |e|
         next unless e.namespaces.namespace.href == FAB_NS
         case e.name
           when 'goes-to':
-            @transitions << Transition.new.compile_xml(e, attrs)
+            if inheriting
+              target = e.attributes.get_attribute_ns(FAB_NS, 'view').value
+              tags = (e.attributes.get_attribute_ns(FAB_NS, 'tag').value rescue '').split(/\s+/)
+              old = @transitions.collect{ |t| t.state == target && (tags.empty? || !(tags & t.tags).empty?)}
+              if old.empty?
+                @transitions << Transition.new.compile_xml(e,attrs)
+              else
+                old.each do |t|
+                  t.compile_xml(e,attrs)
+                end
+              end
+            else 
+              @transitions << Transition.new.compile_xml(e, attrs)
+            end
           when 'before':
-            @pre_actions = ActionLib.compile_actions(e, attrs)
+            ActionLib.with_super(@pre_actions) do
+              t = ActionLib.compile_actions(e, attrs)
+              @pre_actions = t if @pre_actions.nil? || !t.is_noop?
+            end
           when 'after':
-            @post_actions = ActionLib.compile_actions(e, attrs)
+            ActionLib.with_super(@post_actions) do
+              t = ActionLib.compile_actions(e, attrs)
+              @post_actions = t if @post_actions.nil? || !t.is_noop?
+            end
         end
       end
       self

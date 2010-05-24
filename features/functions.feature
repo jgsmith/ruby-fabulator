@@ -29,17 +29,25 @@ Feature: Function calls and lists
     Then I should get 1 item
      And item 0 should be [6*6]
 
+  Scenario: Split a string
+    Given a context
+      And the prefix f as "http://dh.tamu.edu/ns/fabulator/1.0#"
+    When I run the expression (let $t := "The quick brown fox jumped over the brown spotted cow"; f:split($t, " "))
+    Then I should get 10 items
+     And item 0 should be ['The']
+     And item 1 should be ['quick']
+
   Scenario: Histogram of text
     Given a context
      And the prefix f as "http://dh.tamu.edu/ns/fabulator/1.0#"
-    When I run the expression (let $t := "The quick brown fox jumped over the brown spotted cow"; f:histogram(f:split($t, " ")/*)/brown)
+    When I run the expression (let $t := "The quick brown fox jumped over the brown spotted cow"; f:histogram(f:split($t, " "))/brown)
     Then I should get 1 item
      And item 0 should be [2]
 
   Scenario: Histogram of text
     Given a context
      And the prefix f as "http://dh.tamu.edu/ns/fabulator/1.0#"
-    When I run the expression (let $t := f:lower-case("The quick brown fox jumped over the brown spotted cow"); f:consolidate( (f:histogram(f:split($t, " ")/*), f:histogram(f:split($t, " ")/*)) )/brown)
+    When I run the expression (let $t := f:lower-case("The quick brown fox jumped over the brown spotted cow"); f:consolidate( (f:histogram(f:split($t, " ")), f:histogram(f:split($t, " "))) )/brown)
     Then I should get 1 item
      And item 0 should be [4]
 
@@ -47,7 +55,7 @@ Feature: Function calls and lists
   Scenario: Histogram of text with attributes
     Given a context
      And the prefix f as "http://dh.tamu.edu/ns/fabulator/1.0#"
-    When I run the expression (let $t := f:lower-case("The quick brown fox jumped over the brown spotted cow"); f:consolidate( ( (f:histogram(f:split($t, " ")/*) with ./*/@line := 1), (f:histogram(f:split($t, " ")/*) with ./*/@line := 2)) )/brown)
+    When I run the expression (let $t := f:lower-case("The quick brown fox jumped over the brown spotted cow"); f:consolidate( ( (f:histogram(f:split($t, " ")) with ./*/@line := 1), (f:histogram(f:split($t, " ")) with ./*/@line := 2)) )/brown)
     Then I should get 1 item
      And item 0 should be [4]
 
