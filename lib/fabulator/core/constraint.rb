@@ -69,26 +69,28 @@ module Fabulator
 
     def test_constraint(context)
       # do special ones first
+      context = [ context ] unless context.is_a?(Array)
+      paths = [ context.collect{|c| c.path }, [] ]
       inv = (@inverted.run.first.value rescue 'false')
       inv = (inv == 'true' || inv == 'yes') ? true : false
-      @sense = !inv
       @sense = !inv ? Proc.new { |r| r } : Proc.new { |r| r.reverse }
       @not_sense = inv ? Proc.new { |r| r } : Proc.new { |r| r.reverse }
       case @c_type
         when nil, '':
-          return @sense.call([ [ context.path ], [] ]) if @select.nil?
+          return @sense.call(paths) if @select.nil?
           opts = @select.run(context).collect { |o| o.to_s }
-          if opts.include?(context.to_s)
-            return @sense.call([ [ context.path ], [] ])
-          else
-            return @not_sense.call([ [ context.path ], [] ])
+          context.each do |c|
+            if !opts.include?(c.to_s)
+              paths[0] -= [ c.path ]
+              paths[1] += [ c.path ]
+            end
           end
+          return @sense.call(paths)
         when 'all':
           # we have enclosed constraints
           @constraints.each do |c|
             r = c.test_constraint(context)
             return @sense.call(r) unless r[1].empty?
-            #return @sense unless c.test_constraint(context) #params,fields)
           end
           return @not_sense.call(r)
         when 'any':
@@ -100,33 +102,32 @@ module Fabulator
             end
             return @sense.call(r)
           else
-            #context.each do |c|
-              calc_values = [ ]
-              @values.each do |v|
-                if v.is_a?(String)
-                  calc_values << v
-                else
-                  calc_values = calc_values + v.run(context).collect{ |i| i.value }
-                end
+            calc_values = [ ]
+            @values.each do |v|
+              if v.is_a?(String)
+                calc_values << v
+              else
+                calc_values = calc_values + v.run(context).collect{ |i| i.value }
               end
-              return @not_sense.call([ [ context.path ], []]) unless @values.include?(context.value)
-            #end
-            return @sense.call([ [ context.path ], [] ])
+            end
+            context.each do |c|
+              if !calc_values.include?(c.value)
+                paths[0] -= [ c.path ]
+                paths[1] += [ c.path ]
+              end
+            end
+            return @sense.call(paths)
           end
         when 'range':
           fl = (@params['floor'].run(context) rescue nil)
           ce = (@params['ceiling'].run(context) rescue nil)
-          if @requires == 'all'
-            return @not_sense.call([ [ context.path ], [] ]) if !fl.nil? && fl > context.value || 
-                                                    !ce.nil? && ce < context.value
-            return @sense.call([ [ context.path ], [] ])
-          else
-            fields.each do |f|
-              return @sense.call([ [ context.path ], [] ]) if !fl.nil? && fl < context.value || 
-                               !ce.nil? && ce > context.value
+          context.each do |c|
+            if !fl.nil? && fl > c.value || !ce.nil? && ce < c.value
+              paths[0] -= [ c.path ]
+              paths[1] += [ c.path ]
             end
-            return @not_sense.call( [ [ context.path ], [] ] )
           end
+          return @sense.call(paths)
         else
           #c = FabulatorConstraint.find_by_name(@c_type) rescue nil
           #return @sense if c.nil?
