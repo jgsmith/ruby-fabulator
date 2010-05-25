@@ -7,10 +7,13 @@ module Fabulator
       @values = [ ]
       @params = [ ]
       @attributes = { }
+      @select = nil
       attrs = ActionLib.collect_attributes(c_attrs, xml)
       @inverted = ActionLib.get_local_attr(xml, FAB_NS, 'invert', { :default => 'false' })
 
       parser = Fabulator::Expr::Parser.new
+
+      @select = ActionLib.get_local_attr(xml, FAB_NS, 'select', { :eval => true })
 
       if xml.name == 'value'
         @c_type = 'any'
@@ -72,6 +75,14 @@ module Fabulator
       @sense = !inv ? Proc.new { |r| r } : Proc.new { |r| r.reverse }
       @not_sense = inv ? Proc.new { |r| r } : Proc.new { |r| r.reverse }
       case @c_type
+        when nil, '':
+          return @sense.call([ [ context.path ], [] ]) if @select.nil?
+          opts = @select.run(context).collect { |o| o.to_s }
+          if opts.include?(context.to_s)
+            return @sense.call([ [ context.path ], [] ])
+          else
+            return @not_sense.call([ [ context.path ], [] ])
+          end
         when 'all':
           # we have enclosed constraints
           @constraints.each do |c|
