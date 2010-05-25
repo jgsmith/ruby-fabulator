@@ -93,17 +93,22 @@ module Fabulator
 
     def test_constraints(context)
       me = context.traverse_path(@name)
-      return [ [ me.path ], [] ] if @constraints.empty?
+      return [ [ me.collect{ |m| m.path } ], [] ] if @constraints.empty?
+      paths = [ [], [] ]
       if @all_constraints
         @constraints.each do |c|
-          return [ [], [ me.path ] ] unless c.test_constraint(me)[1].empty?
+          p =  c.test_constraints(me)
+          paths[0] += p[0]
+          paths[1] += p[1]
         end
-        return [ [ me.path ], [] ]
+        return [ (paths[0] - paths[1]).uniq, paths[1].uniq ]
       else
         @constraints.each do |c|
-          return [ [ me.path ], [] ] if c.test_constraint(me)
+          p = c.test_constraints(me)
+          paths[0] += p[0]
+          paths[1] += p[1]
         end
-        return [ [], [ me ] ]
+        return [ paths[0].uniq, (paths[1] - paths[0]).uniq ]
       end
     end
   end

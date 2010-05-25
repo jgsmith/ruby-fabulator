@@ -367,11 +367,14 @@ module Fabulator
     end
 
     def run_constraint(context, nom)
-      if send("constraint:#{nom}", context) 
-        [ [ context.path ], [] ] 
-      else
-        [ [], [ context.path ] ]
+      context = [ context ] unless context.is_a?(Array)
+      paths = [ [], [] ]
+      context.each do |c|
+        p = send("constraint:#{nom}", c) 
+        paths[0] += p[0]
+        paths[1] += p[1]
       end
+      return [ (paths[0] - paths[1]).uniq, paths[1].uniq ]
     end
 
     def action_descriptions(hash=nil)
