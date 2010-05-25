@@ -62,7 +62,7 @@ module Fabulator
       res = { :missing => [], :invalid => [], :valid => [], :messages => [] }
       items = context.collect{ |c| c.traverse_path(@name) }.flatten
       if items.empty?
-        res[:missing] = [ (context.path + '/' + @name).gsub(/\/+/, '/') ]
+        res[:missing] = [ (context.collect{ |c| c.path + '/' + @name }).gsub(/\/+/, '/') ]
       elsif @constraints.empty? # make sure something exists
         res[:valid] = items
       elsif @all_constraints
