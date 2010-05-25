@@ -78,7 +78,7 @@ module Fabulator
       case @c_type
         when nil, '':
           return @sense.call(paths) if @select.nil?
-          opts = @select.run(context).collect { |o| o.to_s }
+          opts = context.collect{|c| @select.run(c).collect { |o| o.to_s } }.flatten
           context.each do |c|
             if !opts.include?(c.to_s)
               paths[0] -= [ c.path ]
