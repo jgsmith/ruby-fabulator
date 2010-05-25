@@ -226,8 +226,8 @@ module Fabulator
     # f:concat(node-set) => node
     #
     reduction 'concat', { :scaling => :log } do |ctx, args, ns|
-      return '' if args.empty? || args[0].empty?
-      [ args[0].collect{ |a| a.value.to_s}.join('') ]
+      return '' if args.empty?
+      [ args.collect{ |a| a.value.to_s}.join('') ]
     end
 
     #
