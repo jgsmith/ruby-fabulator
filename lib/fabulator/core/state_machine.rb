@@ -93,7 +93,9 @@ module Fabulator
       # select transition
       # possible get some errors
       # run transition, and move to new state as needed
+      @context.clear_ctx unless @context.nil?
       self.run_transition(current_state.select_transition(@context, params))
+      @context.clear_ctx unless @context.nil?
     end
 
     def run_transition(best_transition)

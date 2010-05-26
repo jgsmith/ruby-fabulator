@@ -48,6 +48,11 @@ module Fabulator
         return v
       end
 
+      def clear_ctx
+        self.roots['data'].ctx if self.roots['data'] != self
+        @e_ctx = { }
+      end
+
       def ctx
         return self.roots['data'].ctx if self.roots['data'] != self
         return @e_ctx
