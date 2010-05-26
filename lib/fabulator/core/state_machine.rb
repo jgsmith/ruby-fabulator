@@ -118,12 +118,12 @@ module Fabulator
           # run_pre for the state we're going to
           new_state = @states[@state]
           new_state.run_pre(@context) if !new_state.nil?
-          jumps = 0
-          while !new_state.nil? && new_state.transitions.size == 1 && new_state.transitions.first.param_names.size == 0 && jumps < 1000
-            jumps = jumps + 1
-            new_state.transitions.first.run(@context)
-            new_state = @states[new_state.transitions.first.state]
-          end
+#          jumps = 0
+#          while !new_state.nil? && new_state.transitions.size == 1 && new_state.transitions.first.param_names.size == 0 && jumps < 1000
+#            jumps = jumps + 1
+#            new_state.transitions.first.run(@context)
+#            new_state = @states[new_state.transitions.first.state]
+#          end
         rescue Fabulator::StateChangeException => e # catch state change
           new_state = @states[e]
           begin
