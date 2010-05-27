@@ -26,8 +26,10 @@ module Fabulator
       def run(context, autovivify = false)
         result = [ ]
         begin
-          (@statements - [nil]).each do |s| 
-            result = s.run(context, autovivify)
+          if !@statements.nil?
+            (@statements - [nil]).each do |s| 
+              result = s.run(context, autovivify)
+            end
           end
         rescue Fabulator::StateChangeException => e
           raise e
@@ -41,17 +43,21 @@ module Fabulator
             ex = context.anon_node(e.to_s, [ FAB_NS, 'string' ])
             ex.set_attribute('class', 'ruby.' + e.class.to_s.gsub(/::/, '.'))
           end
-          @catches.each do |s|
-            if !s.nil? && s.run_test(ex)
-              caught = true
-              result = s.run(ex, autovivify)
+          if !@catches.nil?
+            @catches.each do |s|
+              if !s.nil? && s.run_test(ex)
+                caught = true
+                result = s.run(ex, autovivify)
+              end
             end
           end
 
           raise e unless caught
         ensure
-          @ensures.each do |s|
-            s.run(context, autovivify) unless s.nil?
+          if !@ensures.nil?
+            @ensures.each do |s|
+              s.run(context, autovivify) unless s.nil?
+            end
           end
         end
 
