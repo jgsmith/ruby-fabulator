@@ -4,7 +4,7 @@ module Fabulator
     attr_accessor :name, :params, :tags
 
     def initialize
-      @params = { }
+      @params = [ ]
       @constraints = [ ]
       @filter = [ ]
       @required_params = [ ]
