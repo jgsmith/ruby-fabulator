@@ -5,7 +5,7 @@ module Fabulator
       filter_type = xml.attributes.get_attribute_ns(FAB_NS, 'name').value.split(/:/, 2)
       #filter_type = ActionLib.get_local_attr(xml, FAB_NS, 'name').split(/:/, 2)
       if filter_type.size == 2
-        @ns = ActionLig.prefix_to_ref(xml, filter_type[0]) 
+        @ns = ActionLib.prefix_to_ref(xml, filter_type[0]) 
         @name = filter_type[1]
       else
         @ns = FAB_NS
