@@ -64,7 +64,9 @@ module Fabulator
       context = [ context ] unless context.is_a?(Array)
       items = context.collect{ |c| c.traverse_path(@name) }.flatten
       if items.empty?
-        res[:missing] = context.collect{ |c| (c.path + '/' + @name).gsub(/\/+/, '/')}
+        if @required
+          res[:missing] = context.collect{ |c| (c.path + '/' + @name).gsub(/\/+/, '/')}
+        end
       elsif @constraints.empty? # make sure something exists
         res[:valid] = items
       elsif @all_constraints
@@ -83,7 +85,7 @@ module Fabulator
           passed = @constraints.select {|c| c.test_constraint(item)[1].empty? }
           if passed.empty?
             res[:invalid] << item
-            res[:messages] << [ @constraints.collect { |c| c.error_message(item) } ]
+            res[:messages] += @constraints.collect { |c| c.error_message(item) }
           else
             res[:valid] << item
           end
