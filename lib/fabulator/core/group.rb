@@ -6,7 +6,7 @@ module Fabulator
     def initialize
       @params = [ ]
       @constraints = [ ]
-      @filter = [ ]
+      @filters = [ ]
       @required_params = [ ]
       @tags = [ ]
     end
