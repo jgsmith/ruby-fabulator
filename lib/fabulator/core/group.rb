@@ -56,6 +56,38 @@ module Fabulator
       filtered.uniq
     end
 
+    def apply_constraints(context)
+      res = { :missing => [], :invalid => [], :valid => [], :messages => [] }
+      passed = [ ]
+      failed = [ ]
+      roots = self.get_context(context)
+      roots.each do |root|
+        @params.each do |param|
+          p_ctx = param.get_context(root)
+          if !p_ctx.nil? && !p_ctx.empty?
+            p_ctx.each do |p|
+              @constraints.each do |c|
+                r = c.test_constraint(p)
+                passed += r[0]
+                failed += r[1]
+              end
+              p_res = param.apply_constraints(p)
+              res[:messages] += p_res[:messages]
+              failed += p_res[:invalid]
+              passed += p_res[:valid]
+              res[:missing] += p_res[:missing]
+            end
+          end
+        end
+      end
+      res[:invalid] = failed.unique
+      res[:valid] = (passed - failed).unique
+      res[:messages] = res[:messages].unique
+      res[:missing] = (res[:missing] - passed).unique
+      res
+    end
+
+
     def get_context(context)
       @select.nil? ? [ context ] : @select.run(context)
     end
