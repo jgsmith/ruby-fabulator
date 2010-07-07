@@ -44,13 +44,13 @@ module Fabulator
     end
 
     def get_context(context)
-      context.traverse_path(@name)
+      context = [ context ] unless context.is_a?(Array)
+      context.collect{ |c| c.traverse_path(@name) }
     end
 
     def apply_filters(context)
       filtered = [ ]
       @filters.each do |f|
-        #Rails.logger.info("filter: #{f}")
         context.each do |c|
           filtered = filtered + f.run(c.traverse_path(@name))
         end
