@@ -50,6 +50,7 @@ module Fabulator
 
     def apply_filters(context)
       filtered = [ ]
+      context = [ context ] unless context.is_a?(Array)
       @filters.each do |f|
         context.each do |c|
           filtered = filtered + f.run(c.traverse_path(@name))
@@ -60,6 +61,7 @@ module Fabulator
 
     def apply_constraints(context)
       res = { :missing => [], :invalid => [], :valid => [], :messages => [] }
+      context = [ context ] unless context.is_a?(Array)
       items = context.collect{ |c| c.traverse_path(@name) }.flatten
       if items.empty?
         res[:missing] = context.collect{ |c| (c.path + '/' + @name).gsub(/\/+/, '/')}

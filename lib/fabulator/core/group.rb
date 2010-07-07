@@ -71,12 +71,12 @@ module Fabulator
                 passed += r[0]
                 failed += r[1]
               end
-              p_res = param.apply_constraints(p)
-              res[:messages] += p_res[:messages]
-              failed += p_res[:invalid]
-              passed += p_res[:valid]
-              res[:missing] += p_res[:missing]
             end
+            p_res = param.apply_constraints(root)
+            res[:messages] += p_res[:messages]
+            failed += p_res[:invalid]
+            passed += p_res[:valid]
+            res[:missing] += p_res[:missing]
           end
         end
       end
@@ -89,7 +89,8 @@ module Fabulator
 
 
     def get_context(context)
-      @select.nil? ? [ context ] : @select.run(context)
+      context = [ context ] unless context.is_a?(Array)
+      @select.nil? ? context : context.collect{ |c| @select.run(c) }.flatten
     end
 
     def test_constraints(context)
