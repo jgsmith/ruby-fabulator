@@ -80,10 +80,10 @@ module Fabulator
           end
         end
       end
-      res[:invalid] = failed.unique
-      res[:valid] = (passed - failed).unique
-      res[:messages] = res[:messages].unique
-      res[:missing] = (res[:missing] - passed).unique
+      res[:invalid] = failed.uniq
+      res[:valid] = (passed - failed).uniq
+      res[:messages].uniq!
+      res[:missing] = (res[:missing] - passed).uniq
       res
     end
 
@@ -111,9 +111,9 @@ module Fabulator
         end
       end
       if failed.empty?
-        return [ passed.unique, [] ]
+        return [ passed.uniq, [] ]
       else
-        return [ (passed - failed).unique, failed ]
+        return [ (passed - failed).uniq, failed ]
       end
     end
   end
