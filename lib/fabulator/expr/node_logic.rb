@@ -101,7 +101,7 @@ module Fabulator
 
       def path
         if self.parent.nil? || self.parent == self
-          return self.axis + '::'
+          return ''
         else
           return self.parent.path + '/' + (self.is_attribute? ? '@' : '') + self.name
         end
@@ -216,7 +216,8 @@ module Fabulator
 
       def get_values(ln = nil)
         return [] if ln.nil?
-        self.children(ln).collect{ |c| c.value} - [ nil ]
+        self.eval_expression(ln).collect{ |c| c.value} - [ nil ]
+        #self.children(ln).collect{ |c| c.value} - [ nil ]
       end
 
       def root(a = nil)
