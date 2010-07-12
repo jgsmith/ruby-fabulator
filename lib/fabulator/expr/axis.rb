@@ -74,7 +74,7 @@ module Fabulator
 
           stack = stack + c.children
 
-          possible = possible + c.run(@step, autovivify)
+          possible = possible + @step.run(c, autovivify)
         end
         return possible.uniq
       end
