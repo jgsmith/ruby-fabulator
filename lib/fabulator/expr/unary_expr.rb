@@ -12,9 +12,9 @@ module Fabulator
 
         l = l.collect { |i| i.value }.uniq - [ nil ]
 
-        return @expr.collect{|e|  res << Fabulator::Expr::Node.new(
-              context.axis,
-              context.roots,
+        return @expr.collect{|e|  Fabulator::Expr::Node.new(
+              context.root.axis,
+              context.root.roots,
               self.calculate(e),
               []
             ) }

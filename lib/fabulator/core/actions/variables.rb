@@ -1,48 +1,44 @@
 module Fabulator
   module Core
   module Actions
-  class ValueOf
-    def compile_xml(xml, c_attrs = {})
-      @select = ActionLib.get_local_attr(xml, FAB_NS, 'select', { :eval => true })
-      self
-    end
+  class ValueOf < Fabulator::Action
+    namespace Fabulator::FAB_NS
+    has_select
 
     def run(context, autovivify = false)
-      @select.run(context, autovivify)
+      @select.run(@context.merge(context), autovivify)
     end
   end
 
-  class Value
+  class Value < Fabulator::Action
     attr_accessor :select, :name
 
-    def compile_xml(xml, c_attrs = {})
-      @select = ActionLib.get_local_attr(xml, FAB_NS, 'select', { :eval => true, :default => nil })
-      @name = ActionLib.get_local_attr(xml, FAB_NS, 'path', { :eval => true })
-      @actions = ActionLib.compile_actions(xml, c_attrs)
-      self
-    end
+    namespace Fabulator::FAB_NS
+    attribute :path, :eval => true
+    has_select
+    has_actions
 
     def run(context, autovivify = false)
-      return context.set_value(@name, @select.nil? ? @actions : @select )
+      @context.merge(context).set_value(@path, @select.nil? ? @actions : @select )
     end
   end
 
-  class Variable
-    def compile_xml(xml, c_attrs = {})
-      @select = ActionLib.get_local_attr(xml, FAB_NS, 'select', { :eval => true })
-      @name = (xml.attributes.get_attribute_ns(FAB_NS, 'name').value rescue nil)
-      @actions = ActionLib.compile_actions(xml, c_attrs)
-      self
-    end
+  class Variable < Fabulator::Action
+    namespace Fabulator::FAB_NS
+    attribute :name, :eval => false, :static => true
+    has_select
+    has_actions
 
     def run(context, autovivify = false)
       return [] if @name.nil?
       res = [ ]
-      if @select
-        res = @select.run(context, autovivify)
-      elsif !@actions.empty?
-        @actions.each do |a|
-          res = a.run(context, autovivify)
+      @context.with(context) do |ctx|
+        if @select
+          res = @select.run(ctx, autovivify)
+        elsif !@actions.empty?
+          @actions.each do |a|
+            res = a.run(ctx, autovivify)
+          end
         end
       end
       context.set_var(@name, res)

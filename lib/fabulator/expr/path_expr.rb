@@ -13,13 +13,9 @@ module Fabulator
 
       def run(context, autovivify = false)
         if @primary_expr.nil?
-          possible = [ context ]
+          possible = [ context.root ]
         else
-          #begin
-            possible = @primary_expr.run(context,autovivify).uniq
-          #rescue
-          #  possible = [ context ]
-          #end
+          possible = @primary_expr.run(context,autovivify).uniq
         end
 
         final = [ ]
@@ -30,7 +26,7 @@ module Fabulator
           next if e.nil?
           not_pass = false
           @predicates.each do |p|
-            if !p.test(e)
+            if !p.test(context.with_root(e))
               not_pass = true
               break
             end
@@ -38,7 +34,9 @@ module Fabulator
           next if not_pass
           pos = [ e ]
           @segment.each do |s|
-            pos = pos.collect{ |p| s.run(p, autovivify) }.flatten
+            pos = pos.collect{ |p| 
+              s.run(context.with_root(p), autovivify) 
+            }.flatten - [ nil ]
           end
             
           final = final + pos

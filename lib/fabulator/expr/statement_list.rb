@@ -12,6 +12,7 @@ module Fabulator
       end
 
       def add_ensure(s)
+puts "Adding ensure #{s}"
         @ensures << s
       end
 
@@ -40,22 +41,23 @@ module Fabulator
           if e.is_a?(Fabulator::Expr::Exception) 
             ex = e.node
           else
-            ex = context.anon_node(e.to_s, [ FAB_NS, 'string' ])
+            ex = context.root.anon_node(e.to_s, [ FAB_NS, 'string' ])
             ex.set_attribute('class', 'ruby.' + e.class.to_s.gsub(/::/, '.'))
           end
           if !@catches.nil?
             @catches.each do |s|
               if !s.nil? && s.run_test(ex)
                 caught = true
-                result = s.run(ex, autovivify)
+                result = s.run(context.with_root(ex), autovivify)
               end
             end
           end
 
           raise e unless caught
         ensure
-          if !@ensures.nil?
+          if !@ensures.nil? && !@ensures.empty?
             @ensures.each do |s|
+puts "Running ensure #{s}"
               s.run(context, autovivify) unless s.nil?
             end
           end
@@ -74,7 +76,7 @@ module Fabulator
       def run(context, autovivify = false)
         result = @expr.run(context, autovivify)
         result.each do |r|
-          @with.run(r, true)
+          @with.run(context.with_root(r), true)
         end
         result
       end
@@ -88,7 +90,7 @@ module Fabulator
 
       def run(context, autovivify = false)
         context.set_value(@path, @value)
-        [ context ]
+        [ context.root ]
       end
     end
   end

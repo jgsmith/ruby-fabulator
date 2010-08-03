@@ -1,4 +1,3 @@
-@dev
 Feature: Simple Math
 
   Scenario Outline: binary math

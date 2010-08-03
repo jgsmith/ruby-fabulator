@@ -11,7 +11,7 @@ module Fabulator
       end
 
       def run(context, autovivify = false)
-        return [ context.anon_node(@lit, @type) ]
+        return [ context.root.anon_node(@lit, @type) ]
       end
     end
 

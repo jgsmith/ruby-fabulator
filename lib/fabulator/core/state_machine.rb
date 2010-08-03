@@ -15,16 +15,15 @@ module Fabulator
     attr_accessor :states, :missing_params, :errors, :namespaces, :updated_at
     attr_accessor :state
 
-    def compile_xml(xml, c_attrs = { }, callbacks = { })
+    def compile_xml(xml, context, callbacks = { })
       # /statemachine/states
       @states ||= { }
-      self.namespaces = { } if self.namespaces.nil?
       @state = 'start'
 
-      attr = ActionLib.collect_attributes(c_attrs, xml.root)
+      @context = context.merge(xml.root)
 
       ActionLib.with_super(@actions) do
-        p_actions = ActionLib.compile_actions(xml.root, {})
+        p_actions = @context.compile_actions(xml.root)
         @actions = p_actions if @actions.nil? || !p_actions.is_noop?
       end
 
@@ -34,19 +33,11 @@ module Fabulator
           when 'view':
             nom = (child.attributes.get_attribute_ns(FAB_NS, 'name').value rescue nil)
             if !@states[nom].nil?
-              @states[nom].compile_xml(child, attr)
+              @states[nom].compile_xml(child, @context)
             else
-              @states[nom] = State.new.compile_xml(child, attr)
+              @states[nom] = State.new.compile_xml(child, @context)
             end
         end
-      end
-
-      xml.root.namespaces.each do |ns|
-        self.namespaces[ns.prefix] = ns.href
-      end
-      begin
-        self.namespaces[''] = xml.root.namespaces.default.href
-      rescue
       end
 
       if @states.empty?
@@ -62,27 +53,29 @@ module Fabulator
     end
 
     def namespaces 
-      @namespaces
+      @context.ns
     end
 
     def init_context(c)
-      @context = c
+      ctx = @context.class.new(@context, c)
       begin
-        @actions.run(c)
+        @actions.run(ctx, c)
       rescue Fabulator::StateChangeException => e
         @state = e
       end
     end
 
     def context
-      { :data => @context, :state => @state }
+      { :data => @context.root, :state => @state }
     end
 
     def context=(c)
-      if c.is_a?(Fabulator::Expr::Node)
+      if c.is_a?(Fabulator::Expr::Context)
         @context = c
+      elsif c.is_a?(Fabulator::Expr::Node)
+        @context.root = c
       elsif c.is_a?(Hash)
-        @context = c[:data]
+        @context.root = c[:data]
         @state = c[:state]
       end
     end
@@ -93,9 +86,9 @@ module Fabulator
       # select transition
       # possible get some errors
       # run transition, and move to new state as needed
-      @context.clear_ctx unless @context.nil?
-      self.run_transition(current_state.select_transition(@context, params))
-      @context.clear_ctx unless @context.nil?
+      @context.in_context do |ctx|
+        self.run_transition(current_state.select_transition(@context, params))
+      end
     end
 
     def run_transition(best_transition)
@@ -107,7 +100,7 @@ module Fabulator
       if @missing_params.empty? && @errors.empty?
         @state = t.state
         # merge valid and context
-        best_transition[:valid].each do |item|
+        best_transition[:valid].sort_by { |a| a.path.length }.each do |item|
           p = item.path.gsub(/^[^:]+::/, '').split('/') - [ '' ]
           n = @context.traverse_path(p, true).first
           n.prune
@@ -120,12 +113,6 @@ module Fabulator
           # run_pre for the state we're going to
           new_state = @states[@state]
           new_state.run_pre(@context) if !new_state.nil?
-#          jumps = 0
-#          while !new_state.nil? && new_state.transitions.size == 1 && new_state.transitions.first.param_names.size == 0 && jumps < 1000
-#            jumps = jumps + 1
-#            new_state.transitions.first.run(@context)
-#            new_state = @states[new_state.transitions.first.state]
-#          end
         rescue Fabulator::StateChangeException => e # catch state change
           new_state = @states[e]
           begin
@@ -142,7 +129,7 @@ module Fabulator
     end
 
     def data
-      @context
+      @context.root
     end
 
     def state_names

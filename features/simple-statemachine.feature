@@ -145,3 +145,48 @@ Feature: Simple state machines
     Then it should be in the 'start' state
      And the expression (/foo) should equal ['boo']
 
+  @steps
+  Scenario: simple machine with a 2 simple transitions
+    Given the statemachine
+      """
+        <f:application xmlns:f="http://dh.tamu.edu/ns/fabulator/1.0#">
+          <f:view f:name="start">
+            <f:goes-to f:view="step1">
+              <f:params>
+                <f:param f:name="foo">
+                  <f:filter f:name="trim" />
+                  <f:value>bar</f:value>
+                </f:param>
+              </f:params>
+            </f:goes-to>
+          </f:view>
+          <f:view f:name="step1">
+            <f:goes-to f:view="stop">
+              <f:params>
+                <f:param f:name="bar">
+                  <f:filter f:name="trim" />
+                  <f:value>baz</f:value>
+                </f:param>
+              </f:params>
+            </f:goes-to>
+          </f:view>
+          <f:view f:name="stop" />
+        </f:application>
+      """
+    Then it should be in the 'start' state
+    When I run it with the following params:
+      | key   | value         |   
+      | foo   | bar  b  que   |
+    Then it should be in the 'start' state
+     And the expression (/foo) should be nil
+    When I run it with the following params:
+      | key   | value |
+      | foo   | bar   |
+    Then it should be in the 'step1' state
+     And the expression (/foo) should equal ['bar']
+    When I run it with the following params:
+      | key   | value |
+      | bar   | baz   |
+    Then it should be in the 'stop' state
+     And the expression (/foo) should equal ['bar']
+     And the expression (/bar) should equal ['baz']

@@ -5,7 +5,7 @@ module Fabulator
 
       attr_accessor :axis, :value, :name, :roots, :vtype, :attributes, :is_attribute
 
-      def initialize(a,r,v,c,p = nil,f={})
+      def initialize(a,r,v,c,p = nil) #,f={})
         @roots = r
         @axis = a
         @children = []
@@ -14,7 +14,7 @@ module Fabulator
         @vtype = nil
         @parent = p
         @name = nil
-        @e_ctx = f
+#        @e_ctx = f
         @attributes = [ ]
         @is_attribute = false
 
@@ -45,6 +45,10 @@ module Fabulator
 
       def get_attribute(k)
         (@attributes.select{ |a| a.name == k }.first rescue nil)
+      end
+
+      def attributes
+        @attributes
       end
 
       def self.new_context_environment
@@ -175,11 +179,11 @@ module Fabulator
       end
 
       def run(context, autovivify = false)
-        context.nil? ? [] : [ context ]
+        context.nil? ? [] : [ context.root ]
       end
 
       def create_node(context)
-        context
+        context.root
       end
     end
 
@@ -191,21 +195,21 @@ module Fabulator
       def run(context, autovivify = false)
         c = nil
         if @axis.is_a?(String)
-          c = context.root(@axis)
+          c = context.root.root(@axis)
         elsif !@axis.nil?
           c = @axis.run(context, autovivify).first
         else
-          c = context.root
+          c = context.root.root
         end
         return [ ] if c.nil?
         return [ c ]
       end
 
       def create_node(context)
-        if context.root(@axis).nil?
-          context.roots[@axis] = Fabulator::Expr::Node.new(@axis,context.roots,nil,[])
+        if context.root.root(@axis).nil?
+          context.root.roots[@axis] = Fabulator::Expr::Node.new(@axis,context.root.roots,nil,[])
         end
-        context.root(@axis)
+        context.root.root(@axis)
       end
     end
   end

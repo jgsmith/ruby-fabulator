@@ -1,12 +1,12 @@
 module Fabulator
   module Expr
     class Function
-      def initialize(ns_map, nom, args)
+      def initialize(ctx, nom, args)
         bits = nom.split(/:/, 2)
-        @ns = ns_map[bits[0]]
+        @ns = ctx.get_ns(bits[0])
         @name = bits[1]
         @args = args
-        @ns_map = ns_map
+        @ctx = ctx
       end
 
       def expr_type(context)
@@ -17,8 +17,9 @@ module Fabulator
       def run(context, autovivify = false)
         klass = ActionLib.namespaces[@ns]
         return [] if klass.nil?
+        ctx = @ctx.merge(context)
         return klass.run_function(
-          context, @ns_map, @name, @args.run(context)
+          ctx, @name, @args.run(ctx)
         )
       end
     end
@@ -29,7 +30,7 @@ module Fabulator
       end
 
       def run(context, autovivify = false)
-        @args.collect{ |arg| arg.run(context,autovivify).flatten }
+        @args.collect{ |arg| arg.run(context, autovivify).flatten }
       end
     end
 
@@ -39,8 +40,8 @@ module Fabulator
       end
 
       def run(context, autovivify = false)
-        items = @args.collect{ |arg| arg.run(context,autovivify).flatten }.flatten
-        ret = context.anon_node(nil, [ FAB_NS, 'tuple' ])
+        items = @args.collect{ |arg| arg.run(context, autovivify).flatten }.flatten
+        ret = context.root.anon_node(nil, [ FAB_NS, 'tuple' ])
         ret.value = items
         ret.vtype = [ FAB_NS, 'tuple' ]
         ret.set_attribute('size', items.size)

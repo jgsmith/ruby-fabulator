@@ -1,7 +1,12 @@
 module Fabulator
   module Core
-  class Parameter
+  class Parameter < Fabulator::Action
     attr_accessor :name
+
+    namespace Fabulator::FAB_NS
+
+    attribute :name, :eval => false, :static => true
+    attribute :required, :static => true, :default => 'false'
 
     def required?
       @required
@@ -11,12 +16,11 @@ module Fabulator
       [ @name ]
     end
 
-    def compile_xml(xml, c_attrs = { })
-      @name = xml.attributes.get_attribute_ns(FAB_NS, 'name').value
+    def compile_xml(xml, context)
+      super
+
       @constraints = [ ]
       @filters = [ ]
-      @required = (xml.attributes.get_attribute_ns(FAB_NS, 'required').value rescue 'false')
-      attrs = ActionLib.collect_attributes(c_attrs, xml)
 
       case @required.downcase
         when 'yes':
@@ -33,11 +37,11 @@ module Fabulator
         next unless e.namespaces.namespace.href == FAB_NS
         case e.name
           when 'constraint':
-            @constraints << Constraint.new.compile_xml(e, attrs)
+            @constraints << Constraint.new.compile_xml(e, @context)
           when 'filter':
-            @filters << Filter.new.compile_xml(e, attrs)
+            @filters << Filter.new.compile_xml(e, @context)
           when 'value':
-            @constraints << Constraint.new.compile_xml(e, attrs)
+            @constraints << Constraint.new.compile_xml(e, @context)
         end
       end
       self
@@ -45,15 +49,16 @@ module Fabulator
 
     def get_context(context)
       context = [ context ] unless context.is_a?(Array)
-      context.collect{ |c| c.traverse_path(@name) }
+      context.collect{ |c| c.traverse_path(@name) }.flatten
     end
 
     def apply_filters(context)
       filtered = [ ]
-      context = [ context ] unless context.is_a?(Array)
-      @filters.each do |f|
-        context.each do |c|
-          filtered = filtered + f.run(c.traverse_path(@name))
+      @context.with(context) do |ctx|
+        @filters.each do |f|
+          self.get_context(ctx).each do |cc|
+            filtered = filtered + f.run(ctx.with_root(cc))
+          end
         end
       end
       filtered
@@ -61,18 +66,19 @@ module Fabulator
 
     def apply_constraints(context)
       res = { :missing => [], :invalid => [], :valid => [], :messages => [] }
-      context = [ context ] unless context.is_a?(Array)
-      items = context.collect{ |c| c.traverse_path(@name) }.flatten
+      ctx = @context.merge(context)
+      items = self.get_context(ctx)
+      #name = context.attribute(FAB_NS, 'name')
       if items.empty?
-        if @required
-          res[:missing] = context.collect{ |c| (c.path + '/' + @name).gsub(/\/+/, '/')}
+        if required?
+          res[:missing] = [ (ctx.root.path + '/' + @name).gsub(/\/+/, '/') ]
         end
       elsif @constraints.empty? # make sure something exists
         res[:valid] = items
       elsif @all_constraints
         @constraints.each do |c|
           items.each do |item|
-            r = c.test_constraint(i)
+            r = c.test_constraint(ctx.with_root(i))
             res[:valid] += r[0]
             if !r[1].empty?
               res[:invalid] += r[1]
@@ -82,7 +88,7 @@ module Fabulator
         end
       else
         items.each do |item|
-          passed = @constraints.select {|c| c.test_constraint(item)[1].empty? }
+          passed = @constraints.select {|c| c.test_constraint(ctx.with_root(item))[1].empty? }
           if passed.empty?
             res[:invalid] << item
             res[:messages] += @constraints.collect { |c| c.error_message(item) }
@@ -96,23 +102,25 @@ module Fabulator
     end
 
     def test_constraints(context)
-      me = context.traverse_path(@name)
-      return [ [ me.collect{ |m| m.path } ], [] ] if @constraints.empty?
-      paths = [ [], [] ]
-      if @all_constraints
-        @constraints.each do |c|
-          p =  c.test_constraints(me)
-          paths[0] += p[0]
-          paths[1] += p[1]
+      @context.with(context) do |ctx|
+        me = ctx.traverse_path(@name)
+        return [ [ me.collect{ |m| m.path } ], [] ] if @constraints.empty?
+        paths = [ [], [] ]
+        if @all_constraints
+          @constraints.each do |c|
+            p =  c.test_constraints(ctx, me)
+            paths[0] += p[0]
+            paths[1] += p[1]
+          end
+          return [ (paths[0] - paths[1]).uniq, paths[1].uniq ]
+        else
+          @constraints.each do |c|
+            p = c.test_constraints(ctx, me)
+            paths[0] += p[0]
+            paths[1] += p[1]
+          end
+          return [ paths[0].uniq, (paths[1] - paths[0]).uniq ]
         end
-        return [ (paths[0] - paths[1]).uniq, paths[1].uniq ]
-      else
-        @constraints.each do |c|
-          p = c.test_constraints(me)
-          paths[0] += p[0]
-          paths[1] += p[1]
-        end
-        return [ paths[0].uniq, (paths[1] - paths[0]).uniq ]
       end
     end
   end

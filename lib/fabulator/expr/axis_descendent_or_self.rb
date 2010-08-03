@@ -7,9 +7,9 @@ module Fabulator
 
       def run(context, autovivify = false)
         if context.is_a?(Array)
-          stack = context
+          stack = context.root
         else
-          stack = [ context ]
+          stack = [ context.root ]
         end
         possible = [ ]
         while !stack.empty?
@@ -17,7 +17,7 @@ module Fabulator
 
           stack = stack + c.children
 
-          possible = possible + c.run(@step, autovivify)
+          possible = possible + context.with_root(c).run(@step, autovivify)
         end
         return possible.uniq
       end

@@ -1,3 +1,4 @@
+require 'fabulator/expr/context'
 require 'fabulator/expr/axis_descendent_or_self'
 require 'fabulator/expr/axis'
 require 'fabulator/expr/bin_expr'

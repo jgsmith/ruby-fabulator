@@ -18,7 +18,7 @@ module Fabulator
             n_p = p.run(context).collect{ |i| possible[i-1] }
           else
             possible.each do |c|
-              res = p.run(c)
+              res = p.run(context.with_root(c))
               if res.is_a?(Array)
                 n_p << c if !res.empty? && !!res.first.value
               else

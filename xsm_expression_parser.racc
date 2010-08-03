@@ -130,8 +130,8 @@ rule
     | DOT { result = Fabulator::Expr::CurrentContext.new }
     | DOT_DOT { result = Fabulator::Expr::AxisParent.new }
 
-    #| AXIS_METHOD COLON_COLON node_test predicates { result = Fabulator::Expr::Predicates.new(Fabulator::Expr::Function.new(@namespaces, val[2], []), val[3]) }
-    #| AXIS_METHOD COLON_COLON FUNCTION_NAME list predicates { result = Fabulator::Expr::Predicates.new(Fabulator::Expr::Function.new(@namespaces, val[2], val[3]), val[4]) }
+    #| AXIS_METHOD COLON_COLON node_test predicates { result = Fabulator::Expr::Predicates.new(Fabulator::Expr::Function.new(@context, val[2], []), val[3]) }
+    #| AXIS_METHOD COLON_COLON FUNCTION_NAME list predicates { result = Fabulator::Expr::Predicates.new(Fabulator::Expr::Function.new(@context, val[2], val[3]), val[4]) }
     #| axis LC DOLLAR_QNAME RC predicates { result = Fabulator::Expr::Predicates.new(Fabulator::Expr::Step.new(val[0], Fabulator::Expr::QName.new(val[3])), val[4]) }
 
   axis: node_test { result = Fabulator::Expr::AxisChild.new(val[0]) }
@@ -154,7 +154,7 @@ rule
     | tuple
     | LITERAL { result = Fabulator::Expr::Literal.new(val[0], [ Fabulator::FAB_NS, 'string' ]) }
     | NUMBER { result = Fabulator::Expr::Literal.new(val[0] =~ /\./ ? val[0].to_d.to_r : val[0].to_i.to_r, [ Fabulator::FAB_NS, 'numeric' ]) }
-    | FUNCTION_NAME list { result = Fabulator::Expr::Function.new(@namespaces, val[0], val[1]) }
+    | FUNCTION_NAME list { result = Fabulator::Expr::Function.new(@context, val[0], val[1]) }
 
   list: LP opt_args RP { result = Fabulator::Expr::List.new(val[1]) }
 
@@ -178,26 +178,12 @@ end
   require 'bigdecimal'
   require 'bigdecimal/util'
 
-  def parse(t, xml = { })
+  def parse(t, ctx)
     @source = t
     @curpos = 0
-    @namespaces = { }
+    @context = ctx #.class.new(ctx)
     @line = 0
     @col = 0
-
-    if xml.nil?
-      @namespaces = { }
-    elsif xml.is_a?(Hash)
-      @namespaces = xml
-    else
-      xml.namespaces.each do |ns|
-        @namespaces[ns.prefix] = ns.href
-      end
-      begin
-        @namespaces[''] = xml.namespaces.default.href
-      rescue
-      end
-    end
 
     @yydebug = true
 

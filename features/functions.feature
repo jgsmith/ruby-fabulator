@@ -137,3 +137,11 @@ Feature: Function calls and lists
     When I run the expression (f:keep("foo bar baz! ter", ('alpha', 'numeric')))
     Then I should get 1 item
       And item 0 should be ['foo bar baz ter']
+
+  @bool
+  Scenario: Negating logic
+    Given a context
+     And the prefix f as "http://dh.tamu.edu/ns/fabulator/1.0#"
+    When I run the expression (f:not(f:true()))
+    Then I should get 1 item
+      And item 0 should be [f:false()]

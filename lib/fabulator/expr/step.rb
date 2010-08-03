@@ -7,10 +7,10 @@ module Fabulator
       end
 
       def run(context, autovivify = false)
-        c = context
-        if !@axis.nil? && @axis != '' && context.roots.has_key?(@axis) &&
-            @axis != context.axis
-          c = context.roots[@axis]
+        c = context.root
+        if !@axis.nil? && @axis != '' && context.root.roots.has_key?(@axis) &&
+            @axis != context.root.axis
+          c = context.root.roots[@axis]
         end
         if @node_test.is_a?(String)
           n = @node_test
@@ -24,7 +24,7 @@ module Fabulator
           possible = c.children.select{ |cc| cc.name == n }
           if possible.empty? && autovivify
             #Rails.logger.info("Autovivifying #{n}")
-            possible = c.traverse_path([ n ], true)
+            possible = context.with_root(c).traverse_path([ n ], true)
           end
         end
         return possible
@@ -33,9 +33,9 @@ module Fabulator
       def create_node(context)
         return nil if node_text == '*'
 
-        c = Fabulator::Expr::Node.new(context.axis, context.roots, nil, [])
+        c = Fabulator::Expr::Node.new(context.root.axis, context.root.roots, nil, [])
         c.name = @node_test
-        context.add_child(c)
+        context.root.add_child(c)
         c
       end
     end

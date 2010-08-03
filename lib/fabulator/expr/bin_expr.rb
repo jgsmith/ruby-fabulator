@@ -33,7 +33,7 @@ module Fabulator
             calc = [ calc ] unless calc.is_a?(Array)
 
             rut = self.result_type(ut)
-            res = res + calc.collect { |c| c.is_a?(Fabulator::Expr::Node) ? c : context.anon_node(c, rut) }
+            res = res + calc.collect { |c| c.is_a?(Fabulator::Expr::Node) ? c : context.root.anon_node(c, rut) }
           end
         end
         return res

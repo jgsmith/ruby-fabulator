@@ -15,26 +15,12 @@ module_eval(<<'...end xsm_expression_parser.racc/module_eval...', 'xsm_expressio
   require 'bigdecimal'
   require 'bigdecimal/util'
 
-  def parse(t, xml = { })
+  def parse(t, ctx)
     @source = t
     @curpos = 0
-    @namespaces = { }
+    @context = ctx #.class.new(ctx)
     @line = 0
     @col = 0
-
-    if xml.nil?
-      @namespaces = { }
-    elsif xml.is_a?(Hash)
-      @namespaces = xml
-    else
-      xml.namespaces.each do |ns|
-        @namespaces[ns.prefix] = ns.href
-      end
-      begin
-        @namespaces[''] = xml.namespaces.default.href
-      rescue
-      end
-    end
 
     @yydebug = true
 
@@ -1422,7 +1408,7 @@ module_eval(<<'.,.,', 'xsm_expression_parser.racc', 155)
 
 module_eval(<<'.,.,', 'xsm_expression_parser.racc', 156)
   def _reduce_90(val, _values, result)
-     result = Fabulator::Expr::Function.new(@namespaces, val[0], val[1]) 
+     result = Fabulator::Expr::Function.new(@context, val[0], val[1]) 
     result
   end
 .,.,

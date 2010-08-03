@@ -1,7 +1,11 @@
 module Fabulator
   module Core
-  class Transition
+  class Transition < Fabulator::Action
     attr_accessor :state, :validations, :tags
+
+    namespace Fabulator::FAB_NS
+    attribute :view, :as => :lstate, :static => true
+    attribute :tag,  :as => :ltags,  :static => true, :default => ''
 
     def initialize
       @state = nil
@@ -11,21 +15,21 @@ module Fabulator
       @actions = nil
     end
 
-    def compile_xml(xml, c_attrs = { })
+    def compile_xml(xml, ctx)
+      super
+
       inheriting = !@state.nil?
 
       if !inheriting
-        @state = xml.attributes.get_attribute_ns(FAB_NS, 'view').value
-        @tags = (xml.attributes.get_attribute_ns(FAB_NS, 'tag').value rescue '').split(/\s+/)
+        @state = @lstate
+        @tags = @ltags
       end
-
-      attrs = ActionLib.collect_attributes(c_attrs, xml)
 
         # TODO: figure out some way to reference inherited actions
         #   figure out 'super' vs. 'inner' -- only supporting 'super'
         #   for now
       ActionLib.with_super(@actions) do
-        t = ActionLib.compile_actions(xml, attrs)
+        t = @context.compile_actions(xml)
         @actions = t if @actions.nil? || !t.is_noop?
       end
       parser = Fabulator::Expr::Parser.new
@@ -35,22 +39,22 @@ module Fabulator
         case e.name
 # TODO: handle parameters when inheriting
           when 'params':
-            p_attrs = ActionLib.collect_attributes(attrs, e)
-            @select = ActionLib.get_select(e, '/')
+            p_ctx = @context.merge(e)
+            @select = p_ctx.get_select('/')
 
             e.each_element do |ee|
               next unless ee.namespaces.namespace.href == FAB_NS
               case ee.name
                 when 'group':
                   if !inheriting
-                    g = Group.new.compile_xml(ee, p_attrs)
+                    g = Group.new.compile_xml(ee, p_ctx)
                     @params << g
                   else
                     tags = (ee.attributes.get_attribute_ns(FAB_NS, 'tag').value rescue '').split(/\s+/)
                   end
                 when 'param':
                   if !inheriting
-                    p = Parameter.new.compile_xml(ee, p_attrs)
+                    p = Parameter.new.compile_xml(ee, p_ctx)
                     @params << p
                   else
                     tags = (ee.attributes.get_attribute_ns(FAB_NS, 'tag').value rescue '').split(/\s+/)
@@ -67,27 +71,48 @@ module Fabulator
     end
 
     def validate_params(context,params)
+      ctx = @context.merge(context)
       my_params = params
-      my_params.delete('url')
-      my_params.delete('action')
-      my_params.delete('controller')
-      my_params.delete('id')
+
       param_context = Fabulator::Expr::Node.new(
         'ext',
-        context.roots,
+        ctx.root.roots,
         nil,
         []
       )
-      context.roots['ext'] = param_context
-      param_context.merge_data(my_params)
+      ctx.root.roots['ext'] = param_context
+      p_ctx = ctx.with_root(param_context)
+      p_ctx.merge_data(my_params)
 
-      filtered = self.apply_filters(@select.nil? ? param_context : @select.run(param_context))
+      if @select.nil?
+        self.apply_filters(p_ctx)
+      else
+        @select.run(p_ctx).each{ |c| self.apply_filters(p_ctx.with_root(c)) }
+      end
 
-      # 'filtered' has a list of all parameters that have been passed through
-      # some kind of filter -- not necessarily ones that have passed a
-      # constraint
+      res = {
+        :unknown => [ ],
+        :valid => [ ],
+        :invalid => [ ],
+        :missing => [ ],
+        :messages => [ ],
+      }
 
-      res = self.apply_constraints(@select.nil? ? param_context : @select.run(param_context))
+      if @select.nil?
+        rr = self.apply_constraints(p_ctx)
+        res[:invalid] += rr[:invalid]
+        res[:valid] += rr[:valid]
+        res[:unknown] += rr[:unknown]
+        res[:messages] += rr[:messages]
+      else
+        @select.run(p_ctx).each do |c|
+          rr = self.apply_constraints(p_ctx.with_root(c))
+          res[:invalid] += rr[:invalid]
+          res[:valid] += rr[:valid]
+          res[:unknown] += rr[:unknown]
+          res[:messages] += rr[:messages]
+        end
+      end
 
       res[:unknown] = [ ]
 
@@ -108,19 +133,19 @@ module Fabulator
       return res
     end
 
-    def apply_filters(context)
-      @params.each do |p|
-        p.apply_filters(context)
-      end
+    def apply_filters(ctx)
+      @params.collect { |p|
+        p.apply_filters(ctx)
+      }.flatten
     end
 
-    def apply_constraints(context)
+    def apply_constraints(ctx)
       invalid = [ ]
       missing = [ ]
       valid = [ ]
       msgs = [ ]
       @params.each do |p|
-        res = p.apply_constraints(context)
+        res = p.apply_constraints(ctx)
         invalid = invalid + res[:invalid]
         missing = missing + res[:missing]
         valid = valid + res[:valid]
@@ -131,7 +156,7 @@ module Fabulator
 
     def run(context)
       # do queries, denials, assertions in the order given
-      @actions.run(context)
+      @actions.run(@context.merge(context))
       return []
     end
   end

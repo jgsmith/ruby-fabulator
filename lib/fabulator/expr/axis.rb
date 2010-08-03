@@ -23,12 +23,12 @@ module Fabulator
         if @root.nil? || @root == ''
           return @axis.run(context, autovivify)
         else
-          if context.roots[@root].nil? && !Fabulator::ActionLib.axes[@root].nil?
-            context.roots[@root] = Fabulator::ActionLib.axes[@root].call(context)
+          if context.root.roots[@root].nil? && !Fabulator::ActionLib.axes[@root].nil?
+            context.root.roots[@root] = Fabulator::ActionLib.axes[@root].call(context)
           end
-          return context.roots[@root].nil? ? [ ] : 
-                                @axis.nil? ? [ context.roots[@root] ] : 
-                                             [ @axis.run(context.roots[@root]) ]
+          return context.root.roots[@root].nil? ? [ ] : 
+                                @axis.nil? ? [ context.root.roots[@root] ] : 
+                                             [ @axis.run(context.with_root(context.root.roots[@root])) ]
         end
       end
     end
@@ -46,9 +46,9 @@ module Fabulator
         end
         return [ ] if n.nil?
         if n == '*'
-          possible = context.is_a?(Array) ? context.collect{|c| c.children}.flatten : context.children
+          possible = context.is_a?(Array) ? context.collect{|c| c.root.children}.flatten : context.root.children
         else
-          possible = context.is_a?(Array) ? context.collect{|c| c.children(n)}.flatten : context.children(n)
+          possible = context.is_a?(Array) ? context.collect{|c| c.root.children(n)}.flatten : context.root.children(n)
           if possible.empty? && autovivify
             possible = context.traverse_path([ n ], true)
           end
@@ -64,9 +64,9 @@ module Fabulator
 
       def run(context, autovivify = false)
         if context.is_a?(Array)
-          stack = context
+          stack = context.collect{ |c| c.root }
         else
-          stack = [ context ]
+          stack = [ context.root ]
         end
         possible = [ ]
         while !stack.empty?
@@ -74,7 +74,7 @@ module Fabulator
 
           stack = stack + c.children
 
-          possible = possible + @step.run(c, autovivify)
+          possible = possible + @step.run(context.with_root(c), autovivify)
         end
         return possible.uniq
       end
@@ -83,9 +83,9 @@ module Fabulator
     class AxisParent
       def run(context, autovivify = false)
         if context.is_a?(Array)
-          context.collect { |c| c.parent }.uniq
+          context.collect { |c| c.root.parent }.uniq
         else
-          context.parent
+          context.root.parent
         end
       end
     end
@@ -106,22 +106,22 @@ module Fabulator
             nom = (@name.run(c).last.to_s rescue nil)
           end
           if nom == 'type'
-            if c.vtype.nil?
+            if c.root.vtype.nil?
               nil
             else
-              n = c.anon_node(nil)
-              n.parent = c
-              n.set_attribute('namespace', c.vtype[0])
-              n.set_attribute('name', c.vtype[1])
+              n = c.root.anon_node(nil)
+              n.parent = c.root
+              n.set_attribute('namespace', c.root.vtype[0])
+              n.set_attribute('name', c.root.vtype[1])
               n.name = 'type'
               n.vtype = [ FAB_NS, 'uri' ]
               n
             end
           else
-            t = c.get_attribute(nom)
+            t = c.root.get_attribute(nom)
             if(t.nil? && autovivify)
-              c.set_attribute(nom, nil)
-              t = c.get_attribute(nom)
+              c.root.set_attribute(nom, nil)
+              t = c.root.get_attribute(nom)
             end
             t
           end

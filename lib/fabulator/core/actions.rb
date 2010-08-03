@@ -109,19 +109,19 @@ module Fabulator
 
     NUMERIC = [ FAB_NS, 'numeric' ]
 
-    mapping 'abs' do |ctx, arg, ns|
+    mapping 'abs' do |ctx, arg|
       arg.value.abs
     end
 
-    mapping 'ceiling' do |ctx, arg, ns|
+    mapping 'ceiling' do |ctx, arg|
       arg.to(NUMERIC).value.to_d.ceil.to_r
     end
 
-    mapping 'floor' do |ctx, arg, ns|
+    mapping 'floor' do |ctx, arg|
       arg.to(NUMERIC).value.to_d.floor.to_r
     end
 
-    reduction 'sum', { :scaling => :log } do |ctx, args, ns|
+    reduction 'sum', { :scaling => :log } do |ctx, args|
       zero = ActionLib.find_op(args.first.vtype, :zero)
       if(zero && zero[:proc])
         res = zero[:proc].call(ctx)
@@ -143,7 +143,7 @@ module Fabulator
       [ res ]
     end
 
-    reduction 'avg' do |ctx, args, ns|
+    reduction 'avg' do |ctx, args|
       res = 0.0
       n = 0.0
       args.each do |a|
@@ -158,25 +158,25 @@ module Fabulator
       end
     end
 
-    reduction 'max', { :scaling => :log } do |ctx, args, ns|
+    reduction 'max', { :scaling => :log } do |ctx, args|
       res = nil
       args.each do |a|
         res = a.to(NUMERIC).value if res.nil? || a.to(NUMERIC).value > res
       end
 
-      [ctx.anon_node(res, NUMERIC)]
+      [ctx.root.anon_node(res, NUMERIC)]
     end
 
-    reduction 'min', { :scaling => :log } do |ctx, args, ns|
+    reduction 'min', { :scaling => :log } do |ctx, args|
       res = nil
       args.each do |a|
         res = a.to(NUMERIC).value if res.nil? || a.to(NUMERIC).value < res
       end
 
-      [ctx.anon_node(res, NUMERIC)]
+      [ctx.root.anon_node(res, NUMERIC)]
     end
 
-    function 'histogram' do |ctx, args, ns|
+    function 'histogram' do |ctx, args|
       acc = { }
       args.flatten.each do |a|
         acc[a.to_s] ||= 0
@@ -185,7 +185,13 @@ module Fabulator
       acc
     end
 
-    reduction 'consolidate', { :scaling => :log } do |ctx, args, ns|
+    # TODO: make 'consolidate' a general-purpose function that translates
+    #   into the consolidation function of reductions
+    #
+    # the code here is the consolidation function for histogram
+    # f:sum is the consolidation function for f:sum
+    #
+    reduction 'consolidate', { :scaling => :log } do |ctx, args|
       acc = { }
       attrs = { }
       children = { }
@@ -203,7 +209,7 @@ module Fabulator
         end
       end
 
-      ret = ctx.anon_node(nil)
+      ret = ctx.root.anon_node(nil)
       acc.each_pair do |tok, cnt|
         t = ret.create_child(tok, cnt, [FAB_NS, 'numeric'])
         attrs[tok].each_pair do |a, vs|
@@ -215,6 +221,7 @@ module Fabulator
       end
       ret
     end
+
     ###
     ### String functions
     ###
@@ -225,7 +232,7 @@ module Fabulator
     #
     # f:concat(node-set) => node
     #
-    reduction 'concat', { :scaling => :log } do |ctx, args, ns|
+    reduction 'concat', { :scaling => :log } do |ctx, args|
       return '' if args.empty?
       [ args.collect{ |a| a.value.to_s}.join('') ]
     end
@@ -233,7 +240,7 @@ module Fabulator
     #
     # f:string-join(node-set, joiner) => node
     #
-    function 'string-join' do |ctx, args, ns|
+    function 'string-join' do |ctx, args|
       joiner = args[1].first.value.to_s
       [ args[0].collect{|a| a.value.to_s }.join(joiner) ]
     end
@@ -242,7 +249,7 @@ module Fabulator
     # f:substring(node-set, begin)
     # f:substring(node-set, begin, length)
     #
-    function 'substring' do |ctx, args, ns|
+    function 'substring' do |ctx, args|
       first = args[1].first.value
       if args.size == 3
         last = args[2].first.value
@@ -255,52 +262,52 @@ module Fabulator
     #
     # f:string-length(node-list) => node-list
     #
-    mapping 'string-length' do |ctx, arg, ns|
+    mapping 'string-length' do |ctx, arg|
       arg.to_s.length
     end
 
-    mapping 'normalize-space' do |ctx, arg, ns|
+    mapping 'normalize-space' do |ctx, arg|
       arg.to_s.gsub(/^\s+/, '').gsub(/\s+$/,'').gsub(/\s+/, ' ')
     end
 
-    mapping 'upper-case' do |ctx, arg, ns|
+    mapping 'upper-case' do |ctx, arg|
       arg.to_s.upcase
     end
 
-    mapping 'lower-case' do |ctx, arg, ns|
+    mapping 'lower-case' do |ctx, arg|
       arg.to_s.downcase
     end
 
-    function 'split' do |ctx, args, ns|
+    function 'split' do |ctx, args|
       div = args[1].first.to_s
       args[0].collect{ |a| a.to_s.split(div) }
     end
 
-    function 'contains' do |ctx, args, ns|
+    function 'contains' do |ctx, args|
       tgt = (args[1].first.to_s rescue '')
       return args[0].collect{ |a| (a.to_s.include?(tgt) rescue false) }
     end
 
-    function 'starts-with' do |ctx, args, ns|
+    function 'starts-with' do |ctx, args|
       tgt = (args[1].first.to_s rescue '')
       tgt_len = tgt.size - 1
       return args[0].collect{ |a| (a.to_s[0,tgt_len] == tgt rescue false) }
     end
 
-    function 'ends-with' do |ctx, args, ns|
+    function 'ends-with' do |ctx, args|
       tgt = (args[1].first.to_s rescue '').reverse
       tgt_len = tgt.size
       return args[0].collect{ |a| (a.to_s[-tgt_len,-1] == tgt rescue false) }
     end
 
-    function 'substring-before' do |ctx, args, ns|
+    function 'substring-before' do |ctx, args|
       tgt = (args[1].first.to_s rescue '')
       return [ '' ] if tgt == ''
 
       return args[0].collect{ |a| (a.value.to_s.split(tgt,2))[0] }
     end
 
-    function 'substring-after' do |ctx, args, ns|
+    function 'substring-after' do |ctx, args|
       tgt = (args[1].first.to_s rescue '')
 
       return args[0].collect{ |a| a.to_s } if tgt == ''
@@ -313,16 +320,7 @@ module Fabulator
     ### Regexes
     ###
 
-    function 'matches' do |ctx, args, ns|
-    end
-
-    function 'replace' do |ctx, args, ns|
-    end
-
-    function 'tokenize' do |ctx, args, ns|
-    end
-
-    function 'keep' do |ctx, args, ns|
+    function 'keep' do |ctx, args|
       # args[0] - strings to operate on
       # args[1] - char classes to keep: alpha, numeric, space, punctuation, control
       # we replace with 'space' if no args[2]
@@ -350,15 +348,15 @@ module Fabulator
     ### Boolean
     ###
 
-    function 'true', BOOLEAN do |ctx, args, ns|
-      return [ ctx.anon_node( true, [ FAB_NS, 'boolean' ] ) ]
+    function 'true', BOOLEAN do |ctx, args|
+      return [ ctx.root.anon_node( true, [ FAB_NS, 'boolean' ] ) ]
     end
 
-    function 'false', BOOLEAN do |ctx, args, ns|
-      return [ ctx.anon_node( false, [ FAB_NS, 'boolean' ] ) ]
+    function 'false', BOOLEAN do |ctx, args|
+      return [ ctx.root.anon_node( false, [ FAB_NS, 'boolean' ] ) ]
     end
 
-    mapping 'not' do |ctx, arg, ns|
+    mapping 'not' do |ctx, arg|
       !arg.value
     end
 
@@ -366,32 +364,32 @@ module Fabulator
     ### data node functions
     ###
 
-    mapping 'name' do |ctx, arg, ns|
+    mapping 'name' do |ctx, arg|
       arg.name || ''
     end
 
-    mapping 'root' do |ctx, arg, ns|
+    mapping 'root' do |ctx, arg|
       arg.root
     end
 
-    mapping 'lang' do |ctx, arg, ns|
+    mapping 'lang' do |ctx, arg|
       # we want to track language for rdf purposes?
     end
 
-    mapping 'path' do |ctx, arg, ns|
+    mapping 'path' do |ctx, arg|
       arg.path
     end
 
-    mapping 'dump' do |ctx, arg, ns|
+    mapping 'dump' do |ctx, arg|
       YAML::dump(
         arg.is_a?(Array) ? arg.collect{ |a| a.to_h } : arg.to_h 
       ) 
     end
 
-    mapping 'eval' do |ctx, arg, ns|
+    mapping 'eval' do |ctx, arg|
       p = Fabulator::Expr::Parser.new
       e = arg.to_s
-      pe = e.nil? ? nil : p.parse(e,ns)
+      pe = e.nil? ? nil : p.parse(e,ctx)
       pe.nil? ? [] : pe.run(ctx)
     end
 
@@ -399,31 +397,31 @@ module Fabulator
     ### Sequences
     ###
 
-    mapping 'empty' do |ctx, arg, ns|
+    mapping 'empty' do |ctx, arg|
       arg.nil? || !arg.is_a?(Array) || arg.empty?
     end
 
-    mapping 'exists' do |ctx, arg, ns|
+    mapping 'exists' do |ctx, arg|
       !(arg.nil? || !arg.is_a?(Array) || arg.empty?)
     end
 
-    function 'reverse' do |ctx, args, ns|
+    function 'reverse' do |ctx, args|
       args.flatten.reverse
     end
 
-    mapping 'zero-or-one' do |ctx, arg, ns|
+    mapping 'zero-or-one' do |ctx, arg|
       arg.is_a?(Array) && arg.size <= 1
     end
 
-    mapping 'one-or-more' do |ctx, arg, ns|
+    mapping 'one-or-more' do |ctx, arg|
       arg.is_a?(Array) && arg.size >= 1
     end
 
-    mapping 'zero-or-one' do |ctx, arg, ns|
+    mapping 'zero-or-one' do |ctx, arg|
       arg.is_a?(Array) && arg.size == 1
     end
 
-    reduction 'count' do |ctx, args, ns|
+    reduction 'count' do |ctx, args|
       args.size
     end
 
@@ -431,22 +429,28 @@ module Fabulator
     ### Context
     ###
 
-    function 'position', NUMERIC do |ctx, args, ns|
+    function 'position', NUMERIC do |ctx, args|
+      ctx.position
     end
 
-    function 'last', BOOLEAN do |ctx, args, ns|
+    function 'last', BOOLEAN do |ctx, args|
+      ctx.last?
+    end
+
+    function 'first', BOOLEAN do |ctx, args|
+      ctx.position == 1
     end
 
     ###
     ### URIs
     ###
  
-    mapping 'uri-prefix' do |ctx, arg, ns|
+    mapping 'uri-prefix' do |ctx, arg|
       res = [ ]
       prefix = arg.to_s
       # resolve prefix to href
-      if ns[prefix]
-        return ctx.anon_node( ns[prefix], [FAB_NS, 'string'])
+      if ctx.get_ns(prefix)
+        return ctx.root.anon_node( ctx.get_ns(prefix), [FAB_NS, 'string'])
       else
         return []
       end
@@ -458,40 +462,49 @@ module Fabulator
     ###
 
     filter 'trim' do |c|
-      v = c.value
-      v.chomp!
-      v.gsub!(/^\s*/,'')
-      v.gsub!(/\s*$/,'')
-      v.gsub!(/\s+/, ' ')
-      c.value = v
-      c
+      v = c.root.value
+      if !v.nil?
+        v.chomp!
+        v.gsub!(/^\s*/,'')
+        v.gsub!(/\s*$/,'')
+        v.gsub!(/\s+/, ' ')
+      end
+      v
     end
 
     filter 'downcase' do |c|
-      v = c.value
-      v.downcase!
-      c.value = v
+      v = c.root.value
+      if !v.nil?
+        v.downcase!
+        c.root.value = v
+      end
       c
     end
 
     filter 'upcase' do |c|
-      v = c.value
-      v.upcase!
-      c.value = v
+      v = c.root.value
+      if !v.nil?
+        v.upcase!
+        c.root.value = v
+      end
       c
     end
 
     filter 'integer' do |c|
-      v = c.value
-      v = v.to_i.to_s
-      c.value = v
+      v = c.root.value
+      if !v.nil?
+        v = v.to_i.to_s
+        c.root.value = v
+      end
       c
     end
 
     filter 'decimal' do |c|
-      v = c.value
-      v = v.to_f.to_s
-      c.value = v
+      v = c.root.value
+      if !v.nil?
+        v = v.to_f.to_s
+        c.root.value = v
+      end
       c
     end
 

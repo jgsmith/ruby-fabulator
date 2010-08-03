@@ -8,14 +8,12 @@ module Fabulator
       end
 
       def run(context, autovivify = false)
-        res = @test.run(context)
+        res = @test.run(context.merge)
 
-        context.in_context do
-          if res.nil? || res.empty? || !res.first.value
-            res = @else_expr.nil? ? [] : @else_expr.run(context, autovivify)
-          else
-            res = @then_expr.run(context, autovivify)
-          end
+        if res.nil? || res.empty? || !res.first.value
+          res = @else_expr.nil? ? [] : @else_expr.run(context.merge, autovivify)
+        else
+          res = @then_expr.run(context.merge, autovivify)
         end
         return res
       end

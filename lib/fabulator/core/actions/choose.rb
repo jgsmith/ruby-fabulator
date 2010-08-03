@@ -1,107 +1,106 @@
 module Fabulator
   module Core
   module Actions
-  class Choose
-    def compile_xml(xml, c_attrs = {})
+  class Choose < Fabulator::Action
+    def compile_xml(xml, context)
+      super
+
       @choices = [ ]
       @default = nil
-      attrs = ActionLib.collect_attributes(c_attrs, xml)
 
       xml.each_element do |e|
         next unless e.namespaces.namespace.href == FAB_NS
         case e.name
           when 'when':
-            @choices << When.new.compile_xml(e, attrs)
+            @choices << When.new.compile_xml(e, @context)
           when 'otherwise':
-            @default = When.new.compile_xml(e, attrs)
+            @default = When.new.compile_xml(e, @context)
         end
       end
       self
     end
 
     def run(context, autovivify = false)
-      @choices.each do |c|
-        if c.run_test(context)
-          return c.run(context)
+      @context.with(context) do |ctx|
+        @choices.each do |c|
+          if c.run_test(ctx)
+            return c.run(ctx)
+          end
         end
+        return @default.run(ctx) unless @default.nil?
+        return []
       end
-      return @default.run(context) unless @default.nil?
-      return []
     end
   end
 
-  class When
-    def compile_xml(xml, c_attrs = {})
-      @test = ActionLib.get_local_attr(xml, FAB_NS, 'test', { :eval => true })
-      @actions = ActionLib.compile_actions(xml, c_attrs)
-      self
-    end
+  class When < Fabulator::Action
+    namespace Fabulator::FAB_NS
+    attribute :test, :eval => true, :static => false
+
+    has_actions
 
     def run_test(context)
       return true if @test.nil?
-      result = @test.run(context).collect{ |a| !!a.value }
+      result = @test.run(@context.merge(context)).collect{ |a| !!a.value }
       return false if result.nil? || result.empty? || !result.include?(true)
       return true
     end
 
     def run(context, autovivify = false)
-      return @actions.run(context)
+      return @actions.run(@context.merge(context))
     end
   end
 
-  class If
-    def compile_xml(xml, c_attrs = {})
-      @test = ActionLib.get_local_attr(xml, FAB_NS, 'test', { :eval => true })
-      @actions = ActionLib.compile_actions(xml, c_attrs)
-      self
-    end
+  class If < Fabulator::Action
+    namespace Fabulator::FAB_NS
+    attribute :test, :eval => true, :static => false
+
+    has_actions
 
     def run(context, autovivify = false)
       return [ ] if @test.nil?
-      test_res = @test.run(context).collect{ |a| !!a.value }
-      return [ ] if test_res.nil? || test_res.empty? || !test_res.include?(true)
-      return @actions.run(context)
+      @context.with(context) do |ctx|
+        test_res = @test.run(ctx).collect{ |a| !!a.value }
+        return [ ] if test_res.nil? || test_res.empty? || !test_res.include?(true)
+        return @actions.run(ctx)
+      end
     end
   end
 
-  class Block
-    def compile_xml(xml, c_attrs = {})
-      @actions = ActionLib.compile_actions(xml, c_attrs)
-      self
-    end
+  class Block < Fabulator::Action
+
+    namespace Fabulator::FAB_NS
+    has_actions
 
     def run(context, autovivify = false)
-       return @actions.run(context,autovivify)
+       return @actions.run(@context.merge(context),autovivify)
     end
   end
 
-  class Goto  
-    def compile_xml(xml, c_attrs = {})
-      @test = ActionLib.get_local_attr(xml, FAB_NS, 'test', { :eval => true })
-      @state = ActionLib.get_local_attr(xml, FAB_NS, 'view')   
-      self
-    end
+  class Goto < Fabulator::Action
+    namespace Fabulator::FAB_NS
+    attribute :test, :eval => true, :static => false
+    attribute :state, :static => true
 
     def run(context, autovivify = false)
       raise Fabulator::StateChangeException, @state, caller if @test.nil?
-      test_res = @test.run(context).collect{ |a| !!a.value }
+      test_res = @test.run(@context.merge(context)).collect{ |a| !!a.value }
       return [ ] if test_res.nil? || test_res.empty? || !test_res.include?(true)
       raise Fabulator::StateChangeException, @state, caller
     end
   end
 
-  class Catch
-    def compile_xml(xml, c_attrs = {})
-      @test = ActionLib.get_local_attr(xml, FAB_NS, 'test', { :eval => true })
-      @as = ActionLib.get_local_attr(xml, FAB_NS, 'as')
-      @actions = ActionLib.compile_actions(xml, c_attrs)
-      self
-    end
+  class Catch < Fabulator::Action
+    namespace Fabulator::FAB_NS
+    attribute :test, :eval => true, :static => false
+    attribute :as, :static => true
+
+    has_actions
 
     def run_test(context)
       return true if @test.nil?
-      context.in_context do
-        context.set_ctx_var(@as, context) if @as
+      @context.with(context) do |ctx|
+        ctx.set_var(@as, context) if @as
         result = @test.run(context).collect{ |a| !!a.value }
         return false if result.nil? || result.empty? || !result.include?(true)
         return true
@@ -109,55 +108,57 @@ module Fabulator
     end
 
     def run(context, autovivify = false)
-      context.in_context do
-        context.set_ctx_var(@as, context) if @as
+      @context.with(context) do |ctx|
+        ctx.set_var(@as, context) if @as
         return @actions.run(context)
       end
     end
   end
 
-  class Raise
-    def compile_xml(xml, c_attrs={})
-      @test = ActionLib.get_local_attr(xml, FAB_NS, 'test', { :eval => true })
-      @select = ActionLib.get_local_attr(xml, FAB_NS, 'select', { :eval => true })
-      @actions = ActionLib.compile_actions(xml, c_attrs)
-      self
-    end
+  class Raise < Fabulator::Action
+ 
+    namespace Fabulator::FAB_NS
+    attribute :test, :eval => true, :static => false
+    has_actions
 
     def run(context, autovivify = false)
-      if !@test.nil?
-        test_res = @test.run(context).collect{ |a| !!a.value }
-        return [ ] if test_res.nil? || test_res.empty? || !test_res.include?(true)
-      end
-      res = [ ]
-      if @select.nil? && !@actions.nil?
-        res = @actions.run(context, autovivify)
-      elsif !@select.nil?
-        res = @select.run(context, autovivify)
-      else
-        raise context   # default if <raise/> with no attributes
-      end
+      @context.with(context) do |ctx|
+        select = ctx.get_select
+        if !@test.nil?
+          test_res = @test.run(ctx).collect{ |a| !!a.value }
+          return [ ] if test_res.nil? || test_res.empty? || !test_res.include?(true)
+        end
+        res = [ ]
+        if select.nil? && !@actions.nil?
+          res = @actions.run(ctx, autovivify)
+        elsif !select.nil?
+          res = select.run(ctx, autovivify)
+        else
+          raise ctx   # default if <raise/> with no attributes
+        end
 
-      return [ ] if res.empty?
+        return [ ] if res.empty?
 
-      raise Fabulator::Expr::Exception.new(res.first)
+        raise Fabulator::Expr::Exception.new(res.first)
+      end
     end
   end
 
-  class Super
-    def compile_xml(xml, c_attrs={})
-      @select = ActionLib.get_local_attr(xml, FAB_NS, 'select', { :eval => true })
-      @actions = ActionLib.current_super
-    end
+  class Super < Fabulator::Action
+    namespace Fabulator::FAB_NS
+    has_select
+    has_actions :super
 
     def run(context, autovivify = false)
       return [] if @actions.nil?
 
-      new_context = @select.run(context,autovivify)
+      @context.with(context) do |ctx|
+        new_context = @select.run(ctx,autovivify)
 
-      new_context = [ new_context ] unless new_context.is_a?(Array)
+        new_context = [ new_context ] unless new_context.is_a?(Array)
 
-      new_context.collect { |c| @actions.run(c, autovivify) }.flatten
+        return new_context.collect { |c| @actions.run(ctx.with_root(c), autovivify) }.flatten
+      end
     end
   end
 

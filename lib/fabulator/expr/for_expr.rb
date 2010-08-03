@@ -34,9 +34,9 @@ module Fabulator
       def run(context, autovivify = false)
         result = super
         result.each do |r|
-          return [ context.anon_node(false) ] unless !!r.value
+          return [ context.root.anon_node(false) ] unless !!r.value
         end
-        return [ context.anon_node(true) ]
+        return [ context.root.anon_node(true) ]
       end
     end
 
@@ -48,9 +48,9 @@ module Fabulator
       def run(context, autovivify = false)
         result = super
         result.each do |r|
-          return [ context.anon_node(true) ] if !!r.value
+          return [ context.root.anon_node(true) ] if !!r.value
         end
-        return [ context.anon_node(false) ]
+        return [ context.root.anon_node(false) ]
       end
     end
 
@@ -62,12 +62,10 @@ module Fabulator
       end
 
       def each_binding(context, autovivify = false, &block)
-        context.in_context do
-          @expr.run(context, autovivify).each do |e|
-            #context.in_context do
-              context.set_var(@var_name, e)
-              yield context
-            #end
+        @expr.run(context, autovivify).each do |e|
+          context.in_context do |ctx|
+            ctx.set_var(@var_name, e)
+            yield ctx
           end
         end
       end

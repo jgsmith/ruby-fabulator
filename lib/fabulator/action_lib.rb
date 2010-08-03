@@ -191,12 +191,6 @@ module Fabulator
       return nil
     end
 
-    def self.prefix_to_ref(xml, prefix)
-      x = xml.namespaces.find_by_prefix(prefix)
-      return nil if x.nil?
-      x.href
-    end
-
     def self.with_super(s, &block)
       @@super ||= []  # not thread safe :-/
       @@super.unshift(s)
@@ -209,138 +203,41 @@ module Fabulator
       return @@super.first
     end
 
-    def self.compile_actions(xml, c_attrs)
-      actions = Fabulator::Expr::StatementList.new
-      attrs = self.collect_attributes(c_attrs, xml)
-      xml.each_element do |e|
-        ns = e.namespaces.namespace.href
-        next unless Fabulator::ActionLib.namespaces.include?(ns)
-        if ns == FAB_NS && e.name == 'ensure'
-          actions.add_ensure(self.compile_actions(e, attrs))
-        elsif ns == FAB_NS && e.name == 'catch'
-          actions.add_catch(Fabulator::ActionLib.namespaces[ns].compile_action(e,attrs))
-        else
-          actions.add_statement(Fabulator::ActionLib.namespaces[ns].compile_action(e, attrs)) # rescue nil)
-        end
-      end
-      #actions = actions - [ nil ]
-      return actions
-    end
-
-    def self.collect_attributes(attrs, xml)
-      ret = { }
-      attrs.each_pair do |k,v|
-        ret[k] = { }
-        ret[k].merge!(v)
-      end
-
-      parser = Fabulator::Expr::Parser.new
-
-      spaces = { }
-      xml.namespaces.each do |ns|
-        spaces[ns.prefix] = ns.href
-      end
-      begin
-        spaces[''] = xml.namespaces.default.href
-      rescue
-      end
-
-
-      @@attributes.each do |a|
-        v = xml.attributes.get_attribute_ns(a[0], a[1])
-        if !v.nil?
-          ret[a[0]] = {} if ret[a[0]].nil?
-          v = v.value
-          if !a[2][:expression] && v =~ /^\{(.*)\}$/
-            v = (parser.parse($1, spaces) rescue nil)
-          else
-            v = Fabulator::Expr::Literal.new(v)
-          end
-          ret[a[0]][a[1]] = v
-        end
-      end
-      ret
-    end
-
-    def self.get_attribute(ns, attr, attrs)
-      return nil if attrs.nil? || attrs[ns].nil? || attrs[ns].empty? || attrs[ns][attr].nil?
-      return attrs[ns][attr]
-    end
-
-    def self.get_local_attr(xml, ns, attr, options = {})
-      v = (xml.attributes.get_attribute_ns(ns, attr).value rescue nil)
-      if v.nil? && !options[:default].nil?
-        v = options[:default]
-      end
-
-      if !v.nil?
-        e = nil
-        if !options[:eval] 
-          if v =~ /^\{(.*)\}$/
-            e = $1
-          end
-        else
-          e = v
-        end
-        if !e.nil?
-          p = Fabulator::Expr::Parser.new
-          spaces = { }
-          xml.namespaces.each do |ns|
-            spaces[ns.prefix] = ns.href
-          end
-          begin
-            spaces[''] = xml.namespaces.default.href
-          rescue
-          end
-
-          v = p.parse(e, spaces)
-        else
-          v = Fabulator::Expr::Literal.new(v, [ FAB_NS, v =~ /^\d+$/ ? 'numeric' : v =~ /^\d*\.\d+$/ || v =~ /^\d+\.\d*$/ ? 'numeric' : 'string' ])
-        end
-      end
-      v
-    end
-
-    def self.get_select(xml, default)
-      self.get_local_attr(xml, FAB_NS, 'select', { :eval => true, :default => default })
-    end
- 
-    def compile_action(e, r)
-      #Rails.logger.info("compile_action called with #{YAML::dump(r)}")
+    def compile_action(e, c)
       if self.class.method_defined? "action:#{e.name}"
-        send "action:#{e.name}", e, Fabulator::ActionLib.collect_attributes(r, e)
+        send "action:#{e.name}", e, c.merge(e)
       end
     end
 
-    def run_function(context, ns, nom, args, depth=0)
+    def run_function(context, nom, args, depth=0)
       ret = []
 
-      begin
+      #begin
         case self.function_run_type(nom)
         when :mapping
-          ret = args.flatten.collect { |a| send "fctn:#{nom}", context, a, ns }
+          ret = args.flatten.collect { |a| send "fctn:#{nom}", context, a }
         when :reduction
-          ret = send "fctn:#{nom}", context, args.flatten, ns
+          ret = send "fctn:#{nom}", context, args.flatten
         else
-          ret = send "fctn:#{nom}", context, args, ns
+          ret = send "fctn:#{nom}", context, args
         end
-      rescue => e
-        raise "function #{nom} raised #{e}"
-      end
+      #rescue => e
+      #  raise "function #{nom} raised #{e}"
+      #end
       ret = [ ret ] unless ret.is_a?(Array)
       ret = ret.flatten.collect{ |r| 
         if r.is_a?(Fabulator::Expr::Node) 
           r 
         elsif r.is_a?(Hash)
-          rr = context.anon_node(nil, nil)
+          rr = context.root.anon_node(nil, nil)
           r.each_pair do |k,v|
-            rrr = context.anon_node(v) #, self.function_return_type(nom))
+            rrr = context.root.anon_node(v) #, self.function_return_type(nom))
             rrr.name = k
             rr.add_child(rrr)
           end
           rr
         else
-          context.anon_node(r) #, self.function_return_type(nom))
+          context.root.anon_node(r) #, self.function_return_type(nom))
         end
       }
       ret.flatten
@@ -428,7 +325,7 @@ module Fabulator
         Fabulator::ActionLib.types[ns] ||= {}
         Fabulator::ActionLib.types[ns][nom] = options
 
-        function nom do |ctx, args, nss|
+        function nom do |ctx, args|
           args[0].collect { |i|
             i.to([ ns, nom ])
           }

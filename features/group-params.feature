@@ -1,3 +1,4 @@
+@group
 Feature: Groups/Parameters
 
   Scenario: simple machine with a simple transition and filter
@@ -52,7 +53,6 @@ Feature: Groups/Parameters
     Then it should be in the 'stop' state
      And the expression (/foo) should equal ['bar']
 
-  @groups
   Scenario: simple machine with a simple transition and simple group
     Given the statemachine
       """
