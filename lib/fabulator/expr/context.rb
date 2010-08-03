@@ -61,7 +61,7 @@ module Fabulator
   end
 
   def attribute(ns, attr, popts = { })
-    opts = { :static => @run_time_parent.nil? }.update(popts)
+    opts = { :static => !@run_time_parent.nil? && !self.root.nil? }.update(popts)
     value = nil
     if @attributes.nil? || @attributes[ns].nil? || @attributes[ns].empty? || @attributes[ns][attr].nil?
       if opts[:inherited]
@@ -102,7 +102,7 @@ module Fabulator
     value
   end
 
-  def get_select(default = '.')
+  def get_select(default = nil)
     self.attribute(FAB_NS, 'select', { :eval => true, :static => false, :default => default })
   end
 
@@ -299,14 +299,14 @@ module Fabulator
       end
       d.each do |i|
         c = root_context.create_child(node_name)
-        self.with_root(c).merge_data(i, true)
+        self.with_root(c).merge_data(i)
       end
     elsif d.is_a?(Hash)
       d.each_pair do |k,v|
         bits = k.split('.')
         c = self.with_root(root_context).traverse_path(bits,true).first
         if v.is_a?(Hash) || v.is_a?(Array)
-          self.with_root(c).merge_data(v, true)
+          self.with_root(c).merge_data(v)
         else
           c.value = v
         end

@@ -15,12 +15,16 @@ module Fabulator
     attr_accessor :states, :missing_params, :errors, :namespaces, :updated_at
     attr_accessor :state
 
-    def compile_xml(xml, context, callbacks = { })
+    def compile_xml(xml, context = nil, callbacks = { })
       # /statemachine/states
       @states ||= { }
       @state = 'start'
 
-      @context = context.merge(xml.root)
+      if context.nil?
+        @context = Fabulator::Expr::Context.new(context, xml.root)
+      else
+        @context = context.merge(xml.root)
+      end
 
       ActionLib.with_super(@actions) do
         p_actions = @context.compile_actions(xml.root)
@@ -57,9 +61,9 @@ module Fabulator
     end
 
     def init_context(c)
-      ctx = @context.class.new(@context, c)
+      @context.root = c.root
       begin
-        @actions.run(ctx, c)
+        @actions.run(@context)
       rescue Fabulator::StateChangeException => e
         @state = e
       end
@@ -67,6 +71,10 @@ module Fabulator
 
     def context
       { :data => @context.root, :state => @state }
+    end
+
+    def fabulator_context
+      @context
     end
 
     def context=(c)

@@ -181,7 +181,7 @@ end
   def parse(t, ctx)
     @source = t
     @curpos = 0
-    @context = ctx #.class.new(ctx)
+    @context = ctx
     @line = 0
     @col = 0
 

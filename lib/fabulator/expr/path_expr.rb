@@ -42,7 +42,6 @@ module Fabulator
           final = final + pos
         end
 
-         #puts "path_expr returning #{YAML::dump(final)}"
         return final
       end
     end

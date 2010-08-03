@@ -12,7 +12,6 @@ module Fabulator
       end
 
       def add_ensure(s)
-puts "Adding ensure #{s}"
         @ensures << s
       end
 
@@ -57,7 +56,6 @@ puts "Adding ensure #{s}"
         ensure
           if !@ensures.nil? && !@ensures.empty?
             @ensures.each do |s|
-puts "Running ensure #{s}"
               s.run(context, autovivify) unless s.nil?
             end
           end

@@ -15,7 +15,7 @@ module Fabulator
 
     namespace Fabulator::FAB_NS
     attribute :path, :static => true
-    has_select
+    has_select nil
     has_actions
 
     def run(context, autovivify = false)

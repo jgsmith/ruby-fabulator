@@ -10,7 +10,7 @@ module Fabulator
           self.instance_variable_set(as.to_sym, @context.attribute(opts[:namespace] || @@namespace[klass], nom.to_s, opts))
         end
       end
-      @select = @context.get_select(@@has_select[klass]) if @@has_select[klass]
+      @select = @context.get_select(@@has_select[klass]) if @@has_select.has_key?(klass)
       if @@has_actions[klass]
         case @@has_actions[klass]
           when :simple:
