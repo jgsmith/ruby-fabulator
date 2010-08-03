@@ -155,6 +155,11 @@ module Fabulator
   end
 
   def each_namespace(&block)
+    if !@parent.nil?
+      @parent.each_namespace do |k,v|
+        yield k, v
+      end
+    end
     @ns.each_pair do |k,v|
        yield k, v
     end
