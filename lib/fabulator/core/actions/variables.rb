@@ -14,12 +14,14 @@ module Fabulator
     attr_accessor :select, :name
 
     namespace Fabulator::FAB_NS
-    attribute :path, :eval => true
+    attribute :path, :static => true
     has_select
     has_actions
 
     def run(context, autovivify = false)
-      @context.merge(context).set_value(@path, @select.nil? ? @actions : @select )
+      @context.with(context) do |ctx|
+        ctx.set_value(@path, @select.nil? ? @actions : @select )
+      end
     end
   end
 

@@ -222,7 +222,7 @@ module Fabulator
     p = [ p ] unless p.is_a?(Array)
           
     ret = [ ]
-            
+
     p.each do |pp|
       tgts = pp.run(self, true)
       src = nil
