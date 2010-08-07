@@ -1,12 +1,13 @@
 require 'yaml'
 
 Transform /^(expression|context) \((.*)\)$/ do |n, arg|
-  @namespaces ||= { }
+  @context ||= Fabulator::Expr::Context.new
   @parser ||= Fabulator::Expr::Parser.new
   @parser.parse(arg, @context)
 end
 
 Transform /^\[(.*)\]$/ do |arg|
+  @context ||= Fabulator::Expr::Context.new
   @parser ||= Fabulator::Expr::Parser.new
   @parser.parse(arg, @context)
 end
@@ -16,11 +17,7 @@ Transform /^(\d+)$/ do |arg|
 end
 
 Given 'a context' do
-  @roots ||= { }
-  @data ||= Fabulator::Expr::Node.new('data', @roots, nil, [])
-  @roots['data'] ||= @data
   @context ||= Fabulator::Expr::Context.new
-  @context.root = @data
   @parser ||= Fabulator::Expr::Parser.new
 end
 

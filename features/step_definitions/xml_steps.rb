@@ -1,18 +1,10 @@
 Given /the statemachine/ do |doc_xml|
-  doc = LibXML::XML::Document.string doc_xml
-
-  @roots ||= { }
-  @namespaces ||= { }
-  @data ||= Fabulator::Expr::Node.new('data', @roots, nil, [])
-  @roots['data'] ||= @data
   @context ||= Fabulator::Expr::Context.new
-  @context.root = @data
 
-  @parser ||= Fabulator::Expr::Parser.new
   if @sm.nil?
-    @sm = Fabulator::Core::StateMachine.new.compile_xml(doc, @context)
+    @sm = Fabulator::Core::StateMachine.new.compile_xml(doc_xml)
   else
-    @sm.compile_xml(doc, @context)
+    @sm.compile_xml(doc_xml)
   end
   @sm.init_context(@context)
 end
