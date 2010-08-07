@@ -1,4 +1,5 @@
 require 'yaml'
+require 'xml/libxml'
 
 module Fabulator
   FAB_NS='http://dh.tamu.edu/ns/fabulator/1.0#'
@@ -20,8 +21,12 @@ module Fabulator
       @states ||= { }
       @state = 'start'
 
+      if xml.is_a?(String)
+        xml = LibXML::XML::Document.string xml
+      end
+
       if context.nil?
-        @context = Fabulator::Expr::Context.new(context, xml.root)
+        @context = Fabulator::Expr::Context.new.merge(xml.root)
       else
         @context = context.merge(xml.root)
       end

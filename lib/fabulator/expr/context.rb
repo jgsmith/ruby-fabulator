@@ -11,6 +11,14 @@ module Fabulator
     @position = nil
     @last = nil
 
+    if parent_c.nil?
+       if xml.nil? || (xml.root rescue nil).nil?
+         roots = { }
+         roots['data'] = Fabulator::Expr::Node.new('data', roots, nil, [])
+         @root = roots['data']
+       end
+    end
+
     if !xml.nil?
       if xml.is_a?(self.class)
         @run_time_parent = xml

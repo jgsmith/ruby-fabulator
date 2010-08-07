@@ -3,5 +3,5 @@
 $: << File.expand_path(File.dirname(__FILE__))+'/../../lib'
 
 require 'fabulator'
+require 'fabulator/template'
 require 'spec/expectations'
-require 'xml/libxml'
