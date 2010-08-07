@@ -5,12 +5,12 @@ module Fabulator::Template
 
   attr_reader :context
 
-  def initialize(page)
+  def initialize(parser)
     super()
-    @page = page
+    @parser = parser
     globals.context = @context
-    page.tags.each do |name|
-      define_tag(name) { |tag_binding| page.render_tag(name, tag_binding) }
+    parser.tags.each do |name|
+      define_tag(name) { |tag_binding| parser.render_tag(name, tag_binding) }
     end
   end
 
@@ -41,9 +41,9 @@ module Fabulator::Template
       "<div><strong>#{message}</strong></div>"
     end
 
-    def set_process_variables(page)
-      #page.request ||= @page.request
-      #page.response ||= @page.response
+    def set_process_variables(parser)
+      #parser.request ||= @parser.request
+      #parser.response ||= @parser.response
     end
 
   end
