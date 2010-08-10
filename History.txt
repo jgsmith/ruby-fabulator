@@ -3,7 +3,7 @@
 * 1 major enhancement:
   * Initial release
 
-=== 0.0.2
+=== 0.0.2 2010-08-10
 
 * 3 major enhancement:
   * Introduce '*' suffix to indicate a consolidation of a reduction
