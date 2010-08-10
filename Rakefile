@@ -1,48 +1,39 @@
-$: << File.expand_path(File.dirname(__FILE__))+'/lib'
-
-require 'rubygems'
-gem 'hoe', '>= 2.1.0'
-require 'hoe'
-require 'fileutils'
-require 'fabulator'
-
-Hoe.plugin :newgem
-# Hoe.plugin :website
-Hoe.plugin :cucumberfeatures
-
-# Generate all the Rake tasks
-# Run 'rake -T' to see list of generated tasks (from gem root directory)
-$hoe = Hoe.spec 'fabulator' do
-  self.version = Fabulator::VERSION::STRING
-  self.developer 'James Smith', 'jgsmith@tamu.edu'
-  self.post_install_message = 'PostInstall.txt' # TODO remove if post-install message not required
-  self.rubyforge_name       = self.name # TODO this is default value
-  # self.extra_deps         = [['activesupport','>= 2.0.2']]
-
-end
-
-require 'newgem/tasks'
-Dir['tasks/**/*.rake'].each { |t| load t }
-
-# TODO - want other tests/tasks run by default? Add them to the list
-# remove_task :default
-# task :default => [:spec, :features]
-
-desc "Look for TODO and FIXME tags in the code"
-task :todo do
-  egrep /(FIXME|TODO|TBD)/
-end
-
-desc "verify_committed, verify_rcov, post_news, release"
-task :complete_release => [:verify_committed, :release]
-
-desc "Verifies that there is no uncommitted code"
-task :verify_committed do
-  IO.popen('git status') do |io|
-    io.each_line do |line|
-      raise "\n!!! Do a git commit first !!!\n\n" if line =~ /^#\s*modified:/
-    end
+begin
+  require 'jeweler'
+  Jeweler::Tasks.new do |gem|
+    gem.name = "fabulator"
+    gem.summary = %Q{XML-based state machine description language and engine.}
+    gem.description = %Q{The fabulator library provides a state machine implementation of a core set of semantics for building data-driven applications using a simple XML language coupled with an XQuery-like expression language.}
+    gem.email = "jgsmith@tamu.edu"
+    gem.homepage = "http://github.com/jgsmith/ruby-fabulator"
+    gem.authors = ["James Smith"]
+    gem.add_dependency(%q<libxml-ruby>, [">= 1.1.3"])
+    gem.add_dependency(%q<radius>, [">= 0.6.1"]) 
+    # gem is a Gem::Specification... see http://www.rubygems.org/read/chapter/20 for additional settings
   end
+rescue LoadError
+  puts "Jeweler (or a dependency) not available. This is only required if you plan to package fabulator-exhibit as a gem."
+end
+
+require 'rake'
+require 'rake/rdoctask'
+require 'rake/testtask'
+
+require 'cucumber'
+require 'cucumber/rake/task'
+
+task :features => 'spec:integration'
+
+namespace :spec do
+  
+  desc "Run the Cucumber features"
+  Cucumber::Rake::Task.new(:integration) do |t|
+    t.fork = true
+    t.cucumber_opts = ['--format', (ENV['CUCUMBER_FORMAT'] || 'pretty')]
+    # t.feature_pattern = "#{extension_root}/features/**/*.feature"
+    t.profile = "default"
+  end
+
 end
 
 namespace :update do
@@ -52,3 +43,22 @@ namespace :update do
   end
 end
 
+desc 'Generate documentation for the fabulator exhibit extension.'
+Rake::RDocTask.new(:rdoc) do |rdoc|
+  rdoc.rdoc_dir = 'rdoc'
+  rdoc.title    = 'Fabulator'
+  rdoc.options << '--line-numbers' << '--inline-source'
+  rdoc.rdoc_files.include('README')
+  rdoc.rdoc_files.include('lib/**/*.rb')
+end
+
+# For extensions that are in transition
+desc 'Test the fabulator exhibit extension.'
+Rake::TestTask.new(:test) do |t|
+  t.libs << 'lib'
+  t.pattern = 'test/**/*_test.rb'
+  t.verbose = true
+end
+
+# Load any custom rakefiles for extension
+Dir[File.dirname(__FILE__) + '/tasks/*.rake'].sort.each { |f| require f }
