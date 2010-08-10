@@ -12,3 +12,8 @@
     consolidation.
   * Use LibXSLT to apply template to html transform (requires the
     libxslt-ruby gem)
+
+=== 0.0.3 2010-08-10
+
+* 1 minor enhancement
+  * Add libxslt-ruby gem dependence to gem spec
