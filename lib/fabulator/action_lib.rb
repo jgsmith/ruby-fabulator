@@ -218,6 +218,14 @@ module Fabulator
           ret = args.flatten.collect { |a| send "fctn:#{nom}", context, a }
         when :reduction
           ret = send "fctn:#{nom}", context, args.flatten
+        when :consolidation
+          if respond_to?("fctn:#{nom}")
+            ret = send "fctn:#{nom}", context, args.flatten
+          elsif nom =~ /^consolidation:(.*)$/
+            ret = send "fctn:#{$1}", context, args.flatten
+          else
+            ret = [ ]
+          end
         else
           ret = send "fctn:#{nom}", context, args
         end
@@ -252,7 +260,15 @@ module Fabulator
     end
 
     def function_run_type(name)
-      (self.function_descriptions[name][:type] rescue nil)
+      r = (self.function_descriptions[name][:type] rescue nil)
+      if r.nil? && !self.function_descriptions.has_key?(name)
+        if name =~ /^consolidation:(.*)/
+          if function_run_scaling($1) != :flat
+            return :consolidation
+          end
+        end
+      end
+      r
     end
 
     def function_args
@@ -369,6 +385,20 @@ module Fabulator
         self.function_descriptions[name][:description] = Fabulator::ActionLib.last_description if Fabulator::ActionLib.last_description
         Fabulator::ActionLib.last_description = nil
         define_method("fctn:#{name}", &block)
+        cons = self.function_descriptions[name][:consolidation]
+        if !cons.nil?
+          Fabulator::ActionLib.last_description = self.function_descriptions[name][:description]
+          consolidation name do |ctx, args|
+            send "fctn:#{cons}", ctx, args
+          end
+        end
+      end
+
+      def consolidation(name, opts = {}, &block)
+        self.function_descriptions[name] = { :type => :consolidation }.merge(opts)
+        self.function_descriptions[name][:description] = Fabulator::ActionLib.last_description if Fabulator::ActionLib.last_description
+        Fabulator::ActionLib.last_description = nil
+        define_method("fctn:consolidation:#{name}", &block)
       end
 
       def mapping(name, opts = {}, &block)

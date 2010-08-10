@@ -5,6 +5,9 @@ module Fabulator
         bits = nom.split(/:/, 2)
         @ns = ctx.get_ns(bits[0])
         @name = bits[1]
+        if @name =~ /^(.+)\*$/
+          @name = "consolidation:#{$1}"
+        end
         @args = args
         @ctx = ctx
       end

@@ -2,3 +2,11 @@
 
 * 1 major enhancement:
   * Initial release
+
+=== 0.0.2
+
+* 1 major enhancement:
+  * Introduce '*' suffix to indicate a consolidation of a reduction
+  * Reduction functions can now have a corresponding consolidation
+    function.  The reduction will be a fallback for an undefined
+    consolidation.

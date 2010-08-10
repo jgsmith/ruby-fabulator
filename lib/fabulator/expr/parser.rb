@@ -18,7 +18,7 @@ module_eval(<<'...end xsm_expression_parser.racc/module_eval...', 'xsm_expressio
   def parse(t, ctx)
     @source = t
     @curpos = 0
-    @context = ctx #.class.new(ctx)
+    @context = ctx
     @line = 0
     @col = 0
 
@@ -48,7 +48,7 @@ module_eval(<<'...end xsm_expression_parser.racc/module_eval...', 'xsm_expressio
   @@regex[:qname] = %r{((?:#{@@regex[:ncname]}:)?#{@@regex[:ncname]})}
   @@regex[:dollar_qname] = %r{\$#{@@regex[:qname]}}
   @@regex[:dollar_int] = %r{\$([0-9]+)}
-  @@regex[:function_name] = %r{#{@@regex[:qname]}\s*(?=\([^:])}
+  @@regex[:function_name] = %r{#{@@regex[:qname]}\*?\s*(?=\([^:])}
 
   @@ops = {
     '..' => :DOT_DOT,
@@ -221,7 +221,11 @@ module_eval(<<'...end xsm_expression_parser.racc/module_eval...', 'xsm_expressio
           if res[1] == 'if'
             @token = [ :IF, 'if' ]
           else
-            @token = [ :FUNCTION_NAME, res[1] ]
+            if @source[@curpos+res[1].length .. @curpos+res[1].length] == '*'
+              @token = [ :FUNCTION_NAME, res[1]+'*' ]
+            else
+              @token = [ :FUNCTION_NAME, res[1] ]
+            end
           end
         elsif !res[2].nil?
           @token = [ res[2] == 'method' ? :AXIS_METHOD : :AXIS_NAME, res[2] ]

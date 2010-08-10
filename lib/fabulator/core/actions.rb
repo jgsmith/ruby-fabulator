@@ -143,7 +143,7 @@ module Fabulator
       [ res ]
     end
 
-    reduction 'avg' do |ctx, args|
+    reduction 'avg', { :scaling => :flat } do |ctx, args|
       res = 0.0
       n = 0.0
       args.each do |a|
@@ -176,7 +176,7 @@ module Fabulator
       [ctx.root.anon_node(res, NUMERIC)]
     end
 
-    function 'histogram' do |ctx, args|
+    reduction 'histogram', { :scaling => :log } do |ctx, args|
       acc = { }
       args.flatten.each do |a|
         acc[a.to_s] ||= 0
@@ -191,11 +191,11 @@ module Fabulator
     # the code here is the consolidation function for histogram
     # f:sum is the consolidation function for f:sum
     #
-    reduction 'consolidate', { :scaling => :log } do |ctx, args|
+    consolidation 'histogram', { :scaling => :log } do |ctx, args|
       acc = { }
       attrs = { }
       children = { }
-      args.each do |a|
+      args.flatten.each do |a|
         a.children.each do |c|
           acc[c.name] ||= 0
           acc[c.name] = acc[c.name] + c.value
@@ -421,7 +421,7 @@ module Fabulator
       arg.is_a?(Array) && arg.size == 1
     end
 
-    reduction 'count' do |ctx, args|
+    reduction 'count', { :consolidation => :sum } do |ctx, args|
       args.size
     end
 
