@@ -16,17 +16,20 @@ module Fabulator
     attr_accessor :states, :missing_params, :errors, :namespaces, :updated_at
     attr_accessor :state
 
+    def initialize
+      @states = { }
+      @context = Fabulator::Expr::Context.new
+      @state = 'start'
+    end
+
     def compile_xml(xml, context = nil, callbacks = { })
       # /statemachine/states
-      @states ||= { }
-      @state = 'start'
-
       if xml.is_a?(String)
         xml = LibXML::XML::Document.string xml
       end
 
       if context.nil?
-        @context = Fabulator::Expr::Context.new.merge(xml.root)
+        @context = @context.merge(xml.root)
       else
         @context = context.merge(xml.root)
       end

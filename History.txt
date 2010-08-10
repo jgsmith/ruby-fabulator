@@ -5,8 +5,10 @@
 
 === 0.0.2
 
-* 1 major enhancement:
+* 3 major enhancement:
   * Introduce '*' suffix to indicate a consolidation of a reduction
   * Reduction functions can now have a corresponding consolidation
     function.  The reduction will be a fallback for an undefined
     consolidation.
+  * Use LibXSLT to apply template to html transform (requires the
+    libxslt-ruby gem)

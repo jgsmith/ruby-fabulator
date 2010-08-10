@@ -1,13 +1,15 @@
 require 'xml/libxml'
-require 'xml/xslt'
-
-@@fabulator_xslt_file = File.join(File.dirname(__FILE__), "..", "..", "..", "xslt", "form.xsl")
-
-@@fabulator_xmlt = LibXML::XML::Document.file(@@fabulator_xslt_file)
-
+require 'libxslt'
 
 module Fabulator::Template
   class ParseResult
+
+    @@fabulator_xslt_file = File.join(File.dirname(__FILE__), "..", "..", "..", "xslt", "form.xsl")
+
+    @@fabulator_xslt_doc = LibXML::XML::Document.file(@@fabulator_xslt_file)
+    @@fabulator_xslt = LibXSLT::XSLT::Stylesheet.new(@@fabulator_xslt_doc)
+
+
     def initialize(text)
       @doc = LibXML::XML::Document.string text
     end
@@ -110,11 +112,7 @@ module Fabulator::Template
     end
 
     def to_html
-      xslt = XML::XSLT.new
-      xslt.parameters = { }
-      xslt.xml = @doc
-      xslt.xsl = @@fabulator_xslt
-      xslt.serve
+      @@fabulator_xslt.apply(@doc).to_s
     end
 
 protected
