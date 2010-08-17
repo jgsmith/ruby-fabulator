@@ -31,6 +31,7 @@ Feature: Path expressions
     Then I should get 1 item
       And item 0 should be [5]
 
+  @numpred
   Scenario: Finding the third and fifth odd numbers
     Given a context
       And that [/a] is set to [1 .. 10]
@@ -39,6 +40,7 @@ Feature: Path expressions
       And item 0 should be [5]
       And item 1 should be [9]
 
+  @numpred
   Scenario: Using an expression to name a node test
     Given a context
       And that [/a] is set to [1 .. 10]
@@ -48,6 +50,7 @@ Feature: Path expressions
       And item 0 should be [5]
       And item 1 should be [9]
 
+  @numpred
   Scenario: Using an expression to name a node test
     Given a context
       And that [/a] is set to [1 .. 10]
@@ -55,3 +58,34 @@ Feature: Path expressions
     Then I should get 2 items
       And item 0 should be [5]
       And item 1 should be [9]
+
+  @pred
+  Scenario: Using an expression to name a node test
+    Given a context
+     And the prefix f as "http://dh.tamu.edu/ns/fabulator/1.0#"
+     And that [/a/a] is set to ['a']
+     And that [/a/b] is set to ['bb']
+     And that [/a/c] is set to ['ccc']
+     And that [/a/d] is set to ['dd']
+     And that [/a/e] is set to ['e']
+    When I run the expression (/a/*[f:string-length(.) > 1])
+    Then I should get 3 items
+     And item 0 should be ['bb']
+     And item 1 should be ['ccc']
+     And item 2 should be ['dd']
+
+  @pred
+  Scenario: Using an expression to name a node test
+    Given a context
+     And the prefix f as "http://dh.tamu.edu/ns/fabulator/1.0#"
+     And that [/a/a] is set to ['a']
+     And that [/a/b] is set to ['bb']
+     And that [/a/c] is set to ['ccc']
+     And that [/a/d] is set to ['dd']
+     And that [/a/e] is set to ['e']
+    When I run the expression (/a/*[f:not(f:string-length(.) < 2)])
+    Then I should get 3 items
+     And item 0 should be ['bb']
+     And item 1 should be ['ccc']
+     And item 2 should be ['dd']
+

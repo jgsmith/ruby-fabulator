@@ -19,8 +19,11 @@ module Fabulator
         result = [ ]
         return result if @var.nil? || @expr.nil?
 
+        count = 1
         @var.each_binding(context, autovivify) do |b|
+          b.position = count
           result = result + @expr.run(b)
+          count += 1
         end
         return result
       end

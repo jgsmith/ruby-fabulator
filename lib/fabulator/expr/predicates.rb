@@ -14,16 +14,40 @@ module Fabulator
         return possible if @predicates.nil? || @predicates.empty?
         @predicates.each do |p|
           n_p = [ ]
-          if p.is_a?(Fabulator::Expr::IndexPredicate)
-            n_p = p.run(context).collect{ |i| possible[i-1] }
-          else
-            possible.each do |c|
-              res = p.run(context.with_root(c))
-              if res.is_a?(Array)
-                n_p << c if !res.empty? && !!res.first.value
-              else
-                n_p << c if !!res.value
+          context.with_roots(possible) do |ctx|
+            if p.is_a?(Array)
+              res = p.collect{ |pp| pp.run(ctx) }.flatten
+            else
+              res = p.run(ctx)
+            end
+            if res.is_a?(Array)
+              res -= [ nil ]
+              if !res.empty?
+                # if all boolean and one is true, then keep
+                # if numeric, then keep if position == number
+                # if string and non-blank, then keep
+                unified_type = Fabulator::ActionLib.unify_types(res.collect{ |r| r.vtype })
+                case unified_type.join('') 
+                  when FAB_NS+'boolean':
+                    if res.select{ |r| r.to([FAB_NS, 'boolean']).value }.size > 0
+                      n_p << ctx.root
+                    end
+                  when FAB_NS+'numeric':
+                    if res.select{ |r| r.to([FAB_NS,'numeric']).value == ctx.position }.size > 0
+                      n_p << ctx.root
+                    end
+                  when FAB_NS+'string':
+                    if res.select{ |r| r.to_s.size > 0 }.size > 0
+                      n_p << ctx.root
+                    end
+                  else # default for now is to convert to boolean
+                    if res.select{ |r| r.to([FAB_NS, 'boolean']).value }.size > 0
+                      n_p << ctx.root
+                    end
+                end
               end
+            else
+              n_p << ctx.root if !!res.value
             end
           end
           possible = n_p

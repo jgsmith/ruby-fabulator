@@ -144,7 +144,10 @@ rule
     | predicates predicate { result = val[0] + [ val[1] ] }
 
   predicate: LB expr RB { result = val[1] }
-    | LB num_list RB { result = Fabulator::Expr::IndexPredicate.new(val[1]) }
+    | LB num_list RB { result = val[1] }
+
+      #Fabulator::Expr::IndexPredicate.new(val[1]) 
+    
 
     #| '<' expr '>'
   primary_expr:

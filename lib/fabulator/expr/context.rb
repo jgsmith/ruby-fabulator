@@ -366,6 +366,17 @@ module Fabulator
     yield ctx
   end
 
+  def with_roots(items, &block)
+    idx = 1
+    items.each do |i|
+      ctx = self.with_root(i)
+      ctx.position = idx
+      ctx.last = idx == items.size
+      yield ctx
+      idx += 1
+    end
+  end
+
   def run_filter(ns, name)
     handler = Fabulator::ActionLib.namespaces[ns]
     return [] if handler.nil?

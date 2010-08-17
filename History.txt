@@ -1,6 +1,13 @@
+=== 0.0.5
+
+* 2 major enhancements:
+  * unified predicate execution so numeric indexes and boolean logic
+    work based on run-time evaluation results
+  * position(), first(), and last() should work in predicates
+
 === 0.0.4 2010-08-16
 
-* 5 minor enhancements
+* 5 minor enhancements:
   * Add RedCloth gem dependence to gem spec
   * f:string-length() returns 0 for nil values
   * f:dump() now shows attributes
@@ -8,19 +15,19 @@
   * minor bug fixes in template tags
   * tempate form XML element 'file' is now 'asset'
 
-* 1 major enhancement
+* 1 major enhancement:
   * add_default_values() should now work for parsed templates
   * to_html() can now return form contents only
   * parsed templates will be returned as a string if they are not 
 
 === 0.0.3 2010-08-10
 
-* 1 minor enhancement
+* 1 minor enhancement:
   * Add libxslt-ruby gem dependence to gem spec
 
 === 0.0.2 2010-08-10
 
-* 3 major enhancement:
+* 3 major enhancements:
   * Introduce '*' suffix to indicate a consolidation of a reduction
   * Reduction functions can now have a corresponding consolidation
     function.  The reduction will be a fallback for an undefined
