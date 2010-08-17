@@ -730,7 +730,7 @@
           <xsl:attribute name="relation">
               <xsl:text>rel:</xsl:text><xsl:apply-templates select="ancestor::option[1]" mode="id"/>
           </xsl:attribute>
-          <xsl:apply-templates select="text|textline|textbox|editbox|file|grid|password|selection|form|group|textreader|list">
+          <xsl:apply-templates select="text|textline|textbox|editbox|asset|grid|password|selection|form|group|textreader|list">
             <!-- xsl:with-param name="form_id"><xsl:value-of select="@id"/></xsl:with-param -->
           <xsl:with-param name="form_level"><value-of select="$form_level"/></xsl:with-param>
           </xsl:apply-templates>
@@ -747,7 +747,7 @@
         </span>
       </xsl:when>
       <xsl:otherwise>
-        <xsl:apply-templates select="text|textline|textbox|editbox|file|grid|password|selection|form|group|textreader|list">
+        <xsl:apply-templates select="text|textline|textbox|editbox|asset|grid|password|selection|form|group|textreader|list">
           <!-- xsl:with-param name="form_id"><xsl:value-of select="@id"/></xsl:with-param -->
         <xsl:with-param name="form_level"><value-of select="$form_level"/></xsl:with-param>
         </xsl:apply-templates>
@@ -786,13 +786,13 @@
           <xsl:attribute name="method">
             <xsl:choose>
               <xsl:when test="@method = 'POST'">POST</xsl:when>
-              <xsl:when test=".//file">POST</xsl:when>
+              <xsl:when test=".//asset">POST</xsl:when>
               <xsl:when test=".//textbox">POST</xsl:when>
               <xsl:when test=".//editbox">POST</xsl:when>
               <xsl:otherwise>POST</xsl:otherwise>
             </xsl:choose>
           </xsl:attribute>
-          <xsl:if test=".//file">
+          <xsl:if test=".//asset">
             <xsl:attribute name="type">application/x-multipart</xsl:attribute>
           </xsl:if>
             <xsl:if test="./caption">
@@ -1232,14 +1232,13 @@
 
   <xsl:template match="text/caption"/>
 
-  <xsl:template match="form/file">
+  <xsl:template match="form/asset">
     <!-- xsl:param name="form_id"/ -->
-    <tr>
-      <td align="right" valign="top"> <!-- width="50%"> -->
+    <span class="form-element">
+      <span class="form-element-label">
         <xsl:apply-templates select="caption"/>
         <xsl:apply-templates select="help"/>
-      </td>
-      <td valign="top"> <!-- width="50%"> -->
+      </span>
         <input type="file">
           <!-- xsl:attribute name="name"><xsl:value-of select="$form_id"/>.<xsl:value-of select="@id"/></xsl:attribute -->
           <xsl:attribute name="name"><xsl:apply-templates select="." mode="id"/></xsl:attribute>
@@ -1247,8 +1246,7 @@
             <xsl:attribute name="accept"><xsl:value-of select="@accept"/></xsl:attribute>
           </xsl:if>
         </input>
-      </td>
-    </tr>
+    </span>
   </xsl:template>
 
  <xsl:template match="form//stored">
@@ -1334,7 +1332,7 @@
                   <xsl:apply-templates select="caption"/>
                   <xsl:text>: </xsl:text>
             </xsl:if>
-            <xsl:apply-templates select="text|grid|textline|textbox|editbox|file|password|selection|form|group|textreader">
+            <xsl:apply-templates select="text|grid|textline|textbox|editbox|asset|password|selection|form|group|textreader">
               <!-- xsl:with-param name="form_id">
                 <xsl:if test="@id">
                   <xsl:value-of select="@id"/>
@@ -1367,7 +1365,7 @@
           <xsl:attribute name="method">
             <xsl:choose>
               <xsl:when test="@method = 'POST'">POST</xsl:when>
-              <xsl:when test=".//file">POST</xsl:when>
+              <xsl:when test=".//asset">POST</xsl:when>
               <xsl:when test=".//textbox">POST</xsl:when>
               <xsl:when test=".//editbox">POST</xsl:when>
               <xsl:otherwise>POST</xsl:otherwise>
@@ -1376,14 +1374,14 @@
           <xsl:if test="@target">
             <xsl:attribute name="action"><xsl:value-of select="@target"/></xsl:attribute>
           </xsl:if>
-          <xsl:if test=".//file">
+          <xsl:if test=".//asset">
             <xsl:attribute name="type">application/x-multipart</xsl:attribute>
           </xsl:if>
             <xsl:if test="./caption">
                   <xsl:apply-templates select="caption"/>
                   <xsl:text>: </xsl:text>
             </xsl:if>
-            <xsl:apply-templates select="text|grid|textline|textbox|editbox|file|password|selection|form|group|textreader">
+            <xsl:apply-templates select="text|grid|textline|textbox|editbox|asset|password|selection|form|group|textreader">
               <!-- xsl:with-param name="form_id">
                 <xsl:if test="@id">
                   <xsl:value-of select="@id"/>
@@ -1728,6 +1726,7 @@
       <!-- xsl:attribute name="name"><xsl:if test="$form_id != ''"><xsl:value-of select="$form_id"/>.</xsl:if><xsl:value-of select="@id"/></xsl:attribute -->
       <xsl:attribute name="name"><xsl:apply-templates select="." mode="id"/></xsl:attribute>
       <xsl:value-of select="default"/>
+      <xsl:value-of select="' '"/>
     </textarea>
   </xsl:template>
 

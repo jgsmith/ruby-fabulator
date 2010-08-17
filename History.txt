@@ -1,7 +1,22 @@
-=== 0.0.1 2010-02-23
+=== 0.0.4 2010-08-16
 
-* 1 major enhancement:
-  * Initial release
+* 5 minor enhancements
+  * Add RedCloth gem dependence to gem spec
+  * f:string-length() returns 0 for nil values
+  * f:dump() now shows attributes
+  * compile-time context tree tracks line numbers of associated XML elements
+  * minor bug fixes in template tags
+  * tempate form XML element 'file' is now 'asset'
+
+* 1 major enhancement
+  * add_default_values() should now work for parsed templates
+  * to_html() can now return form contents only
+  * parsed templates will be returned as a string if they are not 
+
+=== 0.0.3 2010-08-10
+
+* 1 minor enhancement
+  * Add libxslt-ruby gem dependence to gem spec
 
 === 0.0.2 2010-08-10
 
@@ -13,7 +28,8 @@
   * Use LibXSLT to apply template to html transform (requires the
     libxslt-ruby gem)
 
-=== 0.0.3 2010-08-10
+=== 0.0.1 2010-02-23
 
-* 1 minor enhancement
-  * Add libxslt-ruby gem dependence to gem spec
+* 1 major enhancement:
+  * Initial release
+

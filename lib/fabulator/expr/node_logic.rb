@@ -14,7 +14,10 @@ module Fabulator
         r[:children] = cs unless cs.empty?
         r[:value] = self.value unless self.value.nil?
         r[:type] = self.vtype.join('') unless self.vtype.nil?
-
+        r[:attributes] = { }
+        self.attributes.each do |a|
+          r[:attributes][a.name] = a.value
+        end
         r
       end
 

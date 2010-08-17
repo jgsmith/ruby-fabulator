@@ -6,6 +6,7 @@ module Fabulator::Template
 
     @@fabulator_xslt_file = File.join(File.dirname(__FILE__), "..", "..", "..", "xslt", "form.xsl")
 
+
     @@fabulator_xslt_doc = LibXML::XML::Document.file(@@fabulator_xslt_file)
     @@fabulator_xslt = LibXSLT::XSLT::Stylesheet.new(@@fabulator_xslt_doc)
 
@@ -15,6 +16,7 @@ module Fabulator::Template
     end
 
     def add_default_values(context)
+      return if context.nil?
       each_form_element do |el|
         own_id = el.attributes['id']
         next if own_id.nil? || own_id.to_s == ''
@@ -22,42 +24,43 @@ module Fabulator::Template
         default = nil
         is_grid = false
         if el.name == 'grid'
-          default = el.find('./default | ./row/default | ./column/default')
+          default = el.find('./default | ./row/default | ./column/default').to_a
           is_grid = true
         else
-          default = el.find('./default')
+          default = el.find('./default').to_a
         end
 
         id = el_id(el)
         ids = id.split('/')
-        if !context.nil? && (default.is_a?(Array) && default.empty? || !default)
-          l = context.traverse_path(ids)
-          if !l.nil? && !l.empty?
-            if is_grid
-              count = (el.attributes['count'].to_s rescue '')
-              how_many = 'multiple' 
-              direction = 'both'
-              if count =~ %r{^(multiple|single)(-by-(row|column))?$}
-                how_many = $1
-                direction = $3 || 'both'
-              end
-              if direction == 'both' 
-                l.collect{|ll| ll.value}.each do |v|
-                  el << XML::Node.new('default', v)
-                end
-              elsif direction == 'row' || direction == 'column'
-                el.find("./#{direction}").each do |div|
-                  id = (div.attributes['id'].to_s rescue '')
-                  next if id == ''
-                  l.collect{|c| context.with_root(c).traverse_path(id)}.flatten.collect{|c| c.value}.each do |v|
-                    div << XML::Node.new('default', v)
-                  end
-                end
-              end
-            else
+        l = context.traverse_path(ids)
+        if !l.nil? && !l.empty?
+          if !default.nil? && !default.empty?
+            default.each { |d| d.remove! }
+          end
+          if is_grid
+            count = (el.attributes['count'].to_s rescue '')
+            how_many = 'multiple' 
+            direction = 'both'
+            if count =~ %r{^(multiple|single)(-by-(row|column))?$}
+              how_many = $1
+              direction = $3 || 'both'
+            end
+            if direction == 'both' 
               l.collect{|ll| ll.value}.each do |v|
                 el << XML::Node.new('default', v)
               end
+            elsif direction == 'row' || direction == 'column'
+              el.find("./#{direction}").each do |div|
+                id = (div.attributes['id'].to_s rescue '')
+                next if id == ''
+                l.collect{|c| context.with_root(c).traverse_path(id)}.flatten.collect{|c| c.value}.each do |v|
+                  div << XML::Node.new('default', v)
+                end
+              end
+            end
+          else
+            l.collect{|ll| ll.value}.each do |v|
+              el << XML::Node.new('default', v)
             end
           end
         end
@@ -111,8 +114,16 @@ module Fabulator::Template
       @doc.to_s
     end
 
-    def to_html
-      @@fabulator_xslt.apply(@doc).to_s
+    def to_html(popts = { })
+      opts = { :form => true }.update(popts)
+
+      res = @@fabulator_xslt.apply(@doc)
+
+      if opts[:form]
+        res.to_s
+      else
+        res.find('//form/*').collect{ |e| e.to_s}.join('')
+      end
     end
 
 protected

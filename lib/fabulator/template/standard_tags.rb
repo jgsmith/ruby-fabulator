@@ -13,23 +13,22 @@ module Fabulator::Template
     selection = tag.attr['select']
     c = tag.locals.context || tag.globals.context
     # ns = get_fabulator_ns(tag)
-    items = c.nil? ? [] : c.eval_expression(selection, ns)
+    items = c.nil? ? [] : c.eval_expression(selection)
     sort_by = tag.attr['sort']
     sort_dir = tag.attr['order'] || 'asc'
                
     if !sort_by.nil? && sort_by != ''
       parser = Fabulator::Expr::Parser.new
-      sort_by_f = parser.parse(sort_by, ns)
-      items = items.sort_by { |i| i.eval_expression(sort_by, ns).first.value }
+      sort_by_f = parser.parse(sort_by, c)
+      items = items.sort_by { |i| c.with_root(i).eval_expression(sort_by_f).first.value }
       if sort_dir == 'desc'
         items.reverse!
       end
     end
     res = ''
-    #Rails.logger.info("Found #{items.size} items for for-each")
     items.each do |i|
       next if i.empty?
-      tag.locals.context = i
+      tag.locals.context = c.with_root(i)
       res = res + tag.expand
     end
     res
@@ -46,7 +45,7 @@ module Fabulator::Template
   tag 'value' do |tag|
     selection = tag.attr['select']
     c = tag.locals.context || tag.globals.context
-    items = c.nil? ? [] : c.eval_expression(selection, get_fabulator_ns(tag))
+    items = c.nil? ? [] : c.eval_expression(selection)
     items.collect{|i| i.to([Fabulator::FAB_NS, 'html']).value }.join('')
   end
 

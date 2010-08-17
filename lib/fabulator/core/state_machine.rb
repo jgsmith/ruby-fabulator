@@ -25,6 +25,7 @@ module Fabulator
     def compile_xml(xml, context = nil, callbacks = { })
       # /statemachine/states
       if xml.is_a?(String)
+        XML.default_line_numbers = true
         xml = LibXML::XML::Document.string xml
       end
 

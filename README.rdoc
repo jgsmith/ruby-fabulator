@@ -19,7 +19,7 @@ XML language coupled with an XQuery-like expression language.
  require 'fabulator'
 
  parser = Fabulator::Expr::Parser.new
- context = Fabulator::Expr::Context.new_context_environment
+ context = Fabulator::Expr::Context.new
 
  context.set_value( '/a', 'some_values' )
  expr = parser.parse( 'f:sum(/a[. > 0]' )
@@ -30,8 +30,9 @@ XML language coupled with an XQuery-like expression language.
 == REQUIREMENTS:
 
 The expression engine does not depend on any external libraries.  The
-XML framework depends on the Ruby libxml libraries at
-<http://libxml.rubyforge.org/>.
+XML framework depends on the Ruby libxml and libxslt libraries at
+<http://libxml.rubyforge.org/>.  It also needs the RedCloth and radius
+gems for the template engine.
 
 == INSTALL:
 

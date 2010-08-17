@@ -190,3 +190,15 @@ Feature: Simple state machines
     Then it should be in the 'stop' state
      And the expression (/foo) should equal ['bar']
      And the expression (/bar) should equal ['baz']
+
+  @var
+  Scenario: simple machine with a <variable /> and <value />
+    Given the statemachine
+      """
+        <f:application xmlns:f="http://dh.tamu.edu/ns/fabulator/1.0#">
+          <f:variable f:name="foo" f:select="'baz'" />
+          <f:value f:path="/foo" f:select="$foo" />
+        </f:application>
+      """
+    Then it should be in the 'start' state
+     And the expression (/foo) should equal ['baz']

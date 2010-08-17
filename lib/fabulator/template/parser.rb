@@ -11,7 +11,8 @@ module Fabulator::Template
         @parser = Radius::Parser.new(@context, :tag_prefix => 'r')
       end
       @context.globals.context = context
-      Fabulator::Template::ParseResult.new(@parser.parse(text))
+      r = @parser.parse(text)
+      (Fabulator::Template::ParseResult.new(r) rescue r)
     end
   end
 end

@@ -60,7 +60,6 @@ Feature: Function calls and lists
     Then I should get 1 item
      And item 0 should be [2]
 
-  @hist
   Scenario: Histogram of text
     Given a context
      And the prefix f as "http://dh.tamu.edu/ns/fabulator/1.0#"
@@ -68,7 +67,6 @@ Feature: Function calls and lists
     Then I should get 1 item
      And item 0 should be [4]
 
-  @hist
   Scenario: Histogram of text with attributes
     Given a context
      And the prefix f as "http://dh.tamu.edu/ns/fabulator/1.0#"

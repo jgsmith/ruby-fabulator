@@ -98,3 +98,28 @@ Feature: Templates
   </form>
 </view>
        """
+
+  @def
+  Scenario: Rendering a form with defaults
+   Given a context
+     And the prefix f as "http://dh.tamu.edu/ns/fabulator/1.0#"
+     And the template
+       """
+<view>
+  <form>
+    <textline id='foo'><caption>Foo</caption></textline>
+  </form>
+</view>
+       """
+   When I render the template
+    And I set the defaults to:
+      | path   | default       |
+      | foo    | FooDefault    |
+   Then the rendered text should equal
+       """
+<view>
+  <form>
+    <textline id="foo"><caption>Foo</caption><default>FooDefault</default></textline>
+  </form>
+</view>
+       """

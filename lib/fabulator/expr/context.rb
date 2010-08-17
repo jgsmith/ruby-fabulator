@@ -10,6 +10,7 @@ module Fabulator
     @variables = { }
     @position = nil
     @last = nil
+    @line_num = nil
 
     if parent_c.nil?
        if xml.nil? || (xml.root rescue nil).nil?
@@ -23,6 +24,8 @@ module Fabulator
       if xml.is_a?(self.class)
         @run_time_parent = xml
       else
+        @line_num = xml.line_num
+
         parser = Fabulator::Expr::Parser.new
 
         xml.namespaces.each do |ns|
@@ -52,6 +55,12 @@ module Fabulator
 
   def last=(l)
     @last = !!l
+  end
+
+  def line_num
+    return @line_num unless @line_num.nil?
+    return @parent.line_num unless @parent.nil?
+    return 0
   end
 
   def position

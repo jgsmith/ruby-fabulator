@@ -263,7 +263,7 @@ module Fabulator
     # f:string-length(node-list) => node-list
     #
     mapping 'string-length' do |ctx, arg|
-      arg.to_s.length
+      (arg.to_s.length rescue 0)
     end
 
     mapping 'normalize-space' do |ctx, arg|
@@ -347,7 +347,7 @@ module Fabulator
     ###
     ### Boolean
     ###
-
+ 
     function 'true', BOOLEAN do |ctx, args|
       return [ ctx.root.anon_node( true, [ FAB_NS, 'boolean' ] ) ]
     end
