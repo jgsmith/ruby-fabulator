@@ -157,7 +157,15 @@ rule
     | tuple
     | LITERAL { result = Fabulator::Expr::Literal.new(val[0], [ Fabulator::FAB_NS, 'string' ]) }
     | NUMBER { result = Fabulator::Expr::Literal.new(val[0] =~ /\./ ? val[0].to_d.to_r : val[0].to_i.to_r, [ Fabulator::FAB_NS, 'numeric' ]) }
-    | FUNCTION_NAME list { result = Fabulator::Expr::Function.new(@context, val[0], val[1]) }
+    | FUNCTION_NAME list { 
+        result = Fabulator::Expr::Function.new(@context, val[0], val[1]) 
+#          when 'any' : Fabulator::Expr::AnyExpr.new(@context, val[1])
+#          when 'all' : Fabulator::Expr::AllExpr.new(@context, val[1])
+#          when 'one' : Fabulator::Expr::OneExpr.new(@context, val[1])
+#          when 'none': Fabulator::Expr::NoneExpr.new(@context, val[1])
+#          else Fabulator::Expr::Function.new(@context, val[0], val[1]) 
+#        end
+    }
 
   list: LP opt_args RP { result = Fabulator::Expr::List.new(val[1]) }
 

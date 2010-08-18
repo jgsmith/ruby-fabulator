@@ -9,7 +9,7 @@ module Fabulator
   module Expr
     class Parser < Racc::Parser
 
-module_eval(<<'...end xsm_expression_parser.racc/module_eval...', 'xsm_expression_parser.racc', 179)
+module_eval(<<'...end xsm_expression_parser.racc/module_eval...', 'xsm_expression_parser.racc', 187)
   require 'fabulator/expr'
   require 'rational'
   require 'bigdecimal'
@@ -1410,21 +1410,28 @@ module_eval(<<'.,.,', 'xsm_expression_parser.racc', 158)
   end
 .,.,
 
-module_eval(<<'.,.,', 'xsm_expression_parser.racc', 159)
+module_eval(<<'.,.,', 'xsm_expression_parser.racc', 160)
   def _reduce_90(val, _values, result)
-     result = Fabulator::Expr::Function.new(@context, val[0], val[1]) 
+            result = Fabulator::Expr::Function.new(@context, val[0], val[1]) 
+#          when 'any' : Fabulator::Expr::AnyExpr.new(@context, val[1])
+#          when 'all' : Fabulator::Expr::AllExpr.new(@context, val[1])
+#          when 'one' : Fabulator::Expr::OneExpr.new(@context, val[1])
+#          when 'none': Fabulator::Expr::NoneExpr.new(@context, val[1])
+#          else Fabulator::Expr::Function.new(@context, val[0], val[1]) 
+#        end
+    
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'xsm_expression_parser.racc', 161)
+module_eval(<<'.,.,', 'xsm_expression_parser.racc', 169)
   def _reduce_91(val, _values, result)
      result = Fabulator::Expr::List.new(val[1]) 
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'xsm_expression_parser.racc', 164)
+module_eval(<<'.,.,', 'xsm_expression_parser.racc', 172)
   def _reduce_92(val, _values, result)
      result = [ ] 
     result
@@ -1433,14 +1440,14 @@ module_eval(<<'.,.,', 'xsm_expression_parser.racc', 164)
 
 # reduce 93 omitted
 
-module_eval(<<'.,.,', 'xsm_expression_parser.racc', 167)
+module_eval(<<'.,.,', 'xsm_expression_parser.racc', 175)
   def _reduce_94(val, _values, result)
      result = [ val[0] ] 
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'xsm_expression_parser.racc', 168)
+module_eval(<<'.,.,', 'xsm_expression_parser.racc', 176)
   def _reduce_95(val, _values, result)
      result = val[0] + [ val[2] ] 
     result
@@ -1449,14 +1456,14 @@ module_eval(<<'.,.,', 'xsm_expression_parser.racc', 168)
 
 # reduce 96 omitted
 
-module_eval(<<'.,.,', 'xsm_expression_parser.racc', 171)
+module_eval(<<'.,.,', 'xsm_expression_parser.racc', 179)
   def _reduce_97(val, _values, result)
      result = val[0].to_s 
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'xsm_expression_parser.racc', 172)
+module_eval(<<'.,.,', 'xsm_expression_parser.racc', 180)
   def _reduce_98(val, _values, result)
      result = val[1] 
     result
