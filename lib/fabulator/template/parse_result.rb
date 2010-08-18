@@ -47,20 +47,20 @@ module Fabulator::Template
             end
             if direction == 'both' 
               l.collect{|ll| ll.value}.each do |v|
-                el << XML::Node.new('default', v)
+                el << text_node('default', v)
               end
             elsif direction == 'row' || direction == 'column'
               el.find("./#{direction}").each do |div|
                 id = (div.attributes['id'].to_s rescue '')
                 next if id == ''
                 l.collect{|c| context.with_root(c).traverse_path(id)}.flatten.collect{|c| c.value}.each do |v|
-                  div << XML::Node.new('default', v)
+                  div << text_node('default', v)
                 end
               end
             end
           else
             l.collect{|ll| ll.value}.each do |v|
-              el << XML::Node.new('default', v)
+              el << text_node('default', v)
             end
           end
         end
@@ -83,10 +83,10 @@ module Fabulator::Template
         next unless errors.has_key?(id)
         if errors[id].is_a?(Array)
           errors[id].each do |e|
-            el << XML::Node.new('error', e)
+            el << text_node('error', e) 
           end
         else
-          el << XML::Node.new('error', errors[id])
+          el << text_node('error', errors[id])
         end
       end
     end
@@ -102,9 +102,11 @@ module Fabulator::Template
         else
           caption = el.find_first('./caption')
           if caption.nil?
-            el << XML::Node.new('caption', captions[id])
+            el << text_node('caption', captions[id]) 
           else
             caption.content = captions[id]
+            caption.parent << text_node('caption', captions[id])
+            caption.remove!
           end
         end
       end
@@ -157,6 +159,12 @@ protected
       ids = ancestors.collect{|a| a.attributes['id']}.select{|a| !a.nil? }
       ids << own_id
       ids.collect{|i| i.to_s}.join('/')
+    end
+
+    def text_node(n,t)
+      e = XML::Node.new(n)
+      e << t
+      e
     end
   end
 end

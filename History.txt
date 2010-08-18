@@ -4,6 +4,7 @@
   * unified predicate execution so numeric indexes and boolean logic
     work based on run-time evaluation results
   * position(), first(), and last() should work in predicates
+  * correctly escape default values
 
 === 0.0.4 2010-08-16
 
