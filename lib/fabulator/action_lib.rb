@@ -175,13 +175,13 @@ module Fabulator
             end
           end
         end
-        common = d1.keys & d2.keys
-        if ordered && common.include?(t2.join(''))
-          return d1[t2.join('')]
-        elsif !common.empty?
-          return d1[common.sort_by{ |c| d1[c][:w] * d2[c][:w] / d1[c][:path].size / d2[c][:path].size }.reverse.first]
-        end
+        r = self._select_type_path(d1, d2, t2, ordered)
+        return r unless r.nil?
       end
+      return self._select_type_path(d1, d2, t2, ordered)
+    end
+
+    def self._select_type_path(d1, d2, t2, ordered)
       common = d1.keys & d2.keys
       if ordered && common.include?(t2.join(''))
         return d1[t2.join('')]

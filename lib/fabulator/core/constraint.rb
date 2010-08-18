@@ -66,8 +66,7 @@ module Fabulator
             return sense.call(paths) if select.nil?
             opts = @select.run(ctx).collect { |o| o.to_s } 
             if !opts.include?(ctx.root.to_s)
-              paths[0] -= [ ctx.root.path ]
-              paths[1] += [ ctx.root.path ]
+              invalidate_path(paths, ctx.root)
             end
             return sense.call(paths)
           when 'all':
@@ -94,8 +93,7 @@ module Fabulator
                 end
               end
               if !calc_values.include?(ctx.root.value)
-                paths[0] -= [ ctx.root.path ]
-                paths[1] += [ ctx.root.path ]
+                invalidate_path(paths, ctx.root)
               end
               return sense.call(paths)
             end
@@ -103,14 +101,20 @@ module Fabulator
             fl = (@params['floor'].run(ctx) rescue nil)
             ce = (@params['ceiling'].run(ctx) rescue nil)
             if !fl.nil? && fl > c.value || !ce.nil? && ce < c.value
-              paths[0] -= [ c.path ]
-              paths[1] += [ c.path ]
+              invalidate_path(paths, c)
             end
             return sense.call(r)
           else
             return not_sense.call(r)
         end
       end
+    end
+
+  protected
+
+    def invalidate_path(paths, root)
+      paths[0] -= [ root.path ]
+      paths[1] += [ root.path ]
     end
   end
   end

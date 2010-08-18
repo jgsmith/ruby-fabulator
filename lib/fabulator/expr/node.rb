@@ -84,59 +84,6 @@ module Fabulator
         node
       end
 
-      def merge_data(d,p = nil)
-        # we have a hash or array based on root (r)
-        if p.nil?
-          root_context = [ self ]
-        else
-          root_context = self.traverse_path(p,true)
-        end
-        if root_context.size > 1
-          # see if we need to prune
-          new_rc = [ ]
-          root_context.each do |c|
-            if c.children.size == 0 && c.value.nil?
-              c.parent.prune(c) if c.parent
-            else
-              new_rc << c
-            end
-          end
-          if new_rc.size > 0
-            raise "Unable to merge data into multiple places simultaneously"
-          else
-            root_context = new_rc
-          end
-        else
-          root_context = root_context.first
-        end
-        if d.is_a?(Array)
-          node_name = root_context.name
-          root_context = root_context.parent
-          # get rid of empty children so we don't have problems later
-          root_context.children.each do |c|
-            if c.children.size == 0 && c.name == node_name && c.value.nil?
-              c.parent.prune(c)
-            end
-          end
-          d.each do |i|
-            c = root_context.create_child(node_name)
-            c.merge_data(i)
-          end
-        elsif d.is_a?(Hash)
-          d.each_pair do |k,v|
-            bits = k.split('.')
-            c = root_context.traverse_path(bits,true).first
-            if v.is_a?(Hash) || v.is_a?(Array)
-              c.merge_data(v)
-            else
-              c.value = v
-            end
-          end
-        else
-          c = root_context.parent.create_child(root_context.name, d)
-        end
-      end
-
       def parent=(p)
         @parent = p
         @axis = p.axis

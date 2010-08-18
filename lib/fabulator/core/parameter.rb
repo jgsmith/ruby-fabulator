@@ -16,6 +16,10 @@ module Fabulator
       [ @name ]
     end
 
+    def names
+      [ @name ]
+    end
+
     def compile_xml(xml, context)
       super
 
@@ -101,28 +105,6 @@ module Fabulator
       return res
     end
 
-    def test_constraints(context)
-      @context.with(context) do |ctx|
-        me = ctx.traverse_path(@name)
-        return [ [ me.collect{ |m| m.path } ], [] ] if @constraints.empty?
-        paths = [ [], [] ]
-        if @all_constraints
-          @constraints.each do |c|
-            p =  c.test_constraints(ctx, me)
-            paths[0] += p[0]
-            paths[1] += p[1]
-          end
-          return [ (paths[0] - paths[1]).uniq, paths[1].uniq ]
-        else
-          @constraints.each do |c|
-            p = c.test_constraints(ctx, me)
-            paths[0] += p[0]
-            paths[1] += p[1]
-          end
-          return [ paths[0].uniq, (paths[1] - paths[0]).uniq ]
-        end
-      end
-    end
   end
   end
 end

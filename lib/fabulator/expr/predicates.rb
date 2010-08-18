@@ -55,15 +55,5 @@ module Fabulator
         return possible
       end
     end
-
-    class IndexPredicate
-      def initialize(l)
-        @indices = l
-      end
-
-      def run(context)
-        @indices.collect { |e| e.run(context).collect{ |i| i.to([FAB_NS, 'numeric']).value.to_i } }.flatten
-      end
-    end
   end
 end

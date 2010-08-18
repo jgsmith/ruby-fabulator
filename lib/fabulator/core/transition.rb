@@ -39,28 +39,7 @@ module Fabulator
         case e.name
 # TODO: handle parameters when inheriting
           when 'params':
-            p_ctx = @context.merge(e)
-            @select = p_ctx.get_select('/')
-
-            e.each_element do |ee|
-              next unless ee.namespaces.namespace.href == FAB_NS
-              case ee.name
-                when 'group':
-                  if !inheriting
-                    g = Group.new.compile_xml(ee, p_ctx)
-                    @params << g
-                  else
-                    tags = (ee.attributes.get_attribute_ns(FAB_NS, 'tag').value rescue '').split(/\s+/)
-                  end
-                when 'param':
-                  if !inheriting
-                    p = Parameter.new.compile_xml(ee, p_ctx)
-                    @params << p
-                  else
-                    tags = (ee.attributes.get_attribute_ns(FAB_NS, 'tag').value rescue '').split(/\s+/)
-                  end
-              end
-            end
+            @params << Group.new.compile_xml(e, @context)
         end
       end
       self
@@ -126,10 +105,10 @@ module Fabulator
         res[:valid].delete(k)
       end
 
-      res[:score] = (res[:valid].size+1)*(params.size)
-      res[:score] = res[:score] / (res[:missing].size + 1)
-      res[:score] = res[:score] / (res[:invalid].size + 1)
-      res[:score] = res[:score] / (res[:unknown].size + 1)
+      res[:score] = (res[:valid].size+1)*(params.size) /
+                    (res[:missing].size + 1) /
+                    (res[:invalid].size + 1) /
+                    (res[:unknown].size + 1)
       return res
     end
 

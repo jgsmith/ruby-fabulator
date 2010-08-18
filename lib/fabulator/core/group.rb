@@ -1,7 +1,7 @@
 module Fabulator
   module Core
   class Group < Fabulator::Action
-    attr_accessor :name, :params, :tags
+    attr_accessor :name, :params, :tags, :required_params
 
     namespace Fabulator::FAB_NS
 
@@ -90,33 +90,6 @@ module Fabulator
         ret = @select.run(ctx)
       end
       ret
-    end
-
-    def test_constraints(context)
-      passed = [ ]
-      failed = [ ]
-      @context.with(context) do |ctx|
-        roots = self.get_context(ctx)
-        roots.each do |root|
-          @params.each do |param|
-            p_ctx = param.get_context(ctx.with_root(root))
-            if !p_ctx.nil? && !p_ctx.empty?
-              p_ctx.each do |p|
-                @constraints.each do |c|
-                  r = c.test_constraint(ctx.with_root(p))
-                  passed += r[0]
-                  failed += r[1]
-                end
-              end
-            end
-          end
-        end
-      end
-      if failed.empty?
-        return [ passed.uniq, [] ]
-      else
-        return [ (passed - failed).uniq, failed ]
-      end
     end
   end
   end

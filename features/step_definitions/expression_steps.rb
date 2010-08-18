@@ -71,7 +71,8 @@ Then /I should get the type (.*)/ do |t|
 end
 
 Then /I should get (\d+) items?/ do |count|
-  @result.length.should == count
+  #puts "result types: #{@result.collect{|r| r.class.name}.join(', ')}"
+  @result.size.should == count
 end
 
 Then /item (\d+) should be (\[.*\])/ do |i,t|
