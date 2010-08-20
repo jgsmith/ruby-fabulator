@@ -41,6 +41,7 @@ module_eval(<<'...end xsm_expression_parser.racc/module_eval...', 'xsm_expressio
     :axis_name => %r{(?:attribute|child|child-or-self|descendant|descendant-or-self|method|self)},
     :namespace_name => %r{(?:context|global|local|session|universal)},
     :number => %r{(-?\d+(?:\.\d+)?|\.\d+)},
+    :literal => %r{((?:"(?:[^\\"]*(?:\\.[^\\"]*)*)")|(?:'(?:[^\\']*(?:\\.[^\\']*)*)'))},
   }
 
   @@regex[:axis] = %r{(#{@@regex[:ncname]})\s*(?=::)}
@@ -88,7 +89,7 @@ module_eval(<<'...end xsm_expression_parser.racc/module_eval...', 'xsm_expressio
     == & && ||
   }.split(/\s*/), '[', ',', '$' ].each { |t| @@preceding_tokens[t] = true }
 
-  @@regex[:general] = Regexp.compile(%{^(?:#{@@regex[:function_name]}|#{@@regex[:axis]}|#{@@regex[:name_colon_star]}|#{@@regex[:qname]}|('[^']*'|"[^"]*")|#{@@regex[:number]}|#{@@regex[:dollar_qname]}|#{@@regex[:dollar_int]}|(#{@@regex[:simple_tokens]}))})
+  @@regex[:general] = Regexp.compile(%{^(?:#{@@regex[:function_name]}|#{@@regex[:axis]}|#{@@regex[:name_colon_star]}|#{@@regex[:qname]}|#{@@regex[:literal]}|#{@@regex[:number]}|#{@@regex[:dollar_qname]}|#{@@regex[:dollar_int]}|(#{@@regex[:simple_tokens]}))})
 
   def next_token  
     @token = nil

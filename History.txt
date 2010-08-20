@@ -1,4 +1,9 @@
-=== 0.0.5
+=== 0.0.6
+
+* 1 minor enhancement:
+  * Better regex for matching quoted strings in expressions
+
+=== 0.0.5 2010-08-18
 
 * 2 major enhancements:
   * unified predicate execution so numeric indexes and boolean logic
