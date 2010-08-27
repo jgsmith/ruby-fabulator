@@ -1,7 +1,10 @@
-=== 0.0.6
+=== 0.0.6 2010-08-27
 
-* 1 minor enhancement:
+* 4 minor enhancement:
   * Better regex for matching quoted strings in expressions
+  * Less duplication of compile-time contexts
+  * Template add_caption call can take a hash or a node context
+  * set_value can take a node as a source instead of only an expression
 
 === 0.0.5 2010-08-18
 
