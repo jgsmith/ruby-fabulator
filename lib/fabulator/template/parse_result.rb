@@ -95,18 +95,25 @@ module Fabulator::Template
       each_form_element do |el|
         id = el_id(el)
         next if id == ''
-        next unless captions.has_key?(id)
+        caption = nil
+        if captions.is_a?(Hash)
+          caption = captions[id]
+        else
+          caption = captions.traverse_path(id.split('.')).first.to_s
+        end
+
+        next if caption.nil?
 
         is_grid = false
         if el.name == 'grid'
         else
-          caption = el.find_first('./caption')
-          if caption.nil?
-            el << text_node('caption', captions[id]) 
+          cap = el.find_first('./caption')
+          if cap.nil?
+            el << text_node('caption', caption)
           else
-            caption.content = captions[id]
-            caption.parent << text_node('caption', captions[id])
-            caption.remove!
+            cap.content = caption
+            cap.parent << text_node('caption', caption)
+            cap.remove!
           end
         end
       end

@@ -239,17 +239,18 @@ module Fabulator
       v = parser.parse(v,self) if v.is_a?(String)
     end
         
-    return [] if p.nil?
-        
+    #return [] if p.nil?
+    p = [ self.root ] if p.nil?
+
     p = [ p ] unless p.is_a?(Array)
           
     ret = [ ]
 
     p.each do |pp|
-      tgts = pp.run(self, true)
+      tgts = pp.is_a?(Fabulator::Expr::Node) ? [ pp ] : pp.run(self, true)
       src = nil
       if !v.nil?
-        src = v.run(self)
+        src = v.is_a?(Fabulator::Expr::Node) ? [ v ] : v.run(self)
       end 
 
       tgts.each do |tgt|
@@ -305,7 +306,9 @@ module Fabulator
     else
       root_context = root_context.first
     end
-    if d.is_a?(Array)
+    if d.is_a?(Fabulator::Expr::Node)
+      self.set_value(p, d)
+    elsif d.is_a?(Array)
       node_name = root_context.name
       root_context = root_context.parent
       # get rid of empty children so we don't have problems later
@@ -322,7 +325,7 @@ module Fabulator
       d.each_pair do |k,v|
         bits = k.split('.')
         c = self.with_root(root_context).traverse_path(bits,true).first
-        if v.is_a?(Hash) || v.is_a?(Array)
+        if v.is_a?(Hash) || v.is_a?(Array) || v.is_a?(Fabulator::Expr::Node)
           self.with_root(c).merge_data(v)
         else
           c.value = v

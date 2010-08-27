@@ -205,7 +205,7 @@ module Fabulator
 
     def compile_action(e, c)
       if self.class.method_defined? "action:#{e.name}"
-        send "action:#{e.name}", e, c.merge(e)
+        send "action:#{e.name}", e, c   #.merge(e)
       end
     end
 
