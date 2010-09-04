@@ -31,7 +31,7 @@ module Fabulator::Template
       tag.locals.context = c.with_root(i)
       res = res + tag.expand
     end
-    res
+    res.nil? ? '' : res
   end
             
   desc %{
@@ -46,7 +46,8 @@ module Fabulator::Template
     selection = tag.attr['select']
     c = tag.locals.context || tag.globals.context
     items = c.nil? ? [] : c.eval_expression(selection)
-    items.collect{|i| i.to([Fabulator::FAB_NS, 'html']).value }.join('')
+    res = items.collect{|i| i.to([Fabulator::FAB_NS, 'html']).value }.join('')
+    res.nil? ? '' : res
   end
 
   desc %{
@@ -58,7 +59,7 @@ module Fabulator::Template
     @chosen.unshift false
     ret = tag.expand
     @chosen.shift
-    ret
+    ret.nil? ? '' : ret
   end
     
   desc %{

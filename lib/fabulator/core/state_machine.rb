@@ -2,19 +2,20 @@ require 'yaml'
 require 'xml/libxml'
 
 module Fabulator
-  FAB_NS='http://dh.tamu.edu/ns/fabulator/1.0#'
-  RDFS_NS = 'http://www.w3.org/2000/01/rdf-schema#'
-  RDF_NS = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#'
-  RDFA_NS = 'http://dh.tamu.edu/ns/fabulator/rdf/1.0#'
-
   class StateChangeException < Exception
   end
 
   module Core
 
-  class StateMachine
+  class StateMachine < Structural
     attr_accessor :states, :missing_params, :errors, :namespaces, :updated_at
     attr_accessor :state
+
+    namespace FAB_NS
+
+    contains :view, :as => :states, :storage => :hash
+
+    has_actions
 
     def initialize
       @states = { }
@@ -22,43 +23,14 @@ module Fabulator
       @state = 'start'
     end
 
-    def compile_xml(xml, context = nil, callbacks = { })
-      # /statemachine/states
-      XML.default_line_numbers = true
-      if xml.is_a?(String)
-        xml = LibXML::XML::Document.string xml
-      end
-
-      if context.nil?
-        @context = @context.merge(xml.root)
-      else
-        @context = context.merge(xml.root)
-      end
-
-      ActionLib.with_super(@actions) do
-        p_actions = @context.compile_actions(xml.root)
-        @actions = p_actions if @actions.nil? || !p_actions.is_noop?
-      end
-
-      xml.root.each_element do |child|
-        next unless child.namespaces.namespace.href == FAB_NS
-        case child.name
-          when 'view':
-            nom = (child.attributes.get_attribute_ns(FAB_NS, 'name').value rescue nil)
-            if !@states[nom].nil?
-              @states[nom].compile_xml(child, @context)
-            else
-              @states[nom] = State.new.compile_xml(child, @context)
-            end
-        end
-      end
+    def compile_xml(xml, context = nil)
+      super
 
       if @states.empty?
         s = State.new
         s.name = 'start'
-        @states['start'] = s
+        @states = { 'start' => s }
       end
-      self
     end
 
     def clone

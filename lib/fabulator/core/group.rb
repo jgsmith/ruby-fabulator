@@ -1,41 +1,37 @@
 module Fabulator
   module Core
-  class Group < Fabulator::Action
+  class Group < Fabulator::Structural
     attr_accessor :name, :params, :tags, :required_params
 
     namespace Fabulator::FAB_NS
 
+    contains 'group', :as => :groups
+    contains 'param', :as => :params
+    contains 'constraint', :as => :constraints
+    contains 'filter', :as => :filters
+
     has_select
 
-    def initialize
-      @params = [ ]
-      @constraints = [ ]
-      @filters = [ ]
-      @required_params = [ ]
-      @tags = [ ]
-    end
+    attribute :select, :as => :name, :static => true
 
     def compile_xml(xml, context)
       super
-      xml.each_element do |e|
-        next unless e.namespaces.namespace.href == FAB_NS
 
-        case e.name
-          when 'param':
-            v = Parameter.new.compile_xml(e,@context)
-            @params << v
-            @required_params = @required_params + v.names if v.required?
-          when 'group':
-            v = Group.new.compile_xml(e,@context)
-            @params << v
-            @required_params = @required_params + v.required_params.collect{ |n| (@name + '/' + n).gsub(/\/+/, '/') }
-          when 'constraint':
-            @constraints << Constraint.new.compile_xml(e,@context)
-          when 'filter':
-            @filters << Filter.new.compile_xml(e,@context)
-        end
+      @required_params = [ ]
+
+      @params.each do |p|
+        @required_params += p.names if p.required?
       end
-      self
+
+      @name = '' if @name.nil?
+      @name.gsub!(/^\//, '')
+
+      @groups.each do |g|
+        @required_params += g.required_params.collect{ |n| (@name + '/' + n).gsub(/\/+/, '/') }
+      end
+
+      @params += @groups
+      @groups = nil
     end
 
     def apply_filters(context)

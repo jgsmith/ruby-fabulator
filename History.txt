@@ -1,3 +1,12 @@
+=== 0.0.7
+
+* 1 major enhancement:
+  * Structural elements are easier to code - similar to actions
+
+* 1 minor enhancement:
+  * Fabulator now depends on the active_support gem
+  * Inheritance is not fully supported, so removing until later
+
 === 0.0.6 2010-08-27
 
 * 4 minor enhancement:

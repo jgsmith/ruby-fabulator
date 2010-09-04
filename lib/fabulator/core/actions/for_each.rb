@@ -1,35 +1,25 @@
 module Fabulator
   module Core
   module Actions
-  class ForEach < Fabulator::Action
+  class ForEach < Fabulator::Structural
     namespace Fabulator::FAB_NS
+
     attribute :as, :static => true
+
+    contains :sort
+
     has_select
     has_actions
-
-    def compile_xml(xml, context)
-      super
-      @sort = [ ]
-
-      xml.each_element do |e|
-        next unless e.namespaces.namespace.href == FAB_NS
-        case e.name
-          when 'sort-by':
-            @sort << Sort.new.compile_xml(e, @context)
-        end
-      end
-      self
-    end
 
     def run(context, autovivify = false)
       @context.with(context) do |ctx|
         items = @select.run(ctx)
         res = nil
         ctx.in_context do |c|
-          if !@sort.empty?
+          if !@sorts.empty?
             items = items.sort_by{ |i| 
               c.set_var(@as, i) unless @as.nil? 
-              @sort.collect{|s| s.run(c.with_root(i)) }.join("\0") 
+              @sorts.collect{|s| s.run(c.with_root(i)) }.join("\0") 
             }
           end
           res = [ ]

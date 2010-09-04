@@ -1,24 +1,12 @@
 module Fabulator
   module Core
   module Actions
-  class Choose < Fabulator::Action
-    def compile_xml(xml, context)
-      super
+  class Choose < Fabulator::Structural
 
-      @choices = [ ]
-      @default = nil
+    namespace FAB_NS
 
-      xml.each_element do |e|
-        next unless e.namespaces.namespace.href == FAB_NS
-        case e.name
-          when 'when':
-            @choices << When.new.compile_xml(e, @context)
-          when 'otherwise':
-            @default = When.new.compile_xml(e, @context)
-        end
-      end
-      self
-    end
+    contains :when, :as => :choices
+    contains :otherwise, :as => :default
 
     def run(context, autovivify = false)
       @context.with(context) do |ctx|
@@ -27,7 +15,7 @@ module Fabulator
             return c.run(ctx)
           end
         end
-        return @default.run(ctx) unless @default.nil?
+        return @default.first.run(ctx) unless @default.empty?
         return []
       end
     end

@@ -6,9 +6,25 @@ require 'fabulator/core/actions/variables'
 module Fabulator
   module Core
   module Actions
-  class Lib
-    include ActionLib
+  class Lib < ActionLib
+    #include ActionLib
     register_namespace FAB_NS
+
+    structural 'application', Fabulator::Core::StateMachine
+    structural 'view', Fabulator::Core::State
+    structural 'goes-to', Fabulator::Core::Transition
+    #structural 'before', 
+    #structural 'after', 
+    structural 'params', Fabulator::Core::Group
+    structural 'group', Fabulator::Core::Group
+    structural 'param', Fabulator::Core::Parameter
+    structural 'value', Fabulator::Core::Constraint
+    structural 'constraint', Fabulator::Core::Constraint
+    structural 'filter', Fabulator::Core::Filter
+    structural 'sort', Sort
+    structural 'when', When
+    structural 'otherwise', When
+
 
     action 'choose', Choose
     action 'for-each', ForEach

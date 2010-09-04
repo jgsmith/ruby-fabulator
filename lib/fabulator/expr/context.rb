@@ -359,6 +359,30 @@ module Fabulator
     Fabulator::ActionLib.namespaces[ns].compile_action(e, self)
   end
 
+  def compile_structurals(xml)
+    #local_ctx = self.merge(xml)
+    structs = { }
+    our_ns = xml.namespaces.namespace.href
+    our_nom = xml.name
+    xml.each_element do |e|
+      ns = e.namespaces.namespace.href
+      nom = e.name.to_sym
+      allowed = Fabulator::ActionLib.namespaces[our_ns].structural_class(our_nom).accepts_structural?(ns, nom)
+      next unless allowed
+      structs[ns] ||= { }
+      structs[ns][nom] ||= [ ]
+      structs[ns][nom] << self.compile_structural(e)
+      structs[ns][nom] -= [ nil ]
+    end
+    return structs
+  end
+
+  def compile_structural(e)
+    ns = e.namespaces.namespace.href
+    return unless Fabulator::ActionLib.namespaces.include?(ns)
+    Fabulator::ActionLib.namespaces[ns].compile_structural(e, self)
+  end
+
   def in_context(&block)
     ctx = self.merge
     yield ctx

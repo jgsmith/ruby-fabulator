@@ -1,12 +1,16 @@
 module Fabulator
   module Core
-  class Parameter < Fabulator::Action
+  class Parameter < Fabulator::Structural
     attr_accessor :name
 
     namespace Fabulator::FAB_NS
 
     attribute :name, :eval => false, :static => true
     attribute :required, :static => true, :default => 'false'
+
+    contains :constraint
+    contains :filter
+    contains :value, :as => :constraints
 
     def required?
       @required
@@ -23,9 +27,6 @@ module Fabulator
     def compile_xml(xml, context)
       super
 
-      @constraints = [ ]
-      @filters = [ ]
-
       case @required.downcase
         when 'yes':
           @required = true
@@ -36,19 +37,6 @@ module Fabulator
         when 'false':
           @required = false
       end
-
-      xml.each_element do |e|
-        next unless e.namespaces.namespace.href == FAB_NS
-        case e.name
-          when 'constraint':
-            @constraints << Constraint.new.compile_xml(e, @context)
-          when 'filter':
-            @filters << Filter.new.compile_xml(e, @context)
-          when 'value':
-            @constraints << Constraint.new.compile_xml(e, @context)
-        end
-      end
-      self
     end
 
     def get_context(context)

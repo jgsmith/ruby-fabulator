@@ -9,6 +9,7 @@ module Fabulator
 
     def compile_xml(xml, ctx)
       super
+
       @constraints = [ ]
       @values = [ ]
       @params = [ ]
@@ -28,7 +29,7 @@ module Fabulator
           e_ctx = @context.merge(e)
           case e.name
             when 'param':
-              pname = e_ctx.attribute(FAB_NS, 'name') # (e.get_attribute_ns(FAB_NS, 'name').value rescue nil)
+              pname = e_ctx.attribute(FAB_NS, 'name')
               if !pname.nil?
                 v = e_ctx.attribute(FAB_NS, 'value', { :default => e_ctx.get_select })
                 @params[pname] = v unless v.nil?
@@ -44,7 +45,6 @@ module Fabulator
           end
         end
       end
-      self
     end
 
     def error_message(context)

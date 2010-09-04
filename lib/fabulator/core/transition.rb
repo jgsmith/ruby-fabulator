@@ -1,49 +1,16 @@
 module Fabulator
   module Core
-  class Transition < Fabulator::Action
+  class Transition < Fabulator::Structural
     attr_accessor :state, :validations, :tags
 
-    namespace Fabulator::FAB_NS
-    attribute :view, :as => :lstate, :static => true
-    attribute :tag,  :as => :ltags,  :static => true, :default => ''
+    namespace FAB_NS
 
-    def initialize
-      @state = nil
-      @tags = nil
-      @groups = { }
-      @params = [ ]
-      @actions = nil
-    end
+    attribute :view, :as => :state, :static => true
+    #attribute :tag,  :as => :ltags,  :static => true, :default => ''
 
-    def compile_xml(xml, ctx)
-      super
+    contains :params, :as => :params
 
-      inheriting = !@state.nil?
-
-      if !inheriting
-        @state = @lstate
-        @tags = @ltags
-      end
-
-        # TODO: figure out some way to reference inherited actions
-        #   figure out 'super' vs. 'inner' -- only supporting 'super'
-        #   for now
-      ActionLib.with_super(@actions) do
-        t = @context.compile_actions(xml)
-        @actions = t if @actions.nil? || !t.is_noop?
-      end
-      parser = Fabulator::Expr::Parser.new
-
-      xml.each_element do |e|
-        next unless e.namespaces.namespace.href == FAB_NS
-        case e.name
-# TODO: handle parameters when inheriting
-          when 'params':
-            @params << Group.new.compile_xml(e, @context)
-        end
-      end
-      self
-    end
+    has_actions
 
     def param_names
       (@params.collect{|w| w.param_names}.flatten).uniq

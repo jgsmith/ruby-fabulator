@@ -4,19 +4,6 @@ module Fabulator
     namespace Fabulator::FAB_NS
     attribute :name, :static => true
     
-#    def compile_xml(xml, context)
-#      @context = context.merge(xml)
-#      filter_type = @context.attribute(FAB_NS, 'name', {:static => true}).split(/:/, 2)
-#      if filter_type.size == 2
-#        @ns = @context.get_ns(filter_type[0])
-#        @name = filter_type[1]
-#      else
-#        @ns = FAB_NS
-#        @name = filter_type[0]
-#      end
-#      self
-#    end
-
     def run(context)
       filtered = [ ]
       @context.with(context) do |ctx|

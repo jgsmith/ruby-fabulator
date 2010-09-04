@@ -2,7 +2,8 @@ Given /the statemachine/ do |doc_xml|
   @context ||= Fabulator::Expr::Context.new
 
   if @sm.nil?
-    @sm = Fabulator::Core::StateMachine.new.compile_xml(doc_xml)
+    @sm = Fabulator::Core::StateMachine.new
+    @sm.compile_xml(doc_xml)
   else
     @sm.compile_xml(doc_xml)
   end

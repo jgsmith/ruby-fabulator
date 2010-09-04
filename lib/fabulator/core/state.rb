@@ -1,54 +1,13 @@
 module Fabulator
   module Core
-  class State < Fabulator::Action
+  class State < Fabulator::Structural
     attr_accessor :name, :transitions
 
-    def initialize
-      @transitions = []
-      @pre_actions = nil
-      @post_actions = nil
-    end
-
     namespace Fabulator::FAB_NS
+
     attribute :name, :static => true
-    
 
-    def compile_xml(xml, ctx)
-      super
-
-      inheriting = !@transitions.empty?
-      xml.each_element do |e|
-        next unless e.namespaces.namespace.href == FAB_NS
-        case e.name
-          when 'goes-to':
-            if inheriting
-              target = e.attributes.get_attribute_ns(FAB_NS, 'view').value
-              tags = (e.attributes.get_attribute_ns(FAB_NS, 'tag').value rescue '').split(/\s+/)
-              old = @transitions.collect{ |t| t.state == target && (tags.empty? || !(tags & t.tags).empty?)}
-              if old.empty?
-                @transitions << Transition.new.compile_xml(e,@context)
-              else
-                old.each do |t|
-                  t.compile_xml(e,@context)
-                end
-              end
-            else 
-              @transitions << Transition.new.compile_xml(e, @context)
-            end
-          when 'before':
-            ActionLib.with_super(@pre_actions) do
-              t = @context.compile_actions(e)
-              @pre_actions = t if @pre_actions.nil? || !t.is_noop?
-            end
-          when 'after':
-            ActionLib.with_super(@post_actions) do
-              t = @context.compile_actions(e)
-              @post_actions = t if @post_actions.nil? || !t.is_noop?
-            end
-        end
-      end
-      self
-    end
+    contains 'goes-to', :as => :transitions
 
     def states
       @transitions.map { |t| t.state }.uniq

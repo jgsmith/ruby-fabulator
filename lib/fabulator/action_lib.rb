@@ -1,6 +1,8 @@
 module Fabulator
-  module ActionLib
+  class ActionLib
     @@action_descriptions = {}
+    @@structural_descriptions = {}
+    @@structural_classes = {}
     @@function_descriptions = {}
     @@function_args = { }
     @@namespaces = {}
@@ -17,6 +19,12 @@ module Fabulator
     end
     def self.action_descriptions
       @@action_descriptions
+    end
+    def self.structural_descriptions
+      @@structural_descriptions
+    end
+    def self.structural_classes
+      @@structural_classes
     end
     def self.function_description
       @@function_description
@@ -43,6 +51,12 @@ module Fabulator
     def self.action_descriptions=(x)
       @@action_descriptions = x
     end
+    def self.structural_descriptions=(x)
+      @@structural_descriptions = x
+    end
+    def self.structural_classes=(x)
+      @@structural_classes = x
+    end
     def self.function_description=(x)
       @@function_description = x
     end
@@ -59,18 +73,26 @@ module Fabulator
       @@axes = x
     end
 
-    def self.included(base)
-      base.extend(ClassMethods)
-      base.module_eval do
-        def self.included(new_base)
-          super
-          new_base.action_descriptions.merge! self.action_descriptions
-          new_base.function_descriptions.merge! self.function_descriptions
-          new_base.function_args.merge! self.function_args
-          new_base.types.merge! self.types
-        end
+      def structural_class(nom)
+        (Fabulator::ActionLib.structural_classes[self.class.name][nom] rescue nil)
       end
+
+    def self.inherited(base)
+      base.extend(ClassMethods)
     end
+
+#    def self.included(base)
+#      base.extend(ClassMethods)
+#      base.module_eval do
+#        def self.included(new_base)
+#          super
+#          new_base.action_descriptions.merge! self.action_descriptions
+#          new_base.function_descriptions.merge! self.function_descriptions
+#          new_base.function_args.merge! self.function_args
+#          new_base.types.merge! self.types
+#        end
+#      end
+#    end
 
     def self.find_op(t,o)
       (@@types[t[0]][t[1]][:ops][o] rescue nil)
@@ -206,6 +228,12 @@ module Fabulator
     def compile_action(e, c)
       if self.class.method_defined? "action:#{e.name}"
         send "action:#{e.name}", e, c   #.merge(e)
+      end
+    end
+
+    def compile_structural(e, c)
+      if self.class.method_defined? "structural:#{e.name}"
+        send "structural:#{e.name}", e, c
       end
     end
 
@@ -366,10 +394,32 @@ module Fabulator
         if block
           define_method("action:#{name}", &block)
         elsif !klass.nil?
-          action(name) { |e,r|
-            return klass.new.compile_xml(e,r)
+          action(name) { |e,c|
+            r = klass.new
+            r.compile_xml(e,c)
+            r
           }
         end
+      end
+
+      def structural(name, klass = nil, &block)
+        self.structural_descriptions[name] = Fabulator::ActionLib.last_description if Fabulator::ActionLib.last_description
+        Fabulator::ActionLib.last_description = nil
+        if block
+          define_method("structural:#{name}", &block)
+        elsif !klass.nil?
+          structural(name) { |e,c|
+            r = klass.new
+            r.compile_xml(e,c)
+            r
+          }
+          Fabulator::ActionLib.structural_classes[self.name] ||= {}
+          Fabulator::ActionLib.structural_classes[self.name][name] = klass
+        end
+      end
+
+      def structural_class(nom)
+        (Fabulator::ActionLib.structural_classes[self.class.name][nom] rescue nil)
       end
 
       def function(name, returns = nil, takes = nil, &block)
@@ -431,22 +481,6 @@ module Fabulator
       def constraint(name, &block)
         define_method("constraint:#{name}", &block)
       end
-
-      def compile_actions(xml, rdf_model)
-        actions = [ ]
-        xml.each_element do |e|
-          ns = e.namespaces.namespace.href
-          #Rails.logger.info("Compiling <#{ns}><#{e.name}>")
-          next unless Fabulator::ActionLib.namespaces.include?(ns)
-          actions << (Fabulator::ActionLib.namespaces[ns].compile_action(e, rdf_model) rescue nil)
-          #Rails.logger.info("compile_actions: #{actions}")
-        end
-        #Rails.logger.info("compile_actions: #{actions}")
-        actions = actions - [ nil ]
-        #Rails.logger.info("compile_actions returning: #{actions}")
-        return actions
-      end
-  
     end
      
     module Util
