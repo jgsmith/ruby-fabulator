@@ -1,5 +1,5 @@
 module Fabulator
-  class ActionLib
+  class TagLib
     @@action_descriptions = {}
     @@structural_descriptions = {}
     @@structural_classes = {}
@@ -74,7 +74,7 @@ module Fabulator
     end
 
       def structural_class(nom)
-        (Fabulator::ActionLib.structural_classes[self.class.name][nom] rescue nil)
+        (Fabulator::TagLib.structural_classes[self.class.name][nom] rescue nil)
       end
 
     def self.inherited(base)
@@ -338,36 +338,36 @@ module Fabulator
       end
       
       def action_descriptions(hash = nil)
-        Fabulator::ActionLib.action_descriptions[self.name] ||= (hash ||{})
+        Fabulator::TagLib.action_descriptions[self.name] ||= (hash ||{})
       end
 
       def function_descriptions(hash = nil)
-        Fabulator::ActionLib.action_descriptions[self.name] ||= (hash ||{})
+        Fabulator::TagLib.action_descriptions[self.name] ||= (hash ||{})
       end
     
       def register_namespace(ns)
-        Fabulator::ActionLib.namespaces[ns] = self.new
+        Fabulator::TagLib.namespaces[ns] = self.new
       end
 
       def register_attribute(a, options = {})
         ns = nil
-        Fabulator::ActionLib.namespaces.each_pair do |k,v|
+        Fabulator::TagLib.namespaces.each_pair do |k,v|
           if v.is_a?(self)
             ns = k
           end
         end
-        Fabulator::ActionLib.attributes << [ ns, a, options ]
+        Fabulator::TagLib.attributes << [ ns, a, options ]
       end
 
       def register_type(nom, options={})
         ns = nil
-        Fabulator::ActionLib.namespaces.each_pair do |k,v|
+        Fabulator::TagLib.namespaces.each_pair do |k,v|
           if v.is_a?(self)
             ns = k
           end
         end
-        Fabulator::ActionLib.types[ns] ||= {}
-        Fabulator::ActionLib.types[ns][nom] = options
+        Fabulator::TagLib.types[ns] ||= {}
+        Fabulator::TagLib.types[ns][nom] = options
 
         function nom do |ctx, args|
           args[0].collect { |i|
@@ -377,20 +377,20 @@ module Fabulator
       end
 
       def axis(nom, &block)
-        Fabulator::ActionLib.axes[nom] = block
+        Fabulator::TagLib.axes[nom] = block
       end
 
       def namespaces
-        Fabulator::ActionLib.namespaces
+        Fabulator::TagLib.namespaces
       end
   
       def desc(text)
-        Fabulator::ActionLib.last_description = RedCloth.new(Util.strip_leading_whitespace(text)).to_html
+        Fabulator::TagLib.last_description = RedCloth.new(Util.strip_leading_whitespace(text)).to_html
       end
       
       def action(name, klass = nil, &block)
-        self.action_descriptions[name] = Fabulator::ActionLib.last_description if Fabulator::ActionLib.last_description
-        Fabulator::ActionLib.last_description = nil
+        self.action_descriptions[name] = Fabulator::TagLib.last_description if Fabulator::TagLib.last_description
+        Fabulator::TagLib.last_description = nil
         if block
           define_method("action:#{name}", &block)
         elsif !klass.nil?
@@ -403,8 +403,8 @@ module Fabulator
       end
 
       def structural(name, klass = nil, &block)
-        self.structural_descriptions[name] = Fabulator::ActionLib.last_description if Fabulator::ActionLib.last_description
-        Fabulator::ActionLib.last_description = nil
+        self.structural_descriptions[name] = Fabulator::TagLib.last_description if Fabulator::TagLib.last_description
+        Fabulator::TagLib.last_description = nil
         if block
           define_method("structural:#{name}", &block)
         elsif !klass.nil?
@@ -413,31 +413,31 @@ module Fabulator
             r.compile_xml(e,c)
             r
           }
-          Fabulator::ActionLib.structural_classes[self.name] ||= {}
-          Fabulator::ActionLib.structural_classes[self.name][name] = klass
+          Fabulator::TagLib.structural_classes[self.name] ||= {}
+          Fabulator::TagLib.structural_classes[self.name][name] = klass
         end
       end
 
       def structural_class(nom)
-        (Fabulator::ActionLib.structural_classes[self.class.name][nom] rescue nil)
+        (Fabulator::TagLib.structural_classes[self.class.name][nom] rescue nil)
       end
 
       def function(name, returns = nil, takes = nil, &block)
         self.function_descriptions[name] = { :returns => returns, :takes => takes }
-        self.function_descriptions[name][:description] = Fabulator::ActionLib.last_description if Fabulator::ActionLib.last_description
+        self.function_descriptions[name][:description] = Fabulator::TagLib.last_description if Fabulator::TagLib.last_description
         #self.function_args[name] = { :return => returns, :takes => takes }
-        Fabulator::ActionLib.last_description = nil
+        Fabulator::TagLib.last_description = nil
         define_method("fctn:#{name}", &block)
       end
 
       def reduction(name, opts = {}, &block)
         self.function_descriptions[name] = { :type => :reduction }.merge(opts)
-        self.function_descriptions[name][:description] = Fabulator::ActionLib.last_description if Fabulator::ActionLib.last_description
-        Fabulator::ActionLib.last_description = nil
+        self.function_descriptions[name][:description] = Fabulator::TagLib.last_description if Fabulator::TagLib.last_description
+        Fabulator::TagLib.last_description = nil
         define_method("fctn:#{name}", &block)
         cons = self.function_descriptions[name][:consolidation]
         if !cons.nil?
-          Fabulator::ActionLib.last_description = self.function_descriptions[name][:description]
+          Fabulator::TagLib.last_description = self.function_descriptions[name][:description]
           consolidation name do |ctx, args|
             send "fctn:#{cons}", ctx, args
           end
@@ -446,15 +446,15 @@ module Fabulator
 
       def consolidation(name, opts = {}, &block)
         self.function_descriptions[name] = { :type => :consolidation }.merge(opts)
-        self.function_descriptions[name][:description] = Fabulator::ActionLib.last_description if Fabulator::ActionLib.last_description
-        Fabulator::ActionLib.last_description = nil
+        self.function_descriptions[name][:description] = Fabulator::TagLib.last_description if Fabulator::TagLib.last_description
+        Fabulator::TagLib.last_description = nil
         define_method("fctn:consolidation:#{name}", &block)
       end
 
       def mapping(name, opts = {}, &block)
         self.function_descriptions[name] = { :type => :mapping }.merge(opts)
-        self.function_descriptions[name][:description] = Fabulator::ActionLib.last_description if Fabulator::ActionLib.last_description
-        Fabulator::ActionLib.last_description = nil
+        self.function_descriptions[name][:description] = Fabulator::TagLib.last_description if Fabulator::TagLib.last_description
+        Fabulator::TagLib.last_description = nil
         define_method("fctn:#{name}", &block)
       end
 

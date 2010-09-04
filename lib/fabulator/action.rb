@@ -50,7 +50,7 @@ module Fabulator
           when :simple:
             @actions = @context.compile_actions(xml)
           when :super:
-            @actions = ActionLib.current_super
+            @actions = TagLib.current_super
         end
       end
     end

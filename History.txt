@@ -1,7 +1,9 @@
 === 0.0.7
 
-* 1 major enhancement:
+* 2 major enhancement:
   * Structural elements are easier to code - similar to actions
+  * Fabulator::ActionLib is now Fabulator::TagLib to reflect the more
+    generic nature of the libraries
 
 * 1 minor enhancement:
   * Fabulator now depends on the active_support gem

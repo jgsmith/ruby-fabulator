@@ -94,7 +94,7 @@ module Fabulator
       end
 
       def children(n = nil)
-        op = ActionLib.find_op(@vtype, :children)
+        op = TagLib.find_op(@vtype, :children)
         possible = op.nil? ? @children : op.call(self)
         if n.nil?
           possible

@@ -1,4 +1,4 @@
-require 'fabulator/action_lib'
+require 'fabulator/tag_lib'
 require 'fabulator/core/actions/choose'
 require 'fabulator/core/actions/for_each'
 require 'fabulator/core/actions/variables'
@@ -6,8 +6,7 @@ require 'fabulator/core/actions/variables'
 module Fabulator
   module Core
   module Actions
-  class Lib < ActionLib
-    #include ActionLib
+  class Lib < TagLib
     register_namespace FAB_NS
 
     structural 'application', Fabulator::Core::StateMachine
@@ -138,14 +137,14 @@ module Fabulator
     end
 
     reduction 'sum', { :scaling => :log } do |ctx, args|
-      zero = ActionLib.find_op(args.first.vtype, :zero)
+      zero = TagLib.find_op(args.first.vtype, :zero)
       if(zero && zero[:proc])
         res = zero[:proc].call(ctx)
       end
       res = 0 if res.nil?
       return [ res ] if args.empty?
 
-      op = ActionLib.find_op(args.first.vtype, :plus)
+      op = TagLib.find_op(args.first.vtype, :plus)
 
       if op.nil? || op[:proc].nil?
         args.each do |a|

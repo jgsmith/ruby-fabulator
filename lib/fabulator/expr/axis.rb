@@ -23,8 +23,8 @@ module Fabulator
         if @root.nil? || @root == ''
           return @axis.run(context, autovivify)
         else
-          if context.root.roots[@root].nil? && !Fabulator::ActionLib.axes[@root].nil?
-            context.root.roots[@root] = Fabulator::ActionLib.axes[@root].call(context)
+          if context.root.roots[@root].nil? && !Fabulator::TagLib.axes[@root].nil?
+            context.root.roots[@root] = Fabulator::TagLib.axes[@root].call(context)
           end
           return context.root.roots[@root].nil? ? [ ] : 
                                 @axis.nil? ? [ context.root.roots[@root] ] : 

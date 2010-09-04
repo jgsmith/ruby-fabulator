@@ -26,7 +26,7 @@ module Fabulator
                 # if all boolean and one is true, then keep
                 # if numeric, then keep if position == number
                 # if string and non-blank, then keep
-                unified_type = Fabulator::ActionLib.unify_types(res.collect{ |r| r.vtype })
+                unified_type = Fabulator::TagLib.unify_types(res.collect{ |r| r.vtype })
                 case unified_type.join('') 
                   when FAB_NS+'boolean':
                     if res.select{ |r| r.to([FAB_NS, 'boolean']).value }.size > 0

@@ -23,7 +23,7 @@ module Fabulator
       def expr_type(context)
         v = context.get_var(@var)
         if( v.is_a?(Array) )
-          ActionLib.unify_types(v.collect{ |i| i.vtype })
+          TagLib.unify_types(v.collect{ |i| i.vtype })
         else
           v.vtype
         end

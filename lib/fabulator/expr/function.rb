@@ -13,12 +13,12 @@ module Fabulator
       end
 
       def expr_type(context)
-        klass = ActionLib.namespaces[@ns]
+        klass = TagLib.namespaces[@ns]
         (klass.function_return_type(@name) rescue nil)
       end
 
       def run(context, autovivify = false)
-        klass = ActionLib.namespaces[@ns]
+        klass = TagLib.namespaces[@ns]
         return [] if klass.nil?
         ctx = @ctx.merge(context)
         return klass.run_function(

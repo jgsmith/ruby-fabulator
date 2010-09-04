@@ -56,7 +56,7 @@ When /I unify the types? (.*)/ do |ts|
       pn = t.split(/:/, 2)
       [ @context.get_ns(pn[0]), pn[1] ]
     }
-  @type_result = Fabulator::ActionLib.unify_types(
+  @type_result = Fabulator::TagLib.unify_types(
     types.collect { |t|
       pn = t.split(/:/, 2)
       [ @context.get_ns(pn[0]), pn[1] ]

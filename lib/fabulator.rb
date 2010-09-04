@@ -7,7 +7,7 @@ module Fabulator
   RDFA_NS = 'http://dh.tamu.edu/ns/fabulator/rdf/1.0#'
 
   require 'fabulator/expr'
-  require 'fabulator/action_lib'
+  require 'fabulator/tag_lib'
   require 'fabulator/action'
   require 'fabulator/structural'
   require 'fabulator/core'

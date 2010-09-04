@@ -318,8 +318,13 @@ module Fabulator
         end
       end
       d.each do |i|
-        c = root_context.create_child(node_name)
-        self.with_root(c).merge_data(i)
+        next if i.nil?
+        if i.is_a?(Array) || i.is_a?(Hash)
+          c = root_context.create_child(node_name)
+          self.with_root(c).merge_data(i)
+        else
+          root_context.create_child(node_name, i)
+        end
       end
     elsif d.is_a?(Hash)
       d.each_pair do |k,v|
@@ -341,7 +346,7 @@ module Fabulator
     local_ctx = self.merge(xml)
     xml.each_element do |e|
       ns = e.namespaces.namespace.href
-      next unless Fabulator::ActionLib.namespaces.include?(ns)
+      next unless Fabulator::TagLib.namespaces.include?(ns)
       if ns == FAB_NS && e.name == 'ensure'
         actions.add_ensure(local_ctx.compile_actions(e))
       elsif ns == FAB_NS && e.name == 'catch'
@@ -355,8 +360,8 @@ module Fabulator
 
   def compile_action(e)
     ns = e.namespaces.namespace.href
-    return unless Fabulator::ActionLib.namespaces.include?(ns)
-    Fabulator::ActionLib.namespaces[ns].compile_action(e, self)
+    return unless Fabulator::TagLib.namespaces.include?(ns)
+    Fabulator::TagLib.namespaces[ns].compile_action(e, self)
   end
 
   def compile_structurals(xml)
@@ -367,7 +372,7 @@ module Fabulator
     xml.each_element do |e|
       ns = e.namespaces.namespace.href
       nom = e.name.to_sym
-      allowed = Fabulator::ActionLib.namespaces[our_ns].structural_class(our_nom).accepts_structural?(ns, nom)
+      allowed = Fabulator::TagLib.namespaces[our_ns].structural_class(our_nom).accepts_structural?(ns, nom)
       next unless allowed
       structs[ns] ||= { }
       structs[ns][nom] ||= [ ]
@@ -379,8 +384,8 @@ module Fabulator
 
   def compile_structural(e)
     ns = e.namespaces.namespace.href
-    return unless Fabulator::ActionLib.namespaces.include?(ns)
-    Fabulator::ActionLib.namespaces[ns].compile_structural(e, self)
+    return unless Fabulator::TagLib.namespaces.include?(ns)
+    Fabulator::TagLib.namespaces[ns].compile_structural(e, self)
   end
 
   def in_context(&block)
@@ -405,7 +410,7 @@ module Fabulator
   end
 
   def run_filter(ns, name)
-    handler = Fabulator::ActionLib.namespaces[ns]
+    handler = Fabulator::TagLib.namespaces[ns]
     return [] if handler.nil?
     handler.run_filter(self, name)
   end

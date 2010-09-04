@@ -9,7 +9,7 @@ module Fabulator
       def expr_type(context)
         lt = @left.expr_type(context)
         rt = @right.expr_type(context)
-        Fabulator::ActionLib.unify_types([ lt, rt ])
+        Fabulator::TagLib.unify_types([ lt, rt ])
       end
 
       def run(context, autovivify = false)
@@ -23,8 +23,8 @@ module Fabulator
 
         l.each do |i|
           r.each do |j|
-            ut = Fabulator::ActionLib.unify_types([ i.vtype, j.vtype ])
-            op = ActionLib.find_op(ut, self.op)
+            ut = Fabulator::TagLib.unify_types([ i.vtype, j.vtype ])
+            op = TagLib.find_op(ut, self.op)
             if(op && op[:proc])
               calc = op[:proc].call(i.to(ut), j.to(ut))
             else

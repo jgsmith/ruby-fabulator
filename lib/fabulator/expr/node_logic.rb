@@ -31,7 +31,7 @@ module Fabulator
         # see if there's a path between @vtype and t
         #   if so, do the conversion
         #   otherwise, return nil
-        path = Fabulator::ActionLib.type_path(self.vtype, t)
+        path = Fabulator::TagLib.type_path(self.vtype, t)
         return self.anon_node(nil,nil) if path.empty?
         v = self
         path.each do |p|

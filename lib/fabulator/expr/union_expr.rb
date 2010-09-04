@@ -6,7 +6,7 @@ module Fabulator
       end
 
       def expr_type(context)
-        Fabulator::ActionLib.unify_types(@exprs.collect{ |e| e.expr_type(context) })
+        Fabulator::TagLib.unify_types(@exprs.collect{ |e| e.expr_type(context) })
       end
 
       def run(context, autovivify = false)
