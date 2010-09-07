@@ -343,6 +343,8 @@ module Fabulator
 
   def compile_actions(xml)
     actions = Fabulator::Expr::StatementList.new
+    return actions if xml.nil?
+
     local_ctx = self.merge(xml)
     xml.each_element do |e|
       ns = e.namespaces.namespace.href
@@ -372,7 +374,7 @@ module Fabulator
     xml.each_element do |e|
       ns = e.namespaces.namespace.href
       nom = e.name.to_sym
-      allowed = Fabulator::TagLib.namespaces[our_ns].structural_class(our_nom).accepts_structural?(ns, nom)
+      allowed = (Fabulator::TagLib.namespaces[our_ns].structural_class(our_nom).accepts_structural?(ns, nom) rescue false)
       next unless allowed
       structs[ns] ||= { }
       structs[ns][nom] ||= [ ]

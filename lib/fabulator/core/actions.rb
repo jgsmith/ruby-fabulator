@@ -7,7 +7,7 @@ module Fabulator
   module Core
   module Actions
   class Lib < TagLib
-    register_namespace FAB_NS
+    namespace FAB_NS
 
     structural 'application', Fabulator::Core::StateMachine
     structural 'view', Fabulator::Core::State

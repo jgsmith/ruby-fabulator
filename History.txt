@@ -1,13 +1,22 @@
-=== 0.0.7
+=== 0.0.7 2010-09-07
 
-* 2 major enhancement:
+* 5 major enhancement:
   * Structural elements are easier to code - similar to actions
   * Fabulator::ActionLib is now Fabulator::TagLib to reflect the more
     generic nature of the libraries
+  * More robust Structural and Action base classes
+  * Added '?' as a suffix character for expression function names
+    A function with a name ending in '?' will have its return values
+    automatically converted to boolean
+  * Default run-time behavior for Action classes is to run any embedded 
+    actions
 
-* 1 minor enhancement:
+* 5 minor enhancement:
   * Fabulator now depends on the active_support gem
   * Inheritance is not fully supported, so removing until later
+  * Simpler access to attributes that require evaluation
+  * Simpler access to f:select values and actions
+  * Beginning support for libraries written in XML (testing only for now)
 
 === 0.0.6 2010-08-27
 

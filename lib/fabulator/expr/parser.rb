@@ -49,7 +49,7 @@ module_eval(<<'...end xsm_expression_parser.racc/module_eval...', 'xsm_expressio
   @@regex[:qname] = %r{((?:#{@@regex[:ncname]}:)?#{@@regex[:ncname]})}
   @@regex[:dollar_qname] = %r{\$#{@@regex[:qname]}}
   @@regex[:dollar_int] = %r{\$([0-9]+)}
-  @@regex[:function_name] = %r{#{@@regex[:qname]}\*?\s*(?=\([^:])}
+  @@regex[:function_name] = %r{#{@@regex[:qname]}\??\*?\s*(?=\([^:])}
 
   @@ops = {
     '..' => :DOT_DOT,

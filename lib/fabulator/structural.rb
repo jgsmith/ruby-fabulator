@@ -33,6 +33,10 @@ module Fabulator
       @@structurals[self.name][ns][nom.to_sym] = opts
     end
 
+    def self.structurals
+      return @@structurals[self.name]
+    end
+
     def self.accepts_structural?(ns, nom)
       return false if @@structurals.nil?
       return false if @@structurals[self.name].nil?
@@ -41,15 +45,20 @@ module Fabulator
       return true
     end
 
+    def accepts_structural?(ns, nom)
+      self.class.accepts_structural?(ns, nom)
+    end
+
+
   protected
     def setup(xml)
       super
 
-      klass = self.class.name
+      #klass = self.class.name
+      possibilities = self.class.structurals
 
-
-      if !@@structurals[klass].nil?
-        @@structurals[klass].each_pair do |ns, parts|
+      if !possibilities.nil?
+        possibilities.each_pair do |ns, parts|
           parts.each_pair do |nom, opts|
             as = "@" + (opts[:as] || nom.to_s.pluralize).to_s
             if opts[:storage].nil? || opts[:storage] == :array
@@ -62,10 +71,10 @@ module Fabulator
 
         structs = @context.compile_structurals(xml)
         structs.each_pair do |ns, parts|
-          next unless @@structurals[klass][ns]
+          next unless possibilities[ns]
           parts.each_pair do |nom, objs|
-            next unless @@structurals[klass][ns][nom]
-            opts = @@structurals[klass][ns][nom]
+            next unless possibilities[ns][nom]
+            opts = possibilities[ns][nom]
             as = "@" + (opts[:as] || nom.to_s.pluralize).to_s
             if opts[:storage].nil? || opts[:storage] == :array
               self.instance_variable_set(as.to_sym, self.instance_variable_get(as.to_sym) + objs)

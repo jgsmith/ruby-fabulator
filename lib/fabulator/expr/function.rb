@@ -2,6 +2,7 @@ module Fabulator
   module Expr
     class Function
       def initialize(ctx, nom, args)
+        nom.gsub(/\s+/, '')
         bits = nom.split(/:/, 2)
         @ns = ctx.get_ns(bits[0])
         @name = bits[1]
@@ -13,6 +14,7 @@ module Fabulator
       end
 
       def expr_type(context)
+        return [ FAB_NS, 'boolean' ] if @name =~ /\?$/
         klass = TagLib.namespaces[@ns]
         (klass.function_return_type(@name) rescue nil)
       end
@@ -21,9 +23,13 @@ module Fabulator
         klass = TagLib.namespaces[@ns]
         return [] if klass.nil?
         ctx = @ctx.merge(context)
-        return klass.run_function(
+        ret = klass.run_function(
           ctx, @name, @args.run(ctx)
         )
+        if @name =~ /\?$/
+          ret = ret.collect{ |v| v.to([FAB_NS, 'boolean']) }
+        end
+        ret
       end
     end
 

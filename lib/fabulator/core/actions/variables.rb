@@ -20,7 +20,7 @@ module Fabulator
 
     def run(context, autovivify = false)
       @context.with(context) do |ctx|
-        ctx.set_value(@path, @select.nil? ? @actions : @select )
+        ctx.set_value(self.path, @select.nil? ? @actions : @select )
       end
     end
   end
@@ -32,18 +32,16 @@ module Fabulator
     has_actions
 
     def run(context, autovivify = false)
-      return [] if @name.nil?
+      return [] if self.name.nil?
       res = [ ]
       @context.with(context) do |ctx|
         if @select
-          res = @select.run(ctx, autovivify)
-        elsif !@actions.empty?
-          @actions.each do |a|
-            res = a.run(ctx, autovivify)
-          end
+          res = self.select(ctx)
+        else
+          res = self.run_actions(ctx)
         end
       end
-      context.set_var(@name, res)
+      context.set_var(self.name, res)
       res
     end
   end

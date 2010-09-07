@@ -74,7 +74,7 @@ module Fabulator
     end
 
       def structural_class(nom)
-        (Fabulator::TagLib.structural_classes[self.class.name][nom] rescue nil)
+        Fabulator::TagLib.structural_classes[self.class.name][nom]
       end
 
     def self.inherited(base)
@@ -346,6 +346,10 @@ module Fabulator
       end
     
       def register_namespace(ns)
+        Fabulator::TagLib.namespaces[ns] = self.new
+      end
+
+      def namespace(ns)
         Fabulator::TagLib.namespaces[ns] = self.new
       end
 

@@ -8,7 +8,7 @@ module Fabulator
     end
 
     def has_actions?
-      !@actions.nil?
+      !@actions.nil? && !@actions.empty?
     end
 
     def self.namespace(href = nil)
@@ -17,10 +17,24 @@ module Fabulator
       @@namespace[self.name] = href
     end
 
-    def self.attribute(nom, opts = { })
+    def self.attribute(e_nom, opts = { })
       @@attributes ||= { }
       @@attributes[self.name] ||= { }
-      @@attributes[self.name][nom.to_s] = opts
+      @@attributes[self.name][e_nom.to_s] = opts
+      nom = (opts[:as].nil? ? e_nom : opts[:as]).to_sym
+      if opts[:static]
+        self.instance_eval {
+          attr_reader nom.to_sym
+        }
+      else
+        at_nom = ('@' + nom.to_s).to_sym
+        self.class_eval {
+          define_method(nom.to_s) { |ctx|
+            v = instance_variable_get(at_nom) 
+            v.nil? ? [] : v.run(ctx,false)
+          }
+        }
+      end
     end
 
     def self.has_actions(t = :simple)
@@ -28,10 +42,49 @@ module Fabulator
       @@has_actions[self.name] = t
     end
 
+    def self.has_actions?
+      !@@has_actions.nil? && @@has_actions.has_key?(self.name)
+    end
+
+    def run_actions(ctx)
+      self.has_actions? ? @actions.run(ctx) : [ ]
+    end
+
     def self.has_select(default = '.')
       @@has_select ||= { }
       @@has_select[self.name] = default
     end
+
+    def select(ctx)
+      self.class.has_select? && !@select.nil? ? @select.run(ctx) : [ ]
+    end
+
+    def self.has_select?
+      !@@has_select.nil? && @@has_select.has_key?(self.name)
+    end
+
+#    def self.at_runtime(&block)
+#      @@run_time ||= { }
+#      @@run_time[self.name] = block
+#    end
+#
+
+    def run(context, autovivify = false)
+      self.run_actions(@context.merge(context))
+    end
+
+#    def run(context, autovivify = false)
+#      ret = []
+#      @context.with(context) do |ctx|
+#        proc = @@run_time[self.class.name]
+#        if !proc.nil?
+#          ret = self.instance_eval {
+#            proc.call(ctx, autovivify)
+#          }
+#        end
+#      end
+#      ret
+#    end
 
   protected
 
@@ -43,7 +96,9 @@ module Fabulator
           self.instance_variable_set(as.to_sym, @context.attribute(opts[:namespace] || @@namespace[klass], nom.to_s, opts))
         end
       end
-      @select = @context.get_select(@@has_select[klass]) if @@has_select.has_key?(klass)
+      if self.class.has_select?
+        @select = @context.get_select(@@has_select[klass])
+      end
       @actions = nil
       if @@has_actions[klass]
         case @@has_actions[klass]

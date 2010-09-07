@@ -23,6 +23,10 @@ module Fabulator
         @statements.empty? && @ensures.empty?
       end
 
+      def empty?
+        @statements.empty? && @ensures.empty?
+      end
+
       def run(context, autovivify = false)
         result = [ ]
         begin

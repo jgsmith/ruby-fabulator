@@ -15,6 +15,7 @@ module Fabulator
 
     def select_transition(context,params)
       # we need hypthetical variables here :-/
+      return nil if @context.nil?
       best_match = nil
       @context.with(context) do |ctx|
         best_match = nil

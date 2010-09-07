@@ -29,13 +29,9 @@ module Fabulator
 
     def run_test(context)
       return true if @test.nil?
-      result = @test.run(@context.merge(context)).collect{ |a| !!a.value }
+      result = self.test(@context.merge(context)).collect{ |a| !!a.value }
       return false if result.nil? || result.empty? || !result.include?(true)
       return true
-    end
-
-    def run(context, autovivify = false)
-      return @actions.run(@context.merge(context))
     end
   end
 
@@ -48,9 +44,9 @@ module Fabulator
     def run(context, autovivify = false)
       return [ ] if @test.nil?
       @context.with(context) do |ctx|
-        test_res = @test.run(ctx).collect{ |a| !!a.value }
+        test_res = self.test(ctx).collect{ |a| !!a.value }
         return [ ] if test_res.nil? || test_res.empty? || !test_res.include?(true)
-        return @actions.run(ctx)
+        return self.run_actions(ctx)
       end
     end
   end
@@ -60,9 +56,6 @@ module Fabulator
     namespace Fabulator::FAB_NS
     has_actions
 
-    def run(context, autovivify = false)
-       return @actions.run(@context.merge(context),autovivify)
-    end
   end
 
   class Goto < Fabulator::Action
@@ -89,7 +82,7 @@ module Fabulator
       return true if @test.nil?
       @context.with(context) do |ctx|
         ctx.set_var(@as, context) if @as
-        result = @test.run(context).collect{ |a| !!a.value }
+        result = self.test(context).collect{ |a| !!a.value }
         return false if result.nil? || result.empty? || !result.include?(true)
         return true
       end
@@ -97,8 +90,8 @@ module Fabulator
 
     def run(context, autovivify = false)
       @context.with(context) do |ctx|
-        ctx.set_var(@as, context) if @as
-        return @actions.run(context)
+        ctx.set_var(self.as, context) if self.as
+        return self.run_actions(context)
       end
     end
   end
@@ -113,12 +106,12 @@ module Fabulator
       @context.with(context) do |ctx|
         select = ctx.get_select
         if !@test.nil?
-          test_res = @test.run(ctx).collect{ |a| !!a.value }
+          test_res = self.test(ctx).collect{ |a| !!a.value }
           return [ ] if test_res.nil? || test_res.empty? || !test_res.include?(true)
         end
         res = [ ]
-        if select.nil? && !@actions.nil?
-          res = @actions.run(ctx, autovivify)
+        if select.nil? && self.has_actions?
+          res = self.run_actions(ctx)
         elsif !select.nil?
           res = select.run(ctx, autovivify)
         else
