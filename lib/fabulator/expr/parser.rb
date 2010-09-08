@@ -222,8 +222,8 @@ module_eval(<<'...end xsm_expression_parser.racc/module_eval...', 'xsm_expressio
           if res[1] == 'if'
             @token = [ :IF, 'if' ]
           else
-            if @source[@curpos+res[1].length .. @curpos+res[1].length] == '*'
-              @token = [ :FUNCTION_NAME, res[1]+'*' ]
+            if @source[@curpos+res[1].length .. @curpos+res[1].length + 1] =~ /^(\??\*?)/
+              @token = [ :FUNCTION_NAME, res[1]+$1 ]
             else
               @token = [ :FUNCTION_NAME, res[1] ]
             end

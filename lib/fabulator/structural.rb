@@ -17,12 +17,12 @@ module Fabulator
       end
 
       self.setup(xml)
-
-      self
     end
 
-    def self.element(nom)
-      @@elements[self.name] = nom
+    def self.element(nom = nil)
+      @@elements ||= { }
+      @@elements[self.name] = nom unless nom.nil?
+      @@elements[self.name]
     end
 
     def self.contains(nom, opts = { })
@@ -33,16 +33,40 @@ module Fabulator
       @@structurals[self.name][ns][nom.to_sym] = opts
     end
 
+    def self.contained_in(ns, nom, h = {})
+      @@contained_in ||= { }
+
+      @@contained_in[ns] ||= { }
+      @@contained_in[ns][nom.to_sym] ||= { }
+      @@contained_in[ns][nom.to_sym][self.namespace] ||= { }
+      @@contained_in[ns][nom.to_sym][self.namespace][self.element.to_sym] = h.update({ :as => :contained})
+    end
+
     def self.structurals
-      return @@structurals[self.name]
+      ret = @@structurals[self.name]
+      els = self.element
+      els = [ els ] unless els.is_a?(Array)
+
+      return ret if self.element.nil?
+
+      @@contained_in ||= { }
+
+      return ret if @@contained_in[self.namespace].nil?
+
+      pot = @@contained_in[self.namespace][self.element.to_sym]
+      return ret if pot.nil? || pot.empty?
+
+      pot.each_pair do |ns, noms|
+        ret[ns] ||= { }
+        ret[ns] = ret[ns].update(noms)
+      end
+      ret
     end
 
     def self.accepts_structural?(ns, nom)
-      return false if @@structurals.nil?
-      return false if @@structurals[self.name].nil?
-      return false if @@structurals[self.name][ns].nil?
-      return false if @@structurals[self.name][ns][nom.to_sym].nil?
-      return true
+      s = self.structurals
+      in_s = (s[ns][nom.to_sym] rescue nil)
+      return !in_s.nil?
     end
 
     def accepts_structural?(ns, nom)

@@ -74,7 +74,7 @@ module Fabulator
     end
 
       def structural_class(nom)
-        Fabulator::TagLib.structural_classes[self.class.name][nom]
+        Fabulator::TagLib.structural_classes[self.class.name][nom.to_sym]
       end
 
     def self.inherited(base)
@@ -418,12 +418,8 @@ module Fabulator
             r
           }
           Fabulator::TagLib.structural_classes[self.name] ||= {}
-          Fabulator::TagLib.structural_classes[self.name][name] = klass
+          Fabulator::TagLib.structural_classes[self.name][name.to_sym] = klass
         end
-      end
-
-      def structural_class(nom)
-        (Fabulator::TagLib.structural_classes[self.class.name][nom] rescue nil)
       end
 
       def function(name, returns = nil, takes = nil, &block)

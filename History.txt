@@ -1,3 +1,11 @@
+=== 0.0.8
+
+* 1 major enhancement:
+  * Extensions can now define structural elements to be contained within
+    other structural elements outside the extension.  See the grammar
+    extension for an example of it allowing the grammar element within
+    the library top-level element.
+
 === 0.0.7 2010-09-07
 
 * 5 major enhancement:
