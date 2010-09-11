@@ -49,9 +49,21 @@ module Fabulator
     end
 
     def run_filter(context, nom)
+      return if @contained.nil?
+      @contained.each do |c|
+        ret = c.run_filter(context, nom)
+        return ret unless ret.nil?
+      end
+      nil
     end
  
     def run_constraint(context, nom)
+      return if @contained.nil?
+      @contained.each do |c|
+        ret = c.run_constraint(context, nom)
+        return ret unless ret.nil?
+      end
+      false
     end
   end
   end

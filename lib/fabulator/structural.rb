@@ -1,7 +1,11 @@
 module Fabulator
   class Structural < Action
 
-    def compile_xml(xml, context)
+    def initialize
+      @context = Fabulator::Expr::Context.new
+    end
+
+    def compile_xml(xml, context = nil)
       XML.default_line_numbers = true
       if xml.is_a?(String)
         xml = LibXML::XML::Document.string xml

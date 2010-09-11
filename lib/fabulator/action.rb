@@ -46,6 +46,10 @@ module Fabulator
       !@@has_actions.nil? && @@has_actions.has_key?(self.name)
     end
 
+    def has_actions?
+      self.class.has_actions? && !@actions.empty?
+    end
+
     def run_actions(ctx)
       self.has_actions? ? @actions.run(ctx) : [ ]
     end
@@ -56,7 +60,11 @@ module Fabulator
     end
 
     def select(ctx)
-      self.class.has_select? && !@select.nil? ? @select.run(ctx) : [ ]
+      self.class.has_select? && !@select.nil? ? @select.run(ctx,false) : [ ]
+    end
+
+    def has_select?
+      self.class.has_select? && !@select.nil?
     end
 
     def self.has_select?

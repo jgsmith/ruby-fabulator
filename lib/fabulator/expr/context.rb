@@ -250,7 +250,7 @@ module Fabulator
       tgts = pp.is_a?(Fabulator::Expr::Node) ? [ pp ] : pp.run(self, true)
       src = nil
       if !v.nil?
-        src = v.is_a?(Fabulator::Expr::Node) ? [ v ] : v.run(self)
+        src = v.is_a?(Fabulator::Expr::Node) ? [ v ] : ( v.is_a?(Array) ? v : v.run(self) )
       end 
 
       tgts.each do |tgt|

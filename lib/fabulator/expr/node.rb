@@ -3,7 +3,7 @@ module Fabulator
     class Node
       include Fabulator::Expr::NodeLogic
 
-      attr_accessor :axis, :value, :name, :roots, :vtype, :attributes, :is_attribute
+      attr_accessor :value, :name, :roots, :vtype, :attributes, :is_attribute
 
       def initialize(a,r,v,c,p = nil) #,f={})
         @roots = r
@@ -29,6 +29,15 @@ module Fabulator
 
       def is_attribute?
         @is_attribute
+      end
+
+      def axis
+        @axis
+      end
+
+      def axis=(a)
+        @axis = a
+        self.children.each { |c| c.axis=a }
       end
 
       def set_attribute(k, v)
@@ -158,6 +167,7 @@ module Fabulator
         end
         context.root.root(@axis)
       end
+
     end
   end
 end
