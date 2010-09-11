@@ -417,6 +417,12 @@ module Fabulator
     handler.run_filter(self, name)
   end
 
+  def run_constraint(ns, name)
+    handler = Fabulator::TagLib.namespaces[ns]
+    return false if handler.nil?
+    handler.run_constraint(self, name)
+  end
+
     end
   end
 end

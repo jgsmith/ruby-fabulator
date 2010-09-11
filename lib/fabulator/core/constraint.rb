@@ -105,7 +105,22 @@ module Fabulator
             end
             return sense.call(r)
           else
-            return not_sense.call(r)
+            # convert @c_type to ns:name
+            bits = @c_type.split(/:/, 2)
+            ns = nil
+            name = nil
+            if bits.size == 2
+              ns = @context.get_ns(bits[0])
+              name = bits[1]
+            else
+              ns = FAB_NS
+              name = bits[0]
+            end
+            if ctx.run_constraint(ns, name)
+              return sense.call(r)
+            else
+              return not_sense.call(r)
+            end
         end
       end
     end
