@@ -22,14 +22,64 @@ module Fabulator
       Fabulator::TagLib.namespaces[self.ns] = self
     end
 
-    def compile_action(e, c_attrs)
+    def compile_action(e, context)
+      name = e.name
+      return nil unless @actions.has_key?(name)
+      @actions[name].compile_action(e, context)
     end
 
     def run_function(context, nom, args)
       # look for a function/mapping/consolidation
       # then pass along to any objects in @contained
 
-      
+      fctn = nil
+      fctn_type = nil
+
+      if nom =~ /^(.*)\*$/
+        cnom = $1
+        if !@consolidations[cnom].nil?
+          fctn = @consolidations[cnom]
+          fctn_type = :reduction
+        end
+      else
+        if @consolidations.has_key?(nom)
+          fctn = @reductions[nom]
+          fctn_type = :reduction
+        end
+        if fctn.nil?
+          fctn = @mappings[nom]
+          fctn_type = :mapping
+        end
+        if fctn.nil?
+          fctn = @functions[nom]
+          fctn_type = :function
+        end
+        if fctn.nil?
+          fctn = @reductions[nom]
+          fctn_type = :reduction
+        end
+      end
+
+      if !fctn.nil?
+        res = [ ]
+        context.in_context do |ctx|
+          args = args.flatten
+          case fctn_type
+            when :function:
+              args.size.times do |i|
+                ctx.set_var((i+1).to_s, args[i])
+              end
+              ctx.set_var('0', args)
+              res = fctn.run(ctx)
+            when :mapping:
+              res = args.collect{ |a| fctn.run(ctx.with_root(a)) }.flatten
+            when :reduction:
+              ctx.set_var('0', args.flatten)
+              res = fctn.run(ctx)
+          end
+        end
+        return res
+      end
 
       return [] if @contained.nil?
 

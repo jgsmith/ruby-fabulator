@@ -47,6 +47,7 @@ require 'fabulator/lib/lib'
 require 'fabulator/lib/structural'
 require 'fabulator/lib/action'
 require 'fabulator/lib/attribute'
+require 'fabulator/lib/function'
 
 module Fabulator
   module Lib
@@ -57,10 +58,10 @@ module Fabulator
     structural :structural, Structural
     structural :action, Action
     structural :attribute, Attribute
-    #structural :function, Function
-    #structural :mapping, Mapping
-    #structural :reduction, Reduction
-    #structural :consolidation, Consolidation
+    structural :function, Function
+    structural :mapping, Mapping
+    structural :reduction, Reduction
+    structural :consolidation, Consolidation
     #structural :type, Type
     #structural :filter, Filter
     #structural :constraint, Constraint

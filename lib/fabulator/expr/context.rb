@@ -113,6 +113,18 @@ module Fabulator
         elsif value.size == 1
           value = value.first
         end
+        case opts[:type]
+          when :boolean:
+            if value =~ /^[YyTt1]/ || value =~ /^on/i
+              value = true
+            else
+              value = false
+            end
+          when :numeric:
+            value = value.to_f
+          when :integer:
+            value = value.to_i
+        end
       end
     end
 

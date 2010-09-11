@@ -403,9 +403,13 @@ module Fabulator
 
     mapping 'eval' do |ctx, arg|
       p = Fabulator::Expr::Parser.new
-      e = arg.to_s
-      pe = e.nil? ? nil : p.parse(e,ctx)
-      pe.nil? ? [] : pe.run(ctx)
+      if arg.vtype.join('') == FAB_NS+'expression'
+        return arg.value.run(ctx)
+      else
+        e = arg.to_s
+        pe = e.nil? ? nil : p.parse(e,ctx)
+        return pe.nil? ? [] : pe.run(ctx)
+      end
     end
 
     ###
