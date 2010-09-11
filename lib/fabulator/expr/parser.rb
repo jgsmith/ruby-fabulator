@@ -9,16 +9,39 @@ module Fabulator
   module Expr
     class Parser < Racc::Parser
 
-module_eval(<<'...end xsm_expression_parser.racc/module_eval...', 'xsm_expression_parser.racc', 187)
+module_eval(<<'...end xsm_expression_parser.racc/module_eval...', 'xsm_expression_parser.racc', 189)
+  # == Fabulator Expression Parser
+  #
+  # <tt>Fabulator::Expr::Parser</tt> provides a parser for Fabulator
+  # expressions operating on a DOM-like data model provided by
+  # Fabulator::Expr::Context and Fabulator::Expr::Node.
+  #
+  # The expression language is based on XQuery and XPath.
+  #
+
   require 'fabulator/expr'
   require 'rational'
   require 'bigdecimal'
   require 'bigdecimal/util'
 
-  def parse(t, ctx)
-    @source = t
+  # Within the context of a Fabulator::Expr::Context object, this will
+  # parse the given string and return an object that can be run to return
+  # an array if Fabulator::Expr::Node objects.
+  #
+  # Example:
+  #
+  #   parser  = Fabulator::Expr::Parser.new
+  #   context = Fabulator::Expr::Context.new
+  #   expr    = parser.parse('//foo', context)
+  #   foos    = expr.run(context)
+  #
+  # Results in 'foos' being an array of all of the nodes in the
+  # context that are named 'foo' regardless of their depth in the
+  # node tree.
+  def parse(text, context)
+    @source = text
     @curpos = 0
-    @context = ctx
+    @context = context
     @line = 0
     @col = 0
 
@@ -29,6 +52,8 @@ module_eval(<<'...end xsm_expression_parser.racc/module_eval...', 'xsm_expressio
     do_parse
   end
 
+  # Used internally by the parser to raise a Fabulator::Expr::ParserError
+  # when the parse fails.
   def on_error(*args)
     raise Fabulator::Expr::ParserError.new("unable to parse '#{args[1]}' near line #{@line + 1}, column #{@col}")
   end
@@ -908,14 +933,14 @@ Racc_debug_parser = false
 
 # reduce 0 omitted
 
-module_eval(<<'.,.,', 'xsm_expression_parser.racc', 10)
+module_eval(<<'.,.,', 'xsm_expression_parser.racc', 12)
   def _reduce_1(val, _values, result)
      result = Fabulator::Expr::StatementList.new; result.add_statement(val[0]) 
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'xsm_expression_parser.racc', 11)
+module_eval(<<'.,.,', 'xsm_expression_parser.racc', 13)
   def _reduce_2(val, _values, result)
      result = val[0]; result.add_statement(val[2]) 
     result
@@ -940,28 +965,28 @@ module_eval(<<'.,.,', 'xsm_expression_parser.racc', 11)
 
 # reduce 11 omitted
 
-module_eval(<<'.,.,', 'xsm_expression_parser.racc', 24)
+module_eval(<<'.,.,', 'xsm_expression_parser.racc', 26)
   def _reduce_12(val, _values, result)
      result = Fabulator::Expr::WithExpr.new(val[0], val[2]) 
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'xsm_expression_parser.racc', 26)
+module_eval(<<'.,.,', 'xsm_expression_parser.racc', 28)
   def _reduce_13(val, _values, result)
      result = Fabulator::Expr::StatementList.new; result.add_statement(val[0]) 
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'xsm_expression_parser.racc', 27)
+module_eval(<<'.,.,', 'xsm_expression_parser.racc', 29)
   def _reduce_14(val, _values, result)
      result = val[0]; result.add_statement(val[2]) 
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'xsm_expression_parser.racc', 29)
+module_eval(<<'.,.,', 'xsm_expression_parser.racc', 31)
   def _reduce_15(val, _values, result)
      result = Fabulator::Expr::DataSet.new(val[0], val[2]) 
     result
@@ -972,77 +997,77 @@ module_eval(<<'.,.,', 'xsm_expression_parser.racc', 29)
 
 # reduce 17 omitted
 
-module_eval(<<'.,.,', 'xsm_expression_parser.racc', 36)
+module_eval(<<'.,.,', 'xsm_expression_parser.racc', 38)
   def _reduce_18(val, _values, result)
      result = [ val[0] ] 
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'xsm_expression_parser.racc', 37)
+module_eval(<<'.,.,', 'xsm_expression_parser.racc', 39)
   def _reduce_19(val, _values, result)
      result = val[0] + [ val[2] ] 
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'xsm_expression_parser.racc', 39)
+module_eval(<<'.,.,', 'xsm_expression_parser.racc', 41)
   def _reduce_20(val, _values, result)
      result = Fabulator::Expr::LetExpr.new(val[1], val[3]) 
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'xsm_expression_parser.racc', 41)
+module_eval(<<'.,.,', 'xsm_expression_parser.racc', 43)
   def _reduce_21(val, _values, result)
      result = Fabulator::Expr::IfExpr.new(val[2], val[5], val[7]) 
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'xsm_expression_parser.racc', 42)
+module_eval(<<'.,.,', 'xsm_expression_parser.racc', 44)
   def _reduce_22(val, _values, result)
      result = Fabulator::Expr::IfExpr.new(val[2], val[5], nil) 
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'xsm_expression_parser.racc', 44)
+module_eval(<<'.,.,', 'xsm_expression_parser.racc', 46)
   def _reduce_23(val, _values, result)
      result = Fabulator::Expr::ForExpr.new(val[1], val[3]) 
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'xsm_expression_parser.racc', 46)
+module_eval(<<'.,.,', 'xsm_expression_parser.racc', 48)
   def _reduce_24(val, _values, result)
      result = [ val[0] ] 
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'xsm_expression_parser.racc', 47)
+module_eval(<<'.,.,', 'xsm_expression_parser.racc', 49)
   def _reduce_25(val, _values, result)
      result = val[0] + [ val[2] ] 
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'xsm_expression_parser.racc', 49)
+module_eval(<<'.,.,', 'xsm_expression_parser.racc', 51)
   def _reduce_26(val, _values, result)
      result = Fabulator::Expr::ForVar.new(val[0], val[2]) 
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'xsm_expression_parser.racc', 51)
+module_eval(<<'.,.,', 'xsm_expression_parser.racc', 53)
   def _reduce_27(val, _values, result)
      result = Fabulator::Expr::SomeExpr.new(val[1], val[3]) 
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'xsm_expression_parser.racc', 52)
+module_eval(<<'.,.,', 'xsm_expression_parser.racc', 54)
   def _reduce_28(val, _values, result)
      result = Fabulator::Expr::EveryExpr.new(val[1], val[3]) 
     result
@@ -1051,7 +1076,7 @@ module_eval(<<'.,.,', 'xsm_expression_parser.racc', 52)
 
 # reduce 29 omitted
 
-module_eval(<<'.,.,', 'xsm_expression_parser.racc', 55)
+module_eval(<<'.,.,', 'xsm_expression_parser.racc', 57)
   def _reduce_30(val, _values, result)
      result = Fabulator::Expr::OrExpr.new(val[0], val[2]) 
     result
@@ -1060,14 +1085,14 @@ module_eval(<<'.,.,', 'xsm_expression_parser.racc', 55)
 
 # reduce 31 omitted
 
-module_eval(<<'.,.,', 'xsm_expression_parser.racc', 58)
+module_eval(<<'.,.,', 'xsm_expression_parser.racc', 60)
   def _reduce_32(val, _values, result)
      result = Fabulator::Expr::AndExpr.new(val[0], val[2]) 
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'xsm_expression_parser.racc', 59)
+module_eval(<<'.,.,', 'xsm_expression_parser.racc', 61)
   def _reduce_33(val, _values, result)
      result = Fabulator::Expr::ExceptExpr.new(val[0], val[2]) 
     result
@@ -1076,21 +1101,21 @@ module_eval(<<'.,.,', 'xsm_expression_parser.racc', 59)
 
 # reduce 34 omitted
 
-module_eval(<<'.,.,', 'xsm_expression_parser.racc', 62)
+module_eval(<<'.,.,', 'xsm_expression_parser.racc', 64)
   def _reduce_35(val, _values, result)
      result = Fabulator::Expr::EqExpr.new(val[0], val[2]) 
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'xsm_expression_parser.racc', 63)
+module_eval(<<'.,.,', 'xsm_expression_parser.racc', 65)
   def _reduce_36(val, _values, result)
      result = Fabulator::Expr::NeqExpr.new(val[0], val[2]) 
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'xsm_expression_parser.racc', 65)
+module_eval(<<'.,.,', 'xsm_expression_parser.racc', 67)
   def _reduce_37(val, _values, result)
      result = Fabulator::Expr::Tuple.new(val[2]) 
     result
@@ -1099,42 +1124,42 @@ module_eval(<<'.,.,', 'xsm_expression_parser.racc', 65)
 
 # reduce 38 omitted
 
-module_eval(<<'.,.,', 'xsm_expression_parser.racc', 70)
+module_eval(<<'.,.,', 'xsm_expression_parser.racc', 72)
   def _reduce_39(val, _values, result)
      result = Fabulator::Expr::LtExpr.new(val[0], val[2]) 
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'xsm_expression_parser.racc', 71)
+module_eval(<<'.,.,', 'xsm_expression_parser.racc', 73)
   def _reduce_40(val, _values, result)
      result = Fabulator::Expr::LtExpr.new(val[2], val[0]) 
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'xsm_expression_parser.racc', 72)
+module_eval(<<'.,.,', 'xsm_expression_parser.racc', 74)
   def _reduce_41(val, _values, result)
      result = Fabulator::Expr::LteExpr.new(val[0], val[2]) 
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'xsm_expression_parser.racc', 73)
+module_eval(<<'.,.,', 'xsm_expression_parser.racc', 75)
   def _reduce_42(val, _values, result)
      result = Fabulator::Expr::LteExpr.new(val[2], val[0]) 
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'xsm_expression_parser.racc', 84)
+module_eval(<<'.,.,', 'xsm_expression_parser.racc', 86)
   def _reduce_43(val, _values, result)
      result = Fabulator::Expr::RangeExpr.new(val[0], val[2]) 
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'xsm_expression_parser.racc', 85)
+module_eval(<<'.,.,', 'xsm_expression_parser.racc', 87)
   def _reduce_44(val, _values, result)
      result = Fabulator::Expr::RangeExpr.new(val[0], val[2]) 
     result
@@ -1143,14 +1168,14 @@ module_eval(<<'.,.,', 'xsm_expression_parser.racc', 85)
 
 # reduce 45 omitted
 
-module_eval(<<'.,.,', 'xsm_expression_parser.racc', 88)
+module_eval(<<'.,.,', 'xsm_expression_parser.racc', 90)
   def _reduce_46(val, _values, result)
      result = Fabulator::Expr::AddExpr.new(val[0], val[2]) 
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'xsm_expression_parser.racc', 89)
+module_eval(<<'.,.,', 'xsm_expression_parser.racc', 91)
   def _reduce_47(val, _values, result)
      result = Fabulator::Expr::SubExpr.new(val[0], val[2]) 
     result
@@ -1159,21 +1184,21 @@ module_eval(<<'.,.,', 'xsm_expression_parser.racc', 89)
 
 # reduce 48 omitted
 
-module_eval(<<'.,.,', 'xsm_expression_parser.racc', 92)
+module_eval(<<'.,.,', 'xsm_expression_parser.racc', 94)
   def _reduce_49(val, _values, result)
      result = Fabulator::Expr::MpyExpr.new(val[0], val[2]) 
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'xsm_expression_parser.racc', 93)
+module_eval(<<'.,.,', 'xsm_expression_parser.racc', 95)
   def _reduce_50(val, _values, result)
      result = Fabulator::Expr::DivExpr.new(val[0], val[2]) 
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'xsm_expression_parser.racc', 94)
+module_eval(<<'.,.,', 'xsm_expression_parser.racc', 96)
   def _reduce_51(val, _values, result)
      result = Fabulator::Expr::ModExpr.new(val[0], val[2]) 
     result
@@ -1182,7 +1207,7 @@ module_eval(<<'.,.,', 'xsm_expression_parser.racc', 94)
 
 # reduce 52 omitted
 
-module_eval(<<'.,.,', 'xsm_expression_parser.racc', 97)
+module_eval(<<'.,.,', 'xsm_expression_parser.racc', 99)
   def _reduce_53(val, _values, result)
      result = Fabulator::Expr::NegExpr.new(val[1]) 
     result
@@ -1191,35 +1216,35 @@ module_eval(<<'.,.,', 'xsm_expression_parser.racc', 97)
 
 # reduce 54 omitted
 
-module_eval(<<'.,.,', 'xsm_expression_parser.racc', 100)
+module_eval(<<'.,.,', 'xsm_expression_parser.racc', 102)
   def _reduce_55(val, _values, result)
      result = Fabulator::Expr::UnionExpr.new(val[0]) 
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'xsm_expression_parser.racc', 102)
+module_eval(<<'.,.,', 'xsm_expression_parser.racc', 104)
   def _reduce_56(val, _values, result)
      result = [ val[0], val[2] ] 
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'xsm_expression_parser.racc', 103)
+module_eval(<<'.,.,', 'xsm_expression_parser.racc', 105)
   def _reduce_57(val, _values, result)
      result = val[0] + [ val[2] ] 
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'xsm_expression_parser.racc', 105)
+module_eval(<<'.,.,', 'xsm_expression_parser.racc', 107)
   def _reduce_58(val, _values, result)
      result = Fabulator::Expr::PathExpr.new(nil, [], val[0]) 
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'xsm_expression_parser.racc', 106)
+module_eval(<<'.,.,', 'xsm_expression_parser.racc', 108)
   def _reduce_59(val, _values, result)
      result = Fabulator::Expr::PathExpr.new(val[0], val[1], val[2]) 
     result
@@ -1228,14 +1253,14 @@ module_eval(<<'.,.,', 'xsm_expression_parser.racc', 106)
 
 # reduce 60 omitted
 
-module_eval(<<'.,.,', 'xsm_expression_parser.racc', 109)
+module_eval(<<'.,.,', 'xsm_expression_parser.racc', 111)
   def _reduce_61(val, _values, result)
      result = val[1] 
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'xsm_expression_parser.racc', 110)
+module_eval(<<'.,.,', 'xsm_expression_parser.racc', 112)
   def _reduce_62(val, _values, result)
      result = [ Fabulator::Expr::AxisDescendentOrSelf.new ] + val[1] 
     result
@@ -1246,147 +1271,147 @@ module_eval(<<'.,.,', 'xsm_expression_parser.racc', 110)
 
 # reduce 64 omitted
 
-module_eval(<<'.,.,', 'xsm_expression_parser.racc', 118)
+module_eval(<<'.,.,', 'xsm_expression_parser.racc', 120)
   def _reduce_65(val, _values, result)
      result = Fabulator::Expr::RootContext.new 
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'xsm_expression_parser.racc', 119)
+module_eval(<<'.,.,', 'xsm_expression_parser.racc', 121)
   def _reduce_66(val, _values, result)
      result = Fabulator::Expr::PathExpr.new(Fabulator::Expr::RootContext.new, [], val[1]) 
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'xsm_expression_parser.racc', 120)
+module_eval(<<'.,.,', 'xsm_expression_parser.racc', 122)
   def _reduce_67(val, _values, result)
      result = [ Fabulator::Expr::RootContext.new, Fabulator::Expr::AxisDescendentOrSelf.new(val[1][0]) ] + val[1][1..val[1].size-1] 
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'xsm_expression_parser.racc', 121)
+module_eval(<<'.,.,', 'xsm_expression_parser.racc', 123)
   def _reduce_68(val, _values, result)
      result = [ Fabulator::Expr::RootContext.new(val[0]) ] + val[2] 
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'xsm_expression_parser.racc', 122)
+module_eval(<<'.,.,', 'xsm_expression_parser.racc', 124)
   def _reduce_69(val, _values, result)
      result = [ Fabulator::Expr::RootContext.new(val[0]), Fabulator::Expr::AxisDescendentOrSelf.new(val[2][0]) ] + val[2][1..val[2].size-1] 
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'xsm_expression_parser.racc', 124)
+module_eval(<<'.,.,', 'xsm_expression_parser.racc', 126)
   def _reduce_70(val, _values, result)
      result = [ val[0] ] 
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'xsm_expression_parser.racc', 125)
+module_eval(<<'.,.,', 'xsm_expression_parser.racc', 127)
   def _reduce_71(val, _values, result)
      result = val[0] + [ val[2] ] 
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'xsm_expression_parser.racc', 126)
+module_eval(<<'.,.,', 'xsm_expression_parser.racc', 128)
   def _reduce_72(val, _values, result)
      result = val[0] + [ Fabulator::Expr::AxisDescendentOrSelf.new(val[2]) ] 
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'xsm_expression_parser.racc', 128)
+module_eval(<<'.,.,', 'xsm_expression_parser.racc', 130)
   def _reduce_73(val, _values, result)
      result = val[1].nil? || val[1].empty? ? val[0] : Fabulator::Expr::Predicates.new(val[0], val[1]) 
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'xsm_expression_parser.racc', 129)
+module_eval(<<'.,.,', 'xsm_expression_parser.racc', 131)
   def _reduce_74(val, _values, result)
      result = Fabulator::Expr::CurrentContext.new 
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'xsm_expression_parser.racc', 130)
+module_eval(<<'.,.,', 'xsm_expression_parser.racc', 132)
   def _reduce_75(val, _values, result)
      result = Fabulator::Expr::AxisParent.new 
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'xsm_expression_parser.racc', 136)
+module_eval(<<'.,.,', 'xsm_expression_parser.racc', 138)
   def _reduce_76(val, _values, result)
      result = Fabulator::Expr::AxisChild.new(val[0]) 
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'xsm_expression_parser.racc', 137)
+module_eval(<<'.,.,', 'xsm_expression_parser.racc', 139)
   def _reduce_77(val, _values, result)
      result = Fabulator::Expr::Axis.new(val[0], val[1]) 
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'xsm_expression_parser.racc', 138)
+module_eval(<<'.,.,', 'xsm_expression_parser.racc', 140)
   def _reduce_78(val, _values, result)
      result = Fabulator::Expr::AxisAttribute.new(val[1]) 
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'xsm_expression_parser.racc', 140)
+module_eval(<<'.,.,', 'xsm_expression_parser.racc', 142)
   def _reduce_79(val, _values, result)
      result = Fabulator::Expr::Axis.new(val[0]) 
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'xsm_expression_parser.racc', 142)
+module_eval(<<'.,.,', 'xsm_expression_parser.racc', 144)
   def _reduce_80(val, _values, result)
      result = [ ] 
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'xsm_expression_parser.racc', 143)
+module_eval(<<'.,.,', 'xsm_expression_parser.racc', 145)
   def _reduce_81(val, _values, result)
      result = val[0] + [ val[1] ] 
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'xsm_expression_parser.racc', 145)
+module_eval(<<'.,.,', 'xsm_expression_parser.racc', 147)
   def _reduce_82(val, _values, result)
      result = val[1] 
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'xsm_expression_parser.racc', 146)
+module_eval(<<'.,.,', 'xsm_expression_parser.racc', 148)
   def _reduce_83(val, _values, result)
      result = val[1] 
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'xsm_expression_parser.racc', 153)
+module_eval(<<'.,.,', 'xsm_expression_parser.racc', 155)
   def _reduce_84(val, _values, result)
      result = Fabulator::Expr::Var.new(val[0]) 
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'xsm_expression_parser.racc', 154)
+module_eval(<<'.,.,', 'xsm_expression_parser.racc', 156)
   def _reduce_85(val, _values, result)
      result = val[1] 
     result
@@ -1397,21 +1422,21 @@ module_eval(<<'.,.,', 'xsm_expression_parser.racc', 154)
 
 # reduce 87 omitted
 
-module_eval(<<'.,.,', 'xsm_expression_parser.racc', 157)
+module_eval(<<'.,.,', 'xsm_expression_parser.racc', 159)
   def _reduce_88(val, _values, result)
      result = Fabulator::Expr::Literal.new(val[0], [ Fabulator::FAB_NS, 'string' ]) 
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'xsm_expression_parser.racc', 158)
+module_eval(<<'.,.,', 'xsm_expression_parser.racc', 160)
   def _reduce_89(val, _values, result)
      result = Fabulator::Expr::Literal.new(val[0] =~ /\./ ? val[0].to_d.to_r : val[0].to_i.to_r, [ Fabulator::FAB_NS, 'numeric' ]) 
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'xsm_expression_parser.racc', 160)
+module_eval(<<'.,.,', 'xsm_expression_parser.racc', 162)
   def _reduce_90(val, _values, result)
             result = Fabulator::Expr::Function.new(@context, val[0], val[1]) 
 #          when 'any' : Fabulator::Expr::AnyExpr.new(@context, val[1])
@@ -1425,14 +1450,14 @@ module_eval(<<'.,.,', 'xsm_expression_parser.racc', 160)
   end
 .,.,
 
-module_eval(<<'.,.,', 'xsm_expression_parser.racc', 169)
+module_eval(<<'.,.,', 'xsm_expression_parser.racc', 171)
   def _reduce_91(val, _values, result)
      result = Fabulator::Expr::List.new(val[1]) 
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'xsm_expression_parser.racc', 172)
+module_eval(<<'.,.,', 'xsm_expression_parser.racc', 174)
   def _reduce_92(val, _values, result)
      result = [ ] 
     result
@@ -1441,14 +1466,14 @@ module_eval(<<'.,.,', 'xsm_expression_parser.racc', 172)
 
 # reduce 93 omitted
 
-module_eval(<<'.,.,', 'xsm_expression_parser.racc', 175)
+module_eval(<<'.,.,', 'xsm_expression_parser.racc', 177)
   def _reduce_94(val, _values, result)
      result = [ val[0] ] 
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'xsm_expression_parser.racc', 176)
+module_eval(<<'.,.,', 'xsm_expression_parser.racc', 178)
   def _reduce_95(val, _values, result)
      result = val[0] + [ val[2] ] 
     result
@@ -1457,14 +1482,14 @@ module_eval(<<'.,.,', 'xsm_expression_parser.racc', 176)
 
 # reduce 96 omitted
 
-module_eval(<<'.,.,', 'xsm_expression_parser.racc', 179)
+module_eval(<<'.,.,', 'xsm_expression_parser.racc', 181)
   def _reduce_97(val, _values, result)
      result = val[0].to_s 
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'xsm_expression_parser.racc', 180)
+module_eval(<<'.,.,', 'xsm_expression_parser.racc', 182)
   def _reduce_98(val, _values, result)
      result = val[1] 
     result

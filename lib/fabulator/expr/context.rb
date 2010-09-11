@@ -2,8 +2,8 @@ module Fabulator
   module Expr
     class Context
 
-  def initialize(parent_c = nil, xml = nil)
-    @parent = parent_c
+  def initialize(parent_context = nil, xml = nil)
+    @parent = parent_context
     @run_time_parent = nil
     @ns = { }
     @attributes = { }
@@ -12,7 +12,7 @@ module Fabulator
     @last = nil
     @line_num = nil
 
-    if parent_c.nil?
+    if parent_context.nil?
        if xml.nil? || (xml.root rescue nil).nil?
          roots = { }
          roots['data'] = Fabulator::Expr::Node.new('data', roots, nil, [])
@@ -402,16 +402,22 @@ module Fabulator
     Fabulator::TagLib.namespaces[ns].compile_structural(e, self)
   end
 
+  # Runs the block with a new context based on this context.  This
+  # provides a new scope for variables and current nodes.
   def in_context(&block)
     ctx = self.merge
     yield ctx
   end
 
-  def with(ctx2, &block)
-    ctx = self.merge(ctx2)
+  # Runs the block with a new context resulting from merging this
+  # context with the given context.
+  def with(context, &block)
+    ctx = self.merge(context)
     yield ctx
   end
 
+  # Iterates through the list of items running the given block with
+  # a new context with the current node set to the item.
   def with_roots(items, &block)
     idx = 1
     items.each do |i|
@@ -423,14 +429,19 @@ module Fabulator
     end
   end
 
+  # Runs the request filter against the current node.  The value
+  # of the current node is replaced with the result of the filter.
   def run_filter(ns, name)
     handler = Fabulator::TagLib.namespaces[ns]
     return [] if handler.nil?
     handler.run_filter(self, name)
   end
 
-  def run_constraint(ns, name)
-    handler = Fabulator::TagLib.namespaces[ns]
+  # Runs the requested constraint against the current node and returns
+  # a boolean.  Returns false if no object can be found to handle the
+  # specified namespace.
+  def run_constraint(namespace, name)
+    handler = Fabulator::TagLib.namespaces[namespace]
     return false if handler.nil?
     handler.run_constraint(self, name)
   end

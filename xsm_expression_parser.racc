@@ -1,9 +1,11 @@
 class Fabulator::Expr::Parser
+  #--
   # based on XSM expression grammer from 
   #    http://cpansearch.perl.org/src/JSMITH/Gestinanna-0.02/parser.PL
-
+  #
   # instead of compiling ruby code, we'll instantiate objects to handle the
   # run-time performance
+  #++
 
   start statements
 
@@ -184,15 +186,38 @@ rule
 end
 
 ---- inner 
+  # == Fabulator Expression Parser
+  #
+  # <tt>Fabulator::Expr::Parser</tt> provides a parser for Fabulator
+  # expressions operating on a DOM-like data model provided by
+  # Fabulator::Expr::Context and Fabulator::Expr::Node.
+  #
+  # The expression language is based on XQuery and XPath.
+  #
+
   require 'fabulator/expr'
   require 'rational'
   require 'bigdecimal'
   require 'bigdecimal/util'
 
-  def parse(t, ctx)
-    @source = t
+  # Within the context of a Fabulator::Expr::Context object, this will
+  # parse the given string and return an object that can be run to return
+  # an array if Fabulator::Expr::Node objects.
+  #
+  # Example:
+  #
+  #   parser  = Fabulator::Expr::Parser.new
+  #   context = Fabulator::Expr::Context.new
+  #   expr    = parser.parse('//foo', context)
+  #   foos    = expr.run(context)
+  #
+  # Results in 'foos' being an array of all of the nodes in the
+  # context that are named 'foo' regardless of their depth in the
+  # node tree.
+  def parse(text, context)
+    @source = text
     @curpos = 0
-    @context = ctx
+    @context = context
     @line = 0
     @col = 0
 
@@ -203,6 +228,8 @@ end
     do_parse
   end
 
+  # Used internally by the parser to raise a Fabulator::Expr::ParserError
+  # when the parse fails.
   def on_error(*args)
     raise Fabulator::Expr::ParserError.new("unable to parse '#{args[1]}' near line #{@line + 1}, column #{@col}")
   end
