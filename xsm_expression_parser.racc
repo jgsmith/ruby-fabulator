@@ -16,6 +16,7 @@ rule
   statement: 
     | expr
     | let_expr
+    | ns_expr { result = nil }
 
   expr: or_expr
     | range_expr
@@ -40,6 +41,10 @@ rule
     | num_list COMMA num_expr { result = val[0] + [ val[2] ] }
 
   let_expr: LET DOLLAR_QNAME COLON_EQUAL expr { result = Fabulator::Expr::LetExpr.new(val[1], val[3]) }
+
+  ns_expr: LET XMLNS_COLON_NCNAME COLON_EQUAL LITERAL { 
+    @context.set_ns(val[1].gsub(/^xmlns:/, ''), val[3])
+  } 
 
   if_expr: IF LP expr RP THEN expr ELSE expr { result = Fabulator::Expr::IfExpr.new(val[2], val[5], val[7]) }
     | IF LP expr RP THEN expr { result = Fabulator::Expr::IfExpr.new(val[2], val[5], nil) }
@@ -217,7 +222,7 @@ end
   def parse(text, context)
     @source = text
     @curpos = 0
-    @context = context
+    @context = context.merge
     @line = 0
     @col = 0
 
@@ -248,6 +253,7 @@ end
   @@regex[:axis] = %r{(#{@@regex[:ncname]})\s*(?=::)}
   @@regex[:name_colon_star] = %r{(#{@@regex[:ncname]}:\*)}
   @@regex[:qname] = %r{((?:#{@@regex[:ncname]}:)?#{@@regex[:ncname]})}
+  @@regex[:xmlns] = %r{((?:xmlns:)#{@@regex[:ncname]})}
   @@regex[:dollar_qname] = %r{\$#{@@regex[:qname]}}
   @@regex[:dollar_int] = %r{\$([0-9]+)}
   @@regex[:function_name] = %r{#{@@regex[:qname]}\??\*?\s*(?=\([^:])}
@@ -290,7 +296,7 @@ end
     == & && ||
   }.split(/\s*/), '[', ',', '$' ].each { |t| @@preceding_tokens[t] = true }
 
-  @@regex[:general] = Regexp.compile(%{^(?:#{@@regex[:function_name]}|#{@@regex[:axis]}|#{@@regex[:name_colon_star]}|#{@@regex[:qname]}|#{@@regex[:literal]}|#{@@regex[:number]}|#{@@regex[:dollar_qname]}|#{@@regex[:dollar_int]}|(#{@@regex[:simple_tokens]}))})
+  @@regex[:general] = Regexp.compile(%{^(?:#{@@regex[:xmlns]}|#{@@regex[:function_name]}|#{@@regex[:axis]}|#{@@regex[:name_colon_star]}|#{@@regex[:qname]}|#{@@regex[:literal]}|#{@@regex[:number]}|#{@@regex[:dollar_qname]}|#{@@regex[:dollar_int]}|(#{@@regex[:simple_tokens]}))})
 
   def next_token  
     @token = nil
@@ -420,21 +426,23 @@ end
         raise "Failed to parse '#{@source}' at #{@curpos}': #{@source[@curpos..@source.length-1]}"
       else
         if !res[1].nil?
-          if res[1] == 'if'
+          @token = [ :XMLNS_COLON_NCNAME, res[1] ]
+        elsif !res[2].nil?
+          if res[2] == 'if'
             @token = [ :IF, 'if' ]
           else
-            if @source[@curpos+res[1].length .. @curpos+res[1].length + 1] =~ /^(\??\*?)/
-              @token = [ :FUNCTION_NAME, res[1]+$1 ]
+            if @source[@curpos+res[2].length .. @curpos+res[2].length + 1] =~ /^(\??\*?)/
+              @token = [ :FUNCTION_NAME, res[2]+$1 ]
             else
-              @token = [ :FUNCTION_NAME, res[1] ]
+              @token = [ :FUNCTION_NAME, res[2] ]
             end
           end
-        elsif !res[2].nil?
-          @token = [ res[2] == 'method' ? :AXIS_METHOD : :AXIS_NAME, res[2] ]
         elsif !res[3].nil?
-          @token = [ :NAME_COLON_STAR, res[3] ]
+          @token = [ res[3] == 'method' ? :AXIS_METHOD : :AXIS_NAME, res[3] ]
         elsif !res[4].nil?
-          qname = res[4]
+          @token = [ :NAME_COLON_STAR, res[4] ]
+        elsif !res[5].nil?
+          qname = res[5]
           case qname
             when 'for':
               @token = [ :FOR, 'for' ]
@@ -461,10 +469,10 @@ end
             when 'with':
               @token = [ :WITH, 'with' ]
             else
-              @token = [ :QNAME, res[4] ]
+              @token = [ :QNAME, qname ]
           end
-        elsif !res[5].nil?
-          s = res[5]
+        elsif !res[6].nil?
+          s = res[6]
           s = s[1..s.length-2]
           @curpos = @curpos + s.length
           @col = @col + s.length
@@ -474,18 +482,18 @@ end
           @token = [ :LITERAL, s ]
           @curpos = @curpos + 2  # the quotes
           @col = @col + 2
-        elsif !res[6].nil?
-          @token = [ :NUMBER, res[6] ]
         elsif !res[7].nil?
-          @curpos = @curpos + 1
-          @col = @col + 1
-          @token = [ :DOLLAR_QNAME, res[7] ]
+          @token = [ :NUMBER, res[7] ]
         elsif !res[8].nil?
           @curpos = @curpos + 1
           @col = @col + 1
           @token = [ :DOLLAR_QNAME, res[8] ]
         elsif !res[9].nil?
-          @token = [ @@ops[res[9]] || res[9], res[9] ]
+          @curpos = @curpos + 1
+          @col = @col + 1
+          @token = [ :DOLLAR_QNAME, res[9] ]
+        elsif !res[10].nil?
+          @token = [ @@ops[res[10]] || res[10], res[10] ]
         else
           raise "Failed to parse '#{@source}' at #{@curpos}: #{@source[@curpos..@source.length-1]}"
         end

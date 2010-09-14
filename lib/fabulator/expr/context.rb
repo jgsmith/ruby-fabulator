@@ -154,7 +154,7 @@ module Fabulator
   end
 
   def get_var(v)
-    if !@variables.has_key?(v)
+    if @variables.nil? || !@variables.has_key?(v)
       if @run_time_parent.nil?
         if @parent.nil?
           nil
@@ -174,12 +174,13 @@ module Fabulator
   end
 
   def get_ns(n)
-    return @ns[n] if @ns.has_key?(n)
+    return @ns[n] if !@ns.nil? && @ns.has_key?(n)
     return @parent.get_ns(n) unless @parent.nil?
     return nil
   end
 
   def set_ns(n,h)
+    @ns ||= { }
     @ns[n] = h
   end
 
@@ -376,6 +377,11 @@ module Fabulator
     ns = e.namespaces.namespace.href
     return unless Fabulator::TagLib.namespaces.include?(ns)
     Fabulator::TagLib.namespaces[ns].compile_action(e, self)
+  end
+
+  def get_action(ns, nom)
+    return unless Fabulator::TagLib.namespaces.include?(ns)
+    Fabulator::TagLib.namespaces[ns].get_action(nom, self)
   end
 
   def compile_structurals(xml)

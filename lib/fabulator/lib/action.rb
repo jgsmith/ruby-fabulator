@@ -5,6 +5,7 @@ module Fabulator
   module Lib
     class Action < Fabulator::Structural
       attr_accessor :attributes
+      attr_accessor :namespace
 
       namespace FAB_LIB_NS
 
@@ -18,7 +19,7 @@ module Fabulator
       def compile_action(e, context)
         ret = nil
         context.with(e) do |ctx|
-          ret = ActionRef.new(self, ctx, ctx.compile_actions(e))
+          ret = ActionRef.new([ e.namespaces.namespace.href, e.name ], ctx, ctx.compile_actions(e))
         end
         ret
       end
@@ -30,8 +31,8 @@ module Fabulator
         @action = defining_action
         @actions = actions
         @static_attributes = { }
-        @action.attributes.collect{ |a| a.is_static? }.each do |a|
-          @static_attributes[a.path] = a.value(@context)
+        @context.get_action(@action.first, @action.last).attributes.collect{ |a| a.is_static? }.each do |a|
+          @static_attributes[a.name] = a.value(@context)
         end
       end
 
@@ -39,17 +40,18 @@ module Fabulator
         ret = [ ]
         @context.with(context) do |ctx|
           @static_attributes.each_pair do |p,v|
-            ctx.set_value(p, v)
+            ctx.set_var(p, v)
           end
 # These can be passed to f:eval to get their value
-          @action.attributes.collect{ |a| !a.is_static? }.each do |attr|
-            ctx.set_value(attr.path, attr.value(ctx))
+          action = ctx.get_action(@action.first, @action.last)
+          action.attributes.collect{ |a| !a.is_static? }.each do |attr|
+            ctx.set_var(attr.name, attr.value(ctx))
           end
           # we can f:eval($actions) in whatever current context we have
-          if @action.has_actions?
+          if action.has_actions?
             ctx.set_var('actions', ctx.root.anon_node(@actions, [ FAB_NS, 'expression' ]))
           end
-          ret = @action.run(ctx)
+          ret = action.run(ctx)
         end
         ret
       end

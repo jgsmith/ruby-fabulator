@@ -160,3 +160,10 @@ Feature: Function calls and lists
     When I run the expression (f:not(f:true()))
     Then I should get 1 item
       And item 0 should be [f:false()]
+  @ns
+  Scenario: Negating logic
+    Given a context
+     And the prefix f as "http://dh.tamu.edu/ns/fabulator/1.0#"
+    When I run the expression (let xmlns:ff:="http://dh.tamu.edu/ns/fabulator/1.0#"; ff:not(ff:true()))
+    Then I should get 1 item
+      And item 0 should be [f:false()]

@@ -28,6 +28,11 @@ module Fabulator
       @actions[name].compile_action(e, context)
     end
 
+    def get_action(nom, context)
+      return nil unless @actions.has_key?(nom)
+      @actions[nom]
+    end
+
     def run_function(context, nom, args)
       # look for a function/mapping/consolidation
       # then pass along to any objects in @contained
