@@ -7,7 +7,6 @@ module Fabulator
     @run_time_parent = nil
     @ns = { }
     @attributes = { }
-    @variables = { }
     @position = nil
     @last = nil
     @line_num = nil
@@ -156,11 +155,7 @@ module Fabulator
   def get_var(v)
     if @variables.nil? || !@variables.has_key?(v)
       if @run_time_parent.nil?
-        if @parent.nil?
-          nil
-        else
-          @parent.get_var(v)
-        end
+        @parent.nil? ? nil : @parent.get_var(v)
       else
         @run_time_parent.get_var(v)
       end
@@ -170,7 +165,25 @@ module Fabulator
   end
 
   def set_var(v,vv)
+    @variables ||= { }
     @variables[v] = vv
+  end
+
+  def set_scoped_info(k, v)
+    @scoped_info ||= { }
+    @scoped_info[k] = v
+  end
+
+  def get_scoped_info(k)
+    if @scoped_info.nil? || !@scoped_info.has_key?(k)
+      if @run_time_parent.nil?
+        @parent.nil? ? nil : @parent.get_scoped_info(k)
+      else
+        @run_time_parent.get_scoped_info(k)
+      end
+    else
+      @scoped_info[k]
+    end
   end
 
   def get_ns(n)

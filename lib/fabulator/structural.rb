@@ -3,6 +3,8 @@ module Fabulator
 
     def initialize
       @context = Fabulator::Expr::Context.new
+      self.init_attribute_storage
+
     end
 
     def compile_xml(xml, context = nil)
@@ -43,7 +45,7 @@ module Fabulator
       @@contained_in[ns] ||= { }
       @@contained_in[ns][nom.to_sym] ||= { }
       @@contained_in[ns][nom.to_sym][self.namespace] ||= { }
-      @@contained_in[ns][nom.to_sym][self.namespace][self.element.to_sym] = h.update({ :as => :contained})
+      @@contained_in[ns][nom.to_sym][self.namespace][self.element.to_sym] = { :as => :contained }.update(h)
     end
 
     def self.structurals
@@ -79,10 +81,8 @@ module Fabulator
 
 
   protected
-    def setup(xml)
-      super
 
-      #klass = self.class.name
+    def init_attribute_storage
       possibilities = self.class.structurals
 
       if !possibilities.nil?
@@ -96,7 +96,17 @@ module Fabulator
             end
           end
         end
+      end
+    end
 
+    def setup(xml)
+      super
+
+      self.init_attribute_storage
+
+      possibilities = self.class.structurals
+
+      if !possibilities.nil?
         structs = @context.compile_structurals(xml)
         structs.each_pair do |ns, parts|
           next unless possibilities[ns]
