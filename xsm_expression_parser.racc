@@ -70,7 +70,7 @@ rule
     | additive_expr EQ additive_expr { result = Fabulator::Expr::EqExpr.new(val[0], val[2]) }
     | additive_expr NEQ additive_expr { result = Fabulator::Expr::NeqExpr.new(val[0], val[2]) }
 
-  tuple: LP LB args RB RP { result = Fabulator::Expr::Tuple.new(val[2]) }
+  tuple: LB args RB { result = Fabulator::Expr::Tuple.new(val[1]) }
 
 #    | LT args GT { result = Fabulator::Expr::Tuple.new(val[1]) }
 

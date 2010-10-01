@@ -1,20 +1,67 @@
 require 'xml/libxml'
-require 'libxslt'
 
 module Fabulator::Template
   class ParseResult
 
-    @@fabulator_xslt_file = File.join(File.dirname(__FILE__), "..", "..", "..", "xslt", "form.xsl")
-
-
-    @@fabulator_xslt_doc = LibXML::XML::Document.file(@@fabulator_xslt_file)
-    @@fabulator_xslt = LibXSLT::XSLT::Stylesheet.new(@@fabulator_xslt_doc)
-
-
     def initialize(text)
+      ## we want to build up the XPath expression for structural and
+      ## interactive elements for use in adding default info and
+      ## building names for those elements -- saves the XSLT from having
+      ## to do this
+
+      structurals = { }
+      interactives = { }
+
+      Fabulator::TagLib.namespaces.each_pair do |ns, ob|
+        structurals[ns] = ob.presentation.structurals
+        interactives[ns] = ob.presentation.interactives
+      end
+
+      @namespaces = { }
+      i = 1
+      (structurals.keys + interactives.keys).uniq.sort.each do |ns|
+        @namespaces["fab_ns_#{i.to_s}"] = ns
+        i += 1
+      end
+
+      structural_xpaths = []
+      interactive_xpaths = []
+      interesting_xpaths = [ ]
+      @fab_prefix = ''
+      @namespaces.keys.each do |p|
+        @fab_prefix = p if @namespaces[p] == Fabulator::FAB_NS
+        structural_xpaths += structurals[@namespaces[p]].collect{ |e| "ancestor::#{p}:#{e}" }
+        interactive_xpaths += interactives[@namespaces[p]].collect{ |e| "//#{p}:#{e}" }
+        interesting_xpaths += structurals[@namespaces[p]].collect{ |e| "//#{p}:#{e}" }
+      end
+      @structural_xpath = structural_xpaths.join("[@id != ''] | ") + "[@id != '']"
+      @interactive_xpath = interactive_xpaths.join(" | ")
+
+      @interesting_xpath = (interactive_xpaths + interesting_xpaths).join(" | ")
+
+      @namespaces = @namespaces.collect{ |k,v| "#{k}:#{v}" }
+
+      ## We also may do our dependency tree -- namespaces in the
+      ## root element of the stylesheet will be run after the current
+      ## stylesheet
+
       @doc = LibXML::XML::Document.string text
+
+      @fab_ns = nil
+      @doc.root.namespaces.each do |ns|
+        if ns.href == Fabulator::FAB_NS
+          @fab_ns = ns
+        end
+      end
+
+      if @fab_ns.nil?
+        @fab_ns = XML::Namespace.new(@doc.root, @fab_prefix, Fabulator::FAB_NS)
+      end
     end
 
+    # This function walks through all of the elements in the provided
+    # markup and adds f:default child elements.  TagLibs declare data
+    # elements that should receive default values.
     def add_default_values(context)
       return if context.nil?
       each_form_element do |el|
@@ -22,13 +69,7 @@ module Fabulator::Template
         next if own_id.nil? || own_id.to_s == ''
 
         default = nil
-        is_grid = false
-        if el.name == 'grid'
-          default = el.find('./default | ./row/default | ./column/default').to_a
-          is_grid = true
-        else
-          default = el.find('./default').to_a
-        end
+        default = el.find("./#{@fab_prefix}:default", @namespaces).to_a
 
         id = el_id(el)
         ids = id.split('/')
@@ -37,31 +78,8 @@ module Fabulator::Template
           if !default.nil? && !default.empty?
             default.each { |d| d.remove! }
           end
-          if is_grid
-            count = (el.attributes['count'].to_s rescue '')
-            how_many = 'multiple' 
-            direction = 'both'
-            if count =~ %r{^(multiple|single)(-by-(row|column))?$}
-              how_many = $1
-              direction = $3 || 'both'
-            end
-            if direction == 'both' 
-              l.collect{|ll| ll.value}.each do |v|
-                el << text_node('default', v)
-              end
-            elsif direction == 'row' || direction == 'column'
-              el.find("./#{direction}").each do |div|
-                id = (div.attributes['id'].to_s rescue '')
-                next if id == ''
-                l.collect{|c| context.with_root(c).traverse_path(id)}.flatten.collect{|c| c.value}.each do |v|
-                  div << text_node('default', v)
-                end
-              end
-            end
-          else
-            l.collect{|ll| ll.value}.each do |v|
-              el << text_node('default', v)
-            end
+          l.collect{|ll| ll.value}.each do |v|
+            el << text_node('default', v)
           end
         end
       end
@@ -92,7 +110,7 @@ module Fabulator::Template
     end
 
     def add_captions(captions = { })
-      each_form_element do |el|
+      each_element do |el|
         id = el_id(el)
         next if id == ''
         caption = nil
@@ -107,7 +125,7 @@ module Fabulator::Template
         is_grid = false
         if el.name == 'grid'
         else
-          cap = el.find_first('./caption')
+          cap = el.find_first("./#{@fab_prefix}:caption", @namespaces)
           if cap.nil?
             el << text_node('caption', caption)
           else
@@ -120,56 +138,70 @@ module Fabulator::Template
     end
 
     def to_s
-      @doc.to_s
+      @doc.to_s.gsub(/^\s*<\?xml\s+.*?\?>\s*/, '')
     end
 
     def to_html(popts = { })
-      opts = { :form => true }.update(popts)
+      opts = { :form => true, :theme => 'coal' }.update(popts)
 
-      res = @@fabulator_xslt.apply(@doc)
+      ## need to be more sophisticated - consider dependencies
+      res = @doc
+      Fabulator::TagLib.namespaces.each_pair do |ns, ob|
+        res = ob.presentation.transform(:html, res, opts)
+      end
 
       if opts[:form]
-        res.to_s
+        res.to_s.gsub(/^\s*<\?xml\s+.*?\?>\s*/, '')
       else
-        res.find('//form/*').collect{ |e| e.to_s}.join('')
+        res.find('//form/*').collect{ |e| e.to_s}.join('').gsub(/^\s*<\?xml\s+.*?\?>\s*/, '')
       end
     end
 
 protected
-
-    def each_form_element(&block)
-      @doc.root.find(%{
-        //text
-        | //textline
-        | //textbox
-        | //editbox
-        | //asset
-        | //password
-        | //selection
-        | //grid
-        | //submit
-      }).each do |el|
+    def each_element(&block)
+      @doc.root.find(@interesting_xpath, @namespaces).each do |el|
         yield el
       end
+    end
+
+    def each_form_element(&block)
+      @doc.root.find(@interactive_xpath, @namespaces).each do |el|
+        yield el
+      end
+#      @doc.root.find(%{
+#        //text
+#        | //textline
+#        | //textbox
+#        | //editbox
+#        | //asset
+#        | //password
+#        | //selection
+#        | //grid
+#        | //submit
+#      }).each do |el|
+#        yield el
+#      end
     end
 
     def el_id(el)
       own_id = el.attributes['id']
       return '' if own_id.nil? || own_id == ''
 
-      ancestors = el.find(%{
-        ancestor::option[@id != '']
-        | ancestor::group[@id != '']
-        | ancestor::form[@id != '']
-        | ancestor::container[@id != '']
-      })
+#      ancestors = el.find(%{
+#        ancestor::option[@id != '']
+#        | ancestor::group[@id != '']
+#        | ancestor::form[@id != '']
+#        | ancestor::container[@id != '']
+#      })
+      ancestors = el.find(@structural_xpath, @namespaces)
       ids = ancestors.collect{|a| a.attributes['id']}.select{|a| !a.nil? }
       ids << own_id
       ids.collect{|i| i.to_s}.join('/')
     end
 
     def text_node(n,t)
-      e = XML::Node.new(n)
+      e = XML::Node.new(n, nil)
+      e.namespaces.namespace = @fab_ns
       e << t
       e
     end

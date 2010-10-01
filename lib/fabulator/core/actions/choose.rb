@@ -125,24 +125,6 @@ module Fabulator
     end
   end
 
-  class Super < Fabulator::Action
-    namespace Fabulator::FAB_NS
-    has_select
-    has_actions :super
-
-    def run(context, autovivify = false)
-      return [] if @actions.nil?
-
-      @context.with(context) do |ctx|
-        new_context = @select.run(ctx,autovivify)
-
-        new_context = [ new_context ] unless new_context.is_a?(Array)
-
-        return new_context.collect { |c| @actions.run(ctx.with_root(c), autovivify) }.flatten
-      end
-    end
-  end
-
   end
   end
 end

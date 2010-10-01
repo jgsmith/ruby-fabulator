@@ -5,7 +5,7 @@ end
 When /^I render the template$/ do
   parser = Fabulator::Template::Parser.new
   @template_result = parser.parse(@context, @template_text)
-  #puts @template_result.to_html unless @template_result.is_a?(String)
+  #puts @template_result.to_s
 end
 
 When /^I set the captions to:$/ do |caption_table|
@@ -28,9 +28,41 @@ When /^I set the defaults to:$/ do |caption_table|
 end
 
 Then /^the rendered text should equal$/ do |doc|
-  @template_result.to_s.should == %{<?xml version="1.0" encoding="UTF-8"?>\n} + doc + "\n"
+  r = @template_result.to_s
+ 
+  cmd = 'xmllint --c14n --nsclean -'
+  IO.popen(cmd, "r+") { |x|
+    x << r
+    x.close_write
+    r = x.readlines.join("")
+  }
+  IO.popen(cmd, "r+") { |x|
+    x << doc
+    x.close_write
+    doc = x.readlines.join("")
+  }
+
+  #@template_result.to_s.should == doc + "\n"
+  r.should == doc
 end
 
 Then /^the rendered html should equal$/ do |doc|
-  @template_result.to_html.should == doc
+  r = @template_result.to_html
+
+  cmd = 'xmllint --html --c14n --nsclean -'
+  IO.popen(cmd, "r+") { |x|
+    x << r
+    x.close_write
+    r = x.readlines.join("")
+  }
+  IO.popen(cmd, "r+") { |x|
+    x << doc
+    x.close_write
+    doc = x.readlines.join("")
+  }
+
+  #puts "html from template: #{r}"
+  #puts "html from doc     : #{doc}"
+
+  r.should == doc
 end

@@ -65,6 +65,9 @@ module Fabulator
     #structural :type, Type
     #structural :filter, Filter
     #structural :constraint, Constraint
+
+    presentations do
+    end
   end
   end
 end

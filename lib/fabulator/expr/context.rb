@@ -10,6 +10,7 @@ module Fabulator
     @position = nil
     @last = nil
     @line_num = nil
+    @finalizations = [ ]
 
     if parent_context.nil?
        if xml.nil? || (xml.root rescue nil).nil?
@@ -75,6 +76,11 @@ module Fabulator
   def merge(s = nil)
     self.class.new(self, s)
   end
+
+  def to(t)
+    self.with_root(self.root.to(t, self))
+  end
+
 
   def attribute(ns, attr, popts = { })
     opts = { :static => !@run_time_parent.nil? && !self.root.nil? }.update(popts)
@@ -166,6 +172,9 @@ module Fabulator
 
   def set_var(v,vv)
     @variables ||= { }
+    if @variables.has_key?(v)
+      raise Fabulator::Expr::VariableAlreadyDefined.new(v)
+    end
     @variables[v] = vv
   end
 
@@ -432,8 +441,25 @@ module Fabulator
   # context with the given context.
   def with(context, &block)
     ctx = self.merge(context)
-    yield ctx
+    ret = []
+    begin
+      ret = yield ctx
+    ensure
+      ctx.clean_up
+    end
+    ret
   end
+
+  def clean_up(&block)
+    if block.nil?
+      @finalizations.each do |f|
+        f.call(self)
+      end
+    else
+      @finalizations << block
+    end
+  end
+    
 
   # Iterates through the list of items running the given block with
   # a new context with the current node set to the item.

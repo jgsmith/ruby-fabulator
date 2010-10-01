@@ -11,8 +11,24 @@ module Fabulator::Template
         @parser = Radius::Parser.new(@context, :tag_prefix => 'r')
       end
       @context.globals.context = context
+
+      # N.B.: these substitutions work around a bug in Radius that shows
+      #       up when working with XML+namespaces
+
+      text.gsub!(/&/, '&amp;')
+      text.gsub!(/<\//, '&lt;/')
+      text.gsub!(/&lt;\/r:/, '</r:')
+
       r = @parser.parse(text)
-      (Fabulator::Template::ParseResult.new(r) rescue r)
+
+      r.gsub!(/&lt;\//, '</')
+      r.gsub!(/&amp;/, '&')
+
+      begin
+        Fabulator::Template::ParseResult.new(r)
+      rescue
+        r
+      end
     end
   end
 end

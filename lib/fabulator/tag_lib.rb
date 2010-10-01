@@ -8,6 +8,7 @@ module Fabulator
     @@namespaces = {}
     @@attributes = [ ]
     @@last_description = nil
+    @@presentations = { }
     @@types = { }
     @@axes = { }
 
@@ -41,6 +42,9 @@ module Fabulator
     def self.axes
       @@axes
     end
+    def self.presentations
+      @@presentations
+    end
 
     def self.last_description=(x)
       @@last_description = x
@@ -72,6 +76,9 @@ module Fabulator
     def self.axes=(x)
       @@axes = x
     end
+    def self.presentations=(x)
+      @@presentations = x
+    end
 
       def structural_class(nom)
         Fabulator::TagLib.structural_classes[self.class.name][nom.to_sym]
@@ -80,19 +87,6 @@ module Fabulator
     def self.inherited(base)
       base.extend(ClassMethods)
     end
-
-#    def self.included(base)
-#      base.extend(ClassMethods)
-#      base.module_eval do
-#        def self.included(new_base)
-#          super
-#          new_base.action_descriptions.merge! self.action_descriptions
-#          new_base.function_descriptions.merge! self.function_descriptions
-#          new_base.function_args.merge! self.function_args
-#          new_base.types.merge! self.types
-#        end
-#      end
-#    end
 
     def self.find_op(t,o)
       (@@types[t[0]][t[1]][:ops][o] rescue nil)
@@ -330,6 +324,10 @@ module Fabulator
       self.class.function_args hash
     end
 
+    def presentation
+      self.class.presentation
+    end
+
     module ClassMethods
       def inherited(subclass)
         subclass.action_descriptions.reverse_merge! self.action_descriptions
@@ -351,6 +349,10 @@ module Fabulator
 
       def namespace(ns)
         Fabulator::TagLib.namespaces[ns] = self.new
+      end
+
+      def presentation
+        Fabulator::TagLib.presentations[self.name] ||= Fabulator::TagLib::Presentations.new
       end
 
       def register_attribute(a, options = {})
@@ -375,7 +377,7 @@ module Fabulator
 
         function nom do |ctx, args|
           args[0].collect { |i|
-            i.to([ ns, nom ])
+            ctx.with_root(i).to([ ns, nom ]).root
           }
         end
       end
@@ -480,6 +482,10 @@ module Fabulator
 
       def constraint(name, &block)
         define_method("constraint:#{name}", &block)
+      end
+
+      def presentations(&block)
+        self.presentation.instance_eval &block
       end
     end
      

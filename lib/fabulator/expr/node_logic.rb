@@ -21,7 +21,7 @@ module Fabulator
         r
       end
 
-      def to(t)
+      def to(t, ctx = nil)
         if @vtype.nil? || t.nil?
           return self.anon_node(self.value, self.vtype)
         end
@@ -34,10 +34,11 @@ module Fabulator
         path = Fabulator::TagLib.type_path(self.vtype, t)
         return self.anon_node(nil,nil) if path.empty?
         v = self
+        ctx = Fabulator::Expr::Context.new if ctx.nil?
         path.each do |p|
           vv = nil
           begin
-            vv = p.call(v)
+            vv = p.call(ctx.with_root(v))
           rescue => e
             raise "Converting to #{t[1]} raised #{e}"
           end

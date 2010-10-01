@@ -1,4 +1,28 @@
-=== 0.0.8
+=== 0.0.9
+
+* 9 major enhancements:
+  * Form markup is now namespaced and limited to the structural elements
+    (form, container, group, option) and interactive elements (asset,
+    selection, password, submission, text)
+  * Tuples in expressions are now [...] instead of ([...])
+  * Tag libraries can now specify an XSLT for transforming to HTML to
+    add presentation capabilities
+  * Tag libraries can specify which presentation elements in their
+    namespace should get default data from the application memory
+  * Tag libraries can specify which presentation elements participate
+    in the path construction for default data, caption, and error
+    markup
+  * Type conversions now are passed a context with the root node being
+    converted
+  * f:uri converts strings using namespace prefixes based on the namespace
+    context of the string instead of the namespace context of the function
+    call
+  * appended '?' to the following functions: f:first, f:last, f:ends-with,
+    f:empty, f:exists, f:only-one, f:one-or-more, and f:zero-or-one
+  * added f:first(list), f:last(list), f:all-but-first(list), and
+    f:all-but-last(list) for working with sequences
+
+=== 0.0.8 2010-09-11
 
 * 1 major enhancement:
   * Extensions can now define structural elements to be contained within

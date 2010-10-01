@@ -6,12 +6,12 @@ Feature: Templates
      And the prefix f as "http://dh.tamu.edu/ns/fabulator/1.0#"
      And the template
        """
-<foo></foo>
+<foo xmlns="http://dh.tamu.edu/ns/fabulator/1.0#"></foo>
        """
    When I render the template
    Then the rendered text should equal
        """
-<foo/>
+<foo xmlns="http://dh.tamu.edu/ns/fabulator/1.0#"/>
        """
 
   Scenario: Rendering a choice in a template
@@ -19,7 +19,7 @@ Feature: Templates
      And the prefix f as "http://dh.tamu.edu/ns/fabulator/1.0#"
      And the template
        """
-<foo>
+<foo xmlns="http://dh.tamu.edu/ns/fabulator/1.0#">
   <r:choose>
     <r:when test="f:true()">
       true
@@ -33,7 +33,7 @@ Feature: Templates
    When I render the template
    Then the rendered text should equal
        """
-<foo>
+<foo xmlns="http://dh.tamu.edu/ns/fabulator/1.0#">
 
 
       true
@@ -48,7 +48,7 @@ Feature: Templates
      And the prefix f as "http://dh.tamu.edu/ns/fabulator/1.0#"
      And the template
        """
-<foo>
+<foo xmlns="http://dh.tamu.edu/ns/fabulator/1.0#">
   <r:choose>
     <r:when test="f:false()">
       true
@@ -62,7 +62,7 @@ Feature: Templates
    When I render the template
    Then the rendered text should equal
        """
-<foo>
+<foo xmlns="http://dh.tamu.edu/ns/fabulator/1.0#">
 
 
 
@@ -77,10 +77,10 @@ Feature: Templates
      And the prefix f as "http://dh.tamu.edu/ns/fabulator/1.0#"
      And the template
        """
-<view>
+<view xmlns="http://dh.tamu.edu/ns/fabulator/1.0#">
   <form>
-    <textline id='foo'><caption>Foo</caption></textline>
-    <submit id='submit'/>
+    <text id='foo'><caption>Foo</caption></text>
+    <submission id='submit'/>
   </form>
 </view>
        """
@@ -91,10 +91,10 @@ Feature: Templates
       | submit | SubmitCaption |
    Then the rendered text should equal
        """
-<view>
+<view xmlns="http://dh.tamu.edu/ns/fabulator/1.0#">
   <form>
-    <textline id="foo"><caption>FooCaption</caption></textline>
-    <submit id="submit"><caption>SubmitCaption</caption></submit>
+    <text id="foo"><caption>FooCaption</caption></text>
+    <submission id="submit"><caption>SubmitCaption</caption></submission>
   </form>
 </view>
        """
@@ -105,9 +105,9 @@ Feature: Templates
      And the prefix f as "http://dh.tamu.edu/ns/fabulator/1.0#"
      And the template
        """
-<view>
+<view xmlns="http://dh.tamu.edu/ns/fabulator/1.0#">
   <form>
-    <textline id='foo'><caption>Foo</caption></textline>
+    <text id='foo'><caption>Foo</caption></text>
   </form>
 </view>
        """
@@ -117,9 +117,9 @@ Feature: Templates
       | foo    | FooDefault    |
    Then the rendered text should equal
        """
-<view>
+<view xmlns="http://dh.tamu.edu/ns/fabulator/1.0#">
   <form>
-    <textline id="foo"><caption>Foo</caption><default>FooDefault</default></textline>
+    <text id="foo"><caption>Foo</caption><default>FooDefault</default></text>
   </form>
 </view>
        """
@@ -130,10 +130,10 @@ Feature: Templates
      And the prefix f as "http://dh.tamu.edu/ns/fabulator/1.0#"
      And the template
        """
-<view>
+<view xmlns="http://dh.tamu.edu/ns/fabulator/1.0#">
   <form id='foo'>
-    <textline id='bar'><caption>Foo</caption></textline>
-    <textline id='baz'><caption>Boo</caption></textline>
+    <text id='bar'><caption>Foo</caption></text>
+    <text id='baz'><caption>Boo</caption></text>
   </form>
 </view>
        """
@@ -144,10 +144,26 @@ Feature: Templates
       | foo/baz | this & that   |
    Then the rendered text should equal
        """
-<view>
+<view xmlns="http://dh.tamu.edu/ns/fabulator/1.0#">
   <form id="foo">
-    <textline id="bar"><caption>Foo</caption><default>FooDefault</default></textline>
-    <textline id="baz"><caption>Boo</caption><default>this &amp; that</default></textline>
+    <text id="bar"><caption>Foo</caption><default>FooDefault</default></text>
+    <text id="baz"><caption>Boo</caption><default>this &amp; that</default></text>
   </form>
+</view>
+       """
+
+  @nst
+  Scenario: Rendering markup with namespaces
+   Given a context
+     And the prefix f as "http://dh.tamu.edu/ns/fabulator/content/1.0#"
+     And the template
+       """
+<view xmlns:f="http://dh.tamu.edu/ns/fabulator/1.0#"> 
+</view>
+       """
+   When I render the template
+   Then the rendered html should equal
+       """
+<view xmlns:f="http://dh.tamu.edu/ns/fabulator/1.0#">
 </view>
        """

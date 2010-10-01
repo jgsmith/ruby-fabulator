@@ -40,25 +40,25 @@ Feature: Type unification
       And the prefix f as "http://dh.tamu.edu/ns/fabulator/1.0#"
     When I run the expression (f:true()/@type)
     Then I should get 1 item
-      And item 0 should be [f:uri-prefix('f') + 'boolean']
+      And item 0 should be [f:uri('f:boolean')]
 
   Scenario: Get the type of a string value
     Given a context
       And the prefix f as "http://dh.tamu.edu/ns/fabulator/1.0#"
     When I run the expression ("foo"/@type)
     Then I should get 1 item
-      And item 0 should be [f:uri-prefix('f') + 'string']
+      And item 0 should be [f:uri('f:string')]
 
   Scenario: Get the type of a numeric value
     Given a context
       And the prefix f as "http://dh.tamu.edu/ns/fabulator/1.0#"
     When I run the expression (3/@type)
     Then I should get 1 item
-      And item 0 should be [f:uri-prefix('f') + 'numeric']
+      And item 0 should be [f:uri('f:numeric')]
 
   Scenario: Get the type of a uri value
     Given a context
       And the prefix f as "http://dh.tamu.edu/ns/fabulator/1.0#"
     When I run the expression (3/@type/@type)
     Then I should get 1 item
-      And item 0 should be [f:uri-prefix('f') + 'uri']
+      And item 0 should be [f:uri('f:uri')]

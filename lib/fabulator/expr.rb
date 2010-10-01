@@ -33,5 +33,11 @@ module Fabulator
         @node = n
       end
     end
+
+    class VariableAlreadyDefined < StandardError
+      def initialize(v)
+        @variable = v
+      end
+    end
   end
 end

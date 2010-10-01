@@ -5,6 +5,8 @@ module Fabulator
   FAB_LIB_NS='http://dh.tamu.edu/ns/fabulator/library/1.0#'
 
   require 'fabulator/expr'
+  require 'fabulator/tag_lib/transformations'
+  require 'fabulator/tag_lib/presentations'
   require 'fabulator/tag_lib'
   require 'fabulator/action'
   require 'fabulator/structural'

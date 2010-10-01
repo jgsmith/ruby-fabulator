@@ -37,6 +37,9 @@ module Fabulator
       @@structurals[self.name] ||= { }
       @@structurals[self.name][ns] ||= { }
       @@structurals[self.name][ns][nom.to_sym] = opts
+      self.module_eval {
+        attr_accessor (opts[:as] || nom.to_s.pluralize).to_sym
+      }
     end
 
     def self.contained_in(ns, nom, h = {})
@@ -88,7 +91,13 @@ module Fabulator
       if !possibilities.nil?
         possibilities.each_pair do |ns, parts|
           parts.each_pair do |nom, opts|
-            as = "@" + (opts[:as] || nom.to_s.pluralize).to_s
+            snom = (opts[:as] || nom.to_s.pluralize).to_s
+            as = "@" + snom
+            if !self.class.respond_to?(snom.to_sym)
+              self.class.module_eval {
+                attr_accessor snom.to_sym
+              }
+            end
             if opts[:storage].nil? || opts[:storage] == :array
               self.instance_variable_set(as.to_sym, [])
             elsif opts[:storage] == :hash
