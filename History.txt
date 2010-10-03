@@ -1,6 +1,6 @@
 === 0.0.9
 
-* 9 major enhancements:
+* 10 major enhancements:
   * Form markup is now namespaced and limited to the structural elements
     (form, container, group, option) and interactive elements (asset,
     selection, password, submission, text)
@@ -21,6 +21,7 @@
     f:empty, f:exists, f:only-one, f:one-or-more, and f:zero-or-one
   * added f:first(list), f:last(list), f:all-but-first(list), and
     f:all-but-last(list) for working with sequences
+  * added basic Type object to manage conversions and type information
 
 === 0.0.8 2010-09-11
 
