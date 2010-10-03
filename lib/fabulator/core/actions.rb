@@ -54,113 +54,88 @@ module Fabulator
     ### core types
     ###
 
-    register_type 'boolean', {
-      :ops => {
-      },
-      :to => [
-        { :type => [ FAB_NS, 'string' ],
-          :weight => 1.0,
-          :convert => lambda { |i| i.root.value ? 'true' : '' }
-        },
-        { :type => [ FAB_NS, 'numeric' ],
-          :weight => 1.0,
-          :convert => lambda{ |i| Rational.new(i.root.value ? 1 : 0, 1) }
-        },
-      ]
-    }
+    has_type :boolean do
+      going_to [ FAB_NS, 'string' ] do
+        weight 1.0
+        converting do |i|
+          i.root.value ? 'true' : ''
+        end
+      end
 
-    register_type 'string', {
-      :ops => {
-        #:plus => {
-        #},
-        :minus => { 
-          :proc => lambda { |a,b| a.split(b).join('')} 
-        },
-        :mpy => {
-          :args => [ [ FAB_NS, 'string' ], [ FAB_NS, 'integer' ] ],
-          :proc => lambda { |a,b| a * b }
-        },
-        :lt => { },
-        :eq => { },
-      },
-      :to => [
-        { :type => [ FAB_NS, 'boolean' ],
-          :weight => 0.0001,
-          :convert => lambda { |s| !(s.root.value.nil? || s.root.value == '' || s.root.value =~ /\s*/) }
-        },
-        { :type => [ FAB_NS, 'html' ],
-          :weight => 1.0,
-          :convert => lambda { |s| s.root.value.gsub(/&/, '&amp;').gsub(/</, '&lt;') }
-        },
-      ],
-    }
+      going_to [ FAB_NS, 'numeric' ] do
+        weight 1.0
+        converting do |i|
+          Rational.new(i.root.value ? 1 : 0, 1)
+        end
+      end
+    end
 
-    register_type 'uri', {
-      :to => [
-        { :type => [ FAB_NS, 'string' ],
-          :weight => 1.0,
-          :convert => lambda { |u| u.root.get_attribute('namespace').value + u.root.get_attribute('name').value }
-        }
-      ],
-      :from => [
-        { :type => [ FAB_NS, 'string' ],
-          :weight => 1.0,
-          :convert => lambda { |u|
-            p = u.root.value
-            ns = nil
-            name = nil
-            if p =~ /^([a-zA-Z_][-a-zA-Z0-9_.]*):([a-zA-Z_][-a-zA-Z0-9_.]*)$/
-              ns_prefix = $1
-              name = $2
-              ns = u.get_ns(ns_prefix)
-            else
-              p =~ /^(.*?)([a-zA-Z_][-a-zA-Z0-9_.]*)$/
-              ns = $1
-              name = $2
-            end
-            r = u.root.anon_node(nil)
-            r.set_attribute('namespace', ns)
-            r.set_attribute('name', name)
-            r
-          }
-        }
-      ]
-    }
+    has_type :string do
+      going_to [ FAB_NS, 'boolean' ] do
+        weight 0.0001
+        converting do |s|
+          !(s.root.value.nil? || s.root.value == '' || s.root.value =~ /^\s*$/)
+        end
+      end
+    end
 
-    register_type 'numeric', {
-      :ops => {
-        #:plus => { },
-        #:minus => { },
-        #:mpy => { },
-        #:div => { },
-        #:mod => { },
-        #:lt => { },
-        #:eq => { },
-      },
-      :to => [
-        { :type => [ FAB_NS, 'string' ],
-          :weight => 1.0,
-          :convert => lambda { |n| (n.root.value % 1 == 0 ? n.root.value.to_i : n.root.value.to_d).to_s }
-        },
-        { :type => [ FAB_NS, 'boolean' ],
-          :weight => 0.0001,
-          :convert => lambda { |n| n.root.value != 0 }
-        },
-      ],
-    }
+    has_type :uri do
+      going_to [ FAB_NS, 'string' ] do
+        weight 1.0
+        converting do |u|
+          u.root.get_attribute('namespace').value + u.root.get_attribute('name').value
+        end
+      end
 
-    register_type 'expression', {
-      :from => [
-        { :type => [ FAB_NS, 'string' ],
-          :weight => 1.0,
-          :convert => lambda { |e|
-            p = Fabulator::Expr::Parser.new
-            c = e.root.value
-            c.nil? ? nil : p.parse(c,e)
-          }
-        }
-      ]
-    }
+      coming_from [ FAB_NS, 'string'] do
+        weight 1.0
+        converting do |u|
+          p = u.root.value
+          ns = nil
+          name = nil
+          if p =~ /^([a-zA-Z_][-a-zA-Z0-9_.]*):([a-zA-Z_][-a-zA-Z0-9_.]*)$/
+            ns_prefix = $1
+            name = $2
+            ns = u.get_ns(ns_prefix)
+          else
+            p =~ /^(.*?)([a-zA-Z_][-a-zA-Z0-9_.]*)$/
+            ns = $1
+            name = $2
+          end
+          r = u.root.anon_node(nil)
+          r.set_attribute('namespace', ns)
+          r.set_attribute('name', name)
+          r
+        end
+      end
+    end
+
+    has_type 'numeric' do
+      going_to [ FAB_NS, 'string' ] do
+        weight 1.0
+        converting do |n|
+          (n.root.value % 1 == 0 ? n.root.value.to_i : n.root.value.to_d).to_s
+        end
+      end
+
+      going_to [ FAB_NS, 'boolean' ] do
+        weight 0.0001
+        converting do |n|
+          n.root.value != 0
+        end
+      end
+    end
+
+    has_type 'expression' do
+      coming_from [ FAB_NS, 'string' ] do
+        weight 1.0
+        converting do |e|
+          p = Fabulator::Expr::Parser.new
+          c = e.root.value
+          c.nil? ? nil : p.parse(c,e)
+        end
+      end
+    end
 
     ###
     ### Numeric functions

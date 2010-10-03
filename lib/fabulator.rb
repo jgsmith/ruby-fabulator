@@ -7,6 +7,7 @@ module Fabulator
   require 'fabulator/expr'
   require 'fabulator/tag_lib/transformations'
   require 'fabulator/tag_lib/presentations'
+  require 'fabulator/tag_lib/type'
   require 'fabulator/tag_lib'
   require 'fabulator/action'
   require 'fabulator/structural'

@@ -38,7 +38,7 @@ module Fabulator
         path.each do |p|
           vv = nil
           begin
-            vv = p.call(ctx.with_root(v))
+            vv = p.convert(ctx.with_root(v))
           rescue => e
             raise "Converting to #{t[1]} raised #{e}"
           end

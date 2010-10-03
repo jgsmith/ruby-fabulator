@@ -88,8 +88,13 @@ module Fabulator
       base.extend(ClassMethods)
     end
 
+    def self.type_handler(t)
+      (@@types[t[0]][t[1].to_sym] rescue nil)
+    end
+
     def self.find_op(t,o)
-      (@@types[t[0]][t[1]][:ops][o] rescue nil)
+      (self.type_handler(t).op_for(o) rescue nil)
+      #(@@types[t[0]][t[1]][:ops][o] rescue nil)
     end
 
     # returns nil if no common type can be found
@@ -104,6 +109,7 @@ module Fabulator
       # now group by types since we only need one of each type for unification
       grouped = { }
       ts.each do |t|
+        t = t.vtype.collect{ |i| i.to_s} unless t.is_a?(Array)
         grouped[t.join('')] = t
       end
 
@@ -115,16 +121,22 @@ module Fabulator
       # until we unify all of them
       t1 = grouped.pop
       t2 = grouped.pop
-      ut = self._unify_types(t1, t2)
+      t1_obj = self.type_handler(t1)
+      ut = t1_obj.unify_with_type(t2)
+      #ut = self._unify_types(t1, t2)
       return nil if ut.nil?
       self.unify_types([ ut[:t] ] + grouped)
     end
 
     def self.type_path(from, to)
       return [] if from.nil? || to.nil? || from.join('') == to.join('')
-      ut = self._unify_types(from, to, true)
-      return [] if ut.nil? || ut[:t].join('') != to.join('')
-      return ut[:convert]
+      from_obj = self.type_handler(from)
+      #to_obj = self.type_handler(to)
+      return [] if from_obj.nil?
+      return from_obj.build_conversion_to(to)
+      #ut = self._unify_types(from, to, true)
+#      return [] if ut.nil? || ut[:t].join('') != to.join('')
+#      return ut[:convert]
     end
 
     ## TODO: allow unification with values as well so we can have
@@ -132,6 +144,8 @@ module Fabulator
     # for example: strings that look like integers can convert to integers
     def self._unify_types(t1, t2, ordered = false)
       return nil if t1.nil? || t2.nil?
+
+      return ordered ? self.type_handler(t1).build_conversion_to(t2) : self.type_handler(t1).unify_with_type(t2)
       d1 = { t1.join('') => { :t => t1, :w => 1.0, :path => [ t1 ], :convert => [ ] } }
       d2 = { t2.join('') => { :t => t2, :w => 1.0, :path => [ t2 ], :convert => [ ] } }
 
@@ -365,7 +379,17 @@ module Fabulator
         Fabulator::TagLib.attributes << [ ns, a, options ]
       end
 
-      def register_type(nom, options={})
+      def get_type(nom)
+        ns = nil
+        Fabulator::TagLib.namespaces.each_pair do |k,v|
+          if v.is_a?(self)
+            ns = k
+          end
+        end
+        Fabulator::TagLib.types[ns][nom.to_sym]
+      end
+
+      def has_type(nom, &block)
         ns = nil
         Fabulator::TagLib.namespaces.each_pair do |k,v|
           if v.is_a?(self)
@@ -373,7 +397,11 @@ module Fabulator
           end
         end
         Fabulator::TagLib.types[ns] ||= {}
-        Fabulator::TagLib.types[ns][nom] = options
+        Fabulator::TagLib.types[ns][nom.to_sym] ||= Fabulator::TagLib::Type.new([ns, nom.to_sym])
+
+        if block
+          Fabulator::TagLib.types[ns][nom.to_sym].instance_eval &block
+        end
 
         function nom do |ctx, args|
           args[0].collect { |i|
@@ -398,7 +426,7 @@ module Fabulator
         self.action_descriptions[name] = Fabulator::TagLib.last_description if Fabulator::TagLib.last_description
         Fabulator::TagLib.last_description = nil
         if block
-          define_method("action:#{name}", &block)
+          define_method("action:#{name}", block)
         elsif !klass.nil?
           action(name) { |e,c|
             r = klass.new
@@ -412,7 +440,7 @@ module Fabulator
         self.structural_descriptions[name] = Fabulator::TagLib.last_description if Fabulator::TagLib.last_description
         Fabulator::TagLib.last_description = nil
         if block
-          define_method("structural:#{name}", &block)
+          define_method("structural:#{name}", block)
         elsif !klass.nil?
           structural(name) { |e,c|
             r = klass.new
