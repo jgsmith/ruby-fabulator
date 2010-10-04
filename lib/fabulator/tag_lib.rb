@@ -405,7 +405,7 @@ module Fabulator
 
         function nom do |ctx, args|
           args[0].collect { |i|
-            ctx.with_root(i).to([ ns, nom ]).root
+            ctx.with_root(i).to([ ns, nom.to_s ]).root
           }
         end
       end
