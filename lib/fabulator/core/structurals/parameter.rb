@@ -1,5 +1,6 @@
 module Fabulator
   module Core
+  module Structurals
   class Parameter < Fabulator::Structural
     attr_accessor :name
 
@@ -95,4 +96,5 @@ module Fabulator
 
   end
   end
+end
 end

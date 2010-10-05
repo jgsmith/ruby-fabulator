@@ -21,6 +21,14 @@ module Fabulator
           doc
         end
       end
+
+      def get_root_namespaces(fmt)
+        if !@formats[fmt.to_sym].nil?
+          @formats[fmt.to_sym].get_root_namespaces
+        else
+          []
+        end
+      end
     end
 
     class Format
@@ -39,6 +47,19 @@ module Fabulator
         @xslt_file = fpath
         @xslt_doc = LibXML::XML::Document.file(@xslt_file)
         @xslt = LibXSLT::XSLT::Stylesheet.new(@xslt_doc)
+      end
+
+      def get_root_namespaces
+        if !@xslt_doc.nil?
+          # extract namespace declarations from root element
+          ret = [ ]
+          @xslt_doc.root.namespaces.each { |ns|
+            ret << ns.href
+          }
+          ret
+        else
+          []
+        end
       end
     end
   end

@@ -1,7 +1,7 @@
 <?xml version="1.0" ?>
 <xsl:stylesheet
   xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
-  xmlns:f="http://dh.tamu.edu/ns/fabulator/content/form/1.0#"
+  xmlns:f="http://dh.tamu.edu/ns/fabulator/1.0#"
   exclude-result-prefixes="f"
   version="1.0"
 >

@@ -80,9 +80,9 @@ module Fabulator
       @@presentations = x
     end
 
-      def structural_class(nom)
-        Fabulator::TagLib.structural_classes[self.class.name][nom.to_sym]
-      end
+    def structural_class(nom)
+      Fabulator::TagLib.structural_classes[self.class.name][nom.to_sym]
+    end
 
     def self.inherited(base)
       base.extend(ClassMethods)
@@ -94,7 +94,6 @@ module Fabulator
 
     def self.find_op(t,o)
       (self.type_handler(t).op_for(o) rescue nil)
-      #(@@types[t[0]][t[1]][:ops][o] rescue nil)
     end
 
     # returns nil if no common type can be found
@@ -123,7 +122,6 @@ module Fabulator
       t2 = grouped.pop
       t1_obj = self.type_handler(t1)
       ut = t1_obj.unify_with_type(t2)
-      #ut = self._unify_types(t1, t2)
       return nil if ut.nil?
       self.unify_types([ ut[:t] ] + grouped)
     end
@@ -131,94 +129,8 @@ module Fabulator
     def self.type_path(from, to)
       return [] if from.nil? || to.nil? || from.join('') == to.join('')
       from_obj = self.type_handler(from)
-      #to_obj = self.type_handler(to)
       return [] if from_obj.nil?
       return from_obj.build_conversion_to(to)
-      #ut = self._unify_types(from, to, true)
-#      return [] if ut.nil? || ut[:t].join('') != to.join('')
-#      return ut[:convert]
-    end
-
-    ## TODO: allow unification with values as well so we can have
-    #        conversions dependent on the value
-    # for example: strings that look like integers can convert to integers
-    def self._unify_types(t1, t2, ordered = false)
-      return nil if t1.nil? || t2.nil?
-
-      return ordered ? self.type_handler(t1).build_conversion_to(t2) : self.type_handler(t1).unify_with_type(t2)
-      d1 = { t1.join('') => { :t => t1, :w => 1.0, :path => [ t1 ], :convert => [ ] } }
-      d2 = { t2.join('') => { :t => t2, :w => 1.0, :path => [ t2 ], :convert => [ ] } }
-
-      added = true
-      while added
-        added = false
-        [d1, d2].each do |d|
-          d.keys.each do |t|
-            if (@@types[d[t][:t][0]][d[t][:t][1]].has_key?(:to) rescue false)
-              @@types[d[t][:t][0]][d[t][:t][1]][:to].each do |conv|
-                w = d[t][:w] * conv[:weight]
-                conv_key = conv[:type].join('')
-                if d.has_key?(conv_key) 
-                  if d[conv_key][:w] < w
-                    d[conv_key][:w] = w
-                    d[conv_key][:path] = d[t][:path] + [ conv[:type] ]
-                    d[conv_key][:convert] = d[t][:convert] + [ conv[:convert] ] - [nil]
-                  end
-                else
-                  d[conv_key] = {
-                    :t => conv[:type],
-                    :w => w,
-                    :path => d[t][:path] + [ conv[:type] ],
-                    :convert => d[t][:convert] + [ conv[:convert] ] - [ nil ]
-                  }
-                  added = true
-                end
-              end
-            end
-          end
-          # go through each type looking for :from
-          @@types.keys.each do |ns|
-            @@types[ns].each_pair do |ct, cd|
-              next if cd[:from].nil?
-              to_key = ns + ct
-              cd[:from].each do |conv|
-                next if conv[:type].nil?
-                from_key = conv[:type].join('')
-                next if !d.has_key?(from_key)
-                w = d[from_key][:w] * conv[:weight]
-                if d.has_key?(to_key)
-                  if d[to_key][:w] < w
-                    d[to_key][:w] = w
-                    d[to_key][:path] = d[from_key][:path] + [ conv[:type] ]
-                    d[to_key][:convert] = d[from_key][:convert] + [ conv[:convert] ] - [nil]
-                  end
-                else
-                  d[to_key] = {
-                    :t => [ns, ct],
-                    :w => w * 95 / 100, # favor to over from
-                    :path => d[from_key][:path] + [ conv[:type] ],
-                    :convert => d[from_key][:convert] + [ conv[:convert] ] - [ nil ]
-                  }
-                  added = true
-                end
-              end
-            end
-          end
-        end
-        r = self._select_type_path(d1, d2, t2, ordered)
-        return r unless r.nil?
-      end
-      return self._select_type_path(d1, d2, t2, ordered)
-    end
-
-    def self._select_type_path(d1, d2, t2, ordered)
-      common = d1.keys & d2.keys
-      if ordered && common.include?(t2.join(''))
-        return d1[t2.join('')]
-      elsif !common.empty? 
-        return d1[common.sort_by{ |c| d1[c][:w] * d2[c][:w] / d1[c][:path].size / d2[c][:path].size }.reverse.first]
-      end
-      return nil
     end
 
     def self.with_super(s, &block)
@@ -288,16 +200,16 @@ module Fabulator
     end
 
     def function_return_type(name)
-      (self.function_descriptions[name][:returns] rescue nil)
+      (self.function_descriptions[name.to_sym][:returns] rescue nil)
     end
 
     def function_run_scaling(name)
-      (self.function_descriptions[name][:scaling] rescue nil)
+      (self.function_descriptions[name.to_sym][:scaling] rescue nil)
     end
 
     def function_run_type(name)
-      r = (self.function_descriptions[name][:type] rescue nil)
-      if r.nil? && !self.function_descriptions.has_key?(name)
+      r = (self.function_descriptions[name.to_sym][:type] rescue nil)
+      if r.nil? && !self.function_descriptions.has_key?(name.to_sym)
         if name =~ /^consolidation:(.*)/
           if function_run_scaling($1) != :flat
             return :consolidation
@@ -403,10 +315,8 @@ module Fabulator
           Fabulator::TagLib.types[ns][nom.to_sym].instance_eval &block
         end
 
-        function nom do |ctx, args|
-          args[0].collect { |i|
-            ctx.with_root(i).to([ ns, nom.to_s ]).root
-          }
+        mapping nom do |ctx, i|
+          ctx.with_root(i).to([ ns, nom.to_s ]).root
         end
       end
 
@@ -423,10 +333,10 @@ module Fabulator
       end
       
       def action(name, klass = nil, &block)
-        self.action_descriptions[name] = Fabulator::TagLib.last_description if Fabulator::TagLib.last_description
+        self.action_descriptions[name.to_sym] = Fabulator::TagLib.last_description if Fabulator::TagLib.last_description
         Fabulator::TagLib.last_description = nil
         if block
-          define_method("action:#{name}", block)
+          define_method("action:#{name.to_s}", block)
         elsif !klass.nil?
           action(name) { |e,c|
             r = klass.new
@@ -437,10 +347,10 @@ module Fabulator
       end
 
       def structural(name, klass = nil, &block)
-        self.structural_descriptions[name] = Fabulator::TagLib.last_description if Fabulator::TagLib.last_description
+        self.structural_descriptions[name.to_sym] = Fabulator::TagLib.last_description if Fabulator::TagLib.last_description
         Fabulator::TagLib.last_description = nil
         if block
-          define_method("structural:#{name}", block)
+          define_method("structural:#{name.to_s}", block)
         elsif !klass.nil?
           structural(name) { |e,c|
             r = klass.new
@@ -453,21 +363,21 @@ module Fabulator
       end
 
       def function(name, returns = nil, takes = nil, &block)
-        self.function_descriptions[name] = { :returns => returns, :takes => takes }
-        self.function_descriptions[name][:description] = Fabulator::TagLib.last_description if Fabulator::TagLib.last_description
+        self.function_descriptions[name.to_sym] = { :returns => returns, :takes => takes }
+        self.function_descriptions[name.to_sym][:description] = Fabulator::TagLib.last_description if Fabulator::TagLib.last_description
         #self.function_args[name] = { :return => returns, :takes => takes }
         Fabulator::TagLib.last_description = nil
         define_method("fctn:#{name}", &block)
       end
 
       def reduction(name, opts = {}, &block)
-        self.function_descriptions[name] = { :type => :reduction }.merge(opts)
-        self.function_descriptions[name][:description] = Fabulator::TagLib.last_description if Fabulator::TagLib.last_description
+        self.function_descriptions[name.to_sym] = { :type => :reduction }.merge(opts)
+        self.function_descriptions[name.to_sym][:description] = Fabulator::TagLib.last_description if Fabulator::TagLib.last_description
         Fabulator::TagLib.last_description = nil
         define_method("fctn:#{name}", &block)
-        cons = self.function_descriptions[name][:consolidation]
+        cons = self.function_descriptions[name.to_sym][:consolidation]
         if !cons.nil?
-          Fabulator::TagLib.last_description = self.function_descriptions[name][:description]
+          Fabulator::TagLib.last_description = self.function_descriptions[name.to_sym][:description]
           consolidation name do |ctx, args|
             send "fctn:#{cons}", ctx, args
           end
@@ -475,17 +385,18 @@ module Fabulator
       end
 
       def consolidation(name, opts = {}, &block)
-        self.function_descriptions[name] = { :type => :consolidation }.merge(opts)
-        self.function_descriptions[name][:description] = Fabulator::TagLib.last_description if Fabulator::TagLib.last_description
+        self.function_descriptions[name.to_sym] = { :type => :consolidation }.merge(opts)
+        self.function_descriptions[name.to_sym][:description] = Fabulator::TagLib.last_description if Fabulator::TagLib.last_description
         Fabulator::TagLib.last_description = nil
         define_method("fctn:consolidation:#{name}", &block)
       end
 
       def mapping(name, opts = {}, &block)
+        name = name.to_sym
         self.function_descriptions[name] = { :type => :mapping }.merge(opts)
         self.function_descriptions[name][:description] = Fabulator::TagLib.last_description if Fabulator::TagLib.last_description
         Fabulator::TagLib.last_description = nil
-        define_method("fctn:#{name}", &block)
+        define_method("fctn:#{name.to_s}", &block)
       end
 
       def function_decl(name, expr, ns)

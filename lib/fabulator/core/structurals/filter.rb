@@ -1,5 +1,6 @@
 module Fabulator
   module Core
+  module Structurals
   class Filter < Fabulator::Action
     namespace Fabulator::FAB_NS
     attribute :name, :static => true
@@ -25,4 +26,5 @@ module Fabulator
     end
   end
   end
+end
 end

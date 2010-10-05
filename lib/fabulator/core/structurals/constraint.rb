@@ -1,5 +1,6 @@
 module Fabulator
   module Core
+  module Structurals
   class Constraint < Fabulator::Action
 
     namespace Fabulator::FAB_NS
@@ -133,4 +134,5 @@ module Fabulator
     end
   end
   end
+end
 end

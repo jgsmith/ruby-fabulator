@@ -23,6 +23,9 @@
     f:all-but-last(list) for working with sequences
   * added basic Type object to manage conversions and type information
 
+1 minor enhancement
+  * Type converters are now mappings
+
 === 0.0.8 2010-09-11
 
 * 1 major enhancement:

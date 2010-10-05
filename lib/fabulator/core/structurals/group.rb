@@ -1,5 +1,6 @@
 module Fabulator
   module Core
+  module Structurals
   class Group < Fabulator::Structural
     attr_accessor :name, :params, :tags, :required_params
 
@@ -89,4 +90,5 @@ module Fabulator
     end
   end
   end
+end
 end

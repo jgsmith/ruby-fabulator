@@ -1,5 +1,6 @@
 module Fabulator
   module Core
+  module Structurals
   class Transition < Fabulator::Structural
     attr_accessor :state, :validations, :tags
 
@@ -107,4 +108,5 @@ module Fabulator
     end
   end
   end
+end
 end

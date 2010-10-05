@@ -155,15 +155,17 @@ Feature: Templates
   @nst
   Scenario: Rendering markup with namespaces
    Given a context
-     And the prefix f as "http://dh.tamu.edu/ns/fabulator/content/1.0#"
+     And the prefix f as "http://dh.tamu.edu/ns/fabulator/1.0#"
      And the template
        """
-<view xmlns:f="http://dh.tamu.edu/ns/fabulator/1.0#"> 
-</view>
+<form xmlns="http://dh.tamu.edu/ns/fabulator/1.0#">
+  <text id="foo"><caption>Foo</caption></text>
+</form>
        """
    When I render the template
    Then the rendered html should equal
        """
-<view xmlns:f="http://dh.tamu.edu/ns/fabulator/1.0#">
-</view>
+<form type="application/x-multipart" method="POST" class="fabulator-form">
+  <input type="text" name="foo" size="12">
+</form>
        """

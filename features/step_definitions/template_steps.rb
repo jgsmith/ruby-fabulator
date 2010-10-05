@@ -43,6 +43,8 @@ Then /^the rendered text should equal$/ do |doc|
   }
 
   #@template_result.to_s.should == doc + "\n"
+  r = r.gsub(/xmlns(:\S+)?=['"][^'"]*['"]/, '').gsub(/\s+/, ' ').gsub(/\s+>/, '>').gsub(/>\s*</, ">\n<")
+  doc = doc.gsub(/xmlns(:\S+)?=['"][^'"]*['"]/, '').gsub(/\s+/, ' ').gsub(/\s+>/, '>').gsub(/>\s*</, ">\n<")
   r.should == doc
 end
 
@@ -63,6 +65,9 @@ Then /^the rendered html should equal$/ do |doc|
 
   #puts "html from template: #{r}"
   #puts "html from doc     : #{doc}"
+  r = r.gsub(/xmlns(:\S+)?=['"][^'"]*['"]/, '').gsub(/\s+/, ' ').gsub(/\s+>/, '>').gsub(/>\s*</, ">\n<")
+  doc = doc.gsub(/xmlns(:\S+)?=['"][^'"]*['"]/, '').gsub(/\s+/, ' ').gsub(/\s+>/, '>').gsub(/>\s*</, ">\n<")
+
 
   r.should == doc
 end

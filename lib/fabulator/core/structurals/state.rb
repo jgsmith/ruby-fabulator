@@ -1,5 +1,6 @@
 module Fabulator
   module Core
+  module Structurals
   class State < Fabulator::Structural
     attr_accessor :name, :transitions
 
@@ -48,4 +49,5 @@ module Fabulator
     end
   end
   end
+end
 end

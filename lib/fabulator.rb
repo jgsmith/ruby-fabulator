@@ -12,5 +12,6 @@ module Fabulator
   require 'fabulator/action'
   require 'fabulator/structural'
   require 'fabulator/core'
+  require 'fabulator/compiler'
   require 'fabulator/version'
 end

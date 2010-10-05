@@ -30,6 +30,10 @@ module Fabulator
       def transform(fmt, doc, opts = { })
         @transformations.transform(fmt, doc, opts)
       end
+
+      def get_root_namespaces(fmt)
+        @transformations.get_root_namespaces(fmt)
+      end
     end
   end
 end

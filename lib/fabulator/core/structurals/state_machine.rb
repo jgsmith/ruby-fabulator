@@ -6,6 +6,7 @@ module Fabulator
   end
 
   module Core
+  module Structurals
 
   class StateMachine < Structural
     attr_accessor :states, :missing_params, :errors, :namespaces, :updated_at
@@ -126,4 +127,5 @@ module Fabulator
     end
   end
   end
+end
 end

@@ -144,16 +144,41 @@ module Fabulator::Template
     def to_html(popts = { })
       opts = { :form => true, :theme => 'coal' }.update(popts)
 
-      ## need to be more sophisticated - consider dependencies
-      res = @doc
+      deps = { }
       Fabulator::TagLib.namespaces.each_pair do |ns, ob|
+        deps[ns] = ob.presentation.get_root_namespaces(:html) & (Fabulator::TagLib.namespaces.keys) - [ ns ]
+      end
+
+      ordered_ns = [ ]
+
+      next_round = ([ Fabulator::FAB_NS ] + deps.keys.select { |k| deps[k].empty? }).uniq
+
+      while !next_round.empty? do
+        next_round.each { |k| deps.delete(k) }
+
+        ordered_ns += next_round
+
+        deps.keys.each do |k|
+          deps[k] -= ordered_ns
+        end
+
+        next_round = deps.keys.select{ |k| deps[k].empty? }
+      end
+
+      ordered_ns.reverse!
+
+      res = @doc
+      ordered_ns.each do |ns|
+        ob = Fabulator::TagLib.namespaces[ns]
+        next if ob.nil?
         res = ob.presentation.transform(:html, res, opts)
       end
 
       if opts[:form]
-        res.to_s.gsub(/^\s*<\?xml\s+.*?\?>\s*/, '')
+        res.to_s.gsub(/^\s*<\?xml\s+.*?\?>\s*/, '').gsub(/xmlns(:\S+)?=['"][^'"]*['"]/, '').gsub(/\s+/, ' ').gsub(/\s+>/, '>')
       else
-        res.find('//form/*').collect{ |e| e.to_s}.join('').gsub(/^\s*<\?xml\s+.*?\?>\s*/, '')
+        res.find('//form/*').collect{ |e| e.to_s}.join('').gsub(/^\s*<\?xml\s+.*?\?>\s*/, '').gsub(/xmlns(:\S+)?=['"][^'"]*['"]/, '').gsub(/\s+/, ' ').gsub(/\s+>/, '>')
+
       end
     end
 

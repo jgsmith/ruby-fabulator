@@ -5,33 +5,33 @@ require 'fabulator/core/actions/variables'
 
 module Fabulator
   module Core
-  module Actions
   class Lib < TagLib
     namespace FAB_NS
 
-    structural 'application', Fabulator::Core::StateMachine
-    structural 'view', Fabulator::Core::State
-    structural 'goes-to', Fabulator::Core::Transition
-    structural 'params', Fabulator::Core::Group
-    structural 'group', Fabulator::Core::Group
-    structural 'param', Fabulator::Core::Parameter
-    structural 'value', Fabulator::Core::Constraint
-    structural 'constraint', Fabulator::Core::Constraint
-    structural 'filter', Fabulator::Core::Filter
-    structural 'sort', Sort
-    structural 'when', When
-    structural 'otherwise', When
+    structural :application, Structurals::StateMachine
+    structural :view, Structurals::State
+    structural 'goes-to', Structurals::Transition
+    structural :params, Structurals::Group
+    structural :group, Structurals::Group
+    structural :param, Structurals::Parameter
+    structural :value, Structurals::Constraint
+    structural :constraint, Structurals::Constraint
+    structural :filter, Structurals::Filter
 
-    action 'choose', Choose
-    action 'for-each', ForEach
-    action 'value-of', ValueOf
-    action 'value', Value
-    action 'variable', Variable
-    action 'if', If
-    action 'go-to', Goto
-    action 'raise', Raise
-    action 'div', Block
-    action 'catch', Catch
+    structural :sort, Actions::Sort
+    structural :when, Actions::When
+    structural :otherwise, Actions::When
+
+    action :choose, Actions::Choose
+    action 'for-each', Actions::ForEach
+    action 'value-of', Actions::ValueOf
+    action :value, Actions::Value
+    action :variable, Actions::Variable
+    action :if, Actions::If
+    action 'go-to', Actions::Goto
+    action :raise, Actions::Raise
+    action :div, Actions::Block
+    action :catch, Actions::Catch
 
     presentations do
       transformations_into.html do
@@ -110,7 +110,7 @@ module Fabulator
       end
     end
 
-    has_type 'numeric' do
+    has_type :numeric do
       going_to [ FAB_NS, 'string' ] do
         weight 1.0
         converting do |n|
@@ -126,7 +126,7 @@ module Fabulator
       end
     end
 
-    has_type 'expression' do
+    has_type :expression do
       coming_from [ FAB_NS, 'string' ] do
         weight 1.0
         converting do |e|
@@ -590,7 +590,6 @@ module Fabulator
       c
     end
 
-  end
   end
   end
 end
