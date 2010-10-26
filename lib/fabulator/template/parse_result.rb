@@ -174,15 +174,21 @@ module Fabulator::Template
         res = ob.presentation.transform(:html, res, opts)
       end
 
+      ret = ''
       if opts[:form]
-        res.to_s.gsub(/^\s*<\?xml\s+.*?\?>\s*/, '').gsub(/xmlns(:\S+)?=['"][^'"]*['"]/, '').gsub(/\s+/, ' ').gsub(/\s+>/, '>')
+        ret = res.to_s.gsub(/^\s*<\?xml\s+.*?\?>\s*/, '').gsub(/xmlns(:\S+)?=['"][^'"]*['"]/, '').gsub(/\s+/, ' ').gsub(/\s+>/, '>')
       else
-        res.find('//form/*').collect{ |e| e.to_s}.join('').gsub(/^\s*<\?xml\s+.*?\?>\s*/, '').gsub(/xmlns(:\S+)?=['"][^'"]*['"]/, '').gsub(/\s+/, ' ').gsub(/\s+>/, '>')
+        ret = res.find('//form/*').collect{ |e| e.to_s}.join('').gsub(/^\s*<\?xml\s+.*?\?>\s*/, '').gsub(/xmlns(:\S+)?=['"][^'"]*['"]/, '').gsub(/\s+/, ' ').gsub(/\s+>/, '>')
 
       end
+
+      ret.gsub!(/<(div\s*[^<]*?)\/>/, "<\\1></div>")
+      ret.gsub!(/<(span\s*[^<]*?)\/>/, "<\\1></span>")
+      ret
     end
 
 protected
+
     def each_element(&block)
       @doc.root.find(@interesting_xpath, @namespaces).each do |el|
         yield el

@@ -166,6 +166,15 @@ Feature: Templates
    Then the rendered html should equal
        """
 <form type="application/x-multipart" method="POST" class="fabulator-form">
-  <input type="text" name="foo" size="12">
+  <table class="form-content" border="0" cellspacing="0" cellpadding="0">
+    <tr>
+      <td class="form-caption" valign="top">
+        <span class="caption">Foo</span>
+      </td>
+      <td class="form-element" valign="top">
+        <input type="text" name="foo" size="12" value="">
+      </td>
+    </tr>
+    </table>
 </form>
        """

@@ -1,6 +1,6 @@
 === 0.0.9
 
-* 10 major enhancements:
+* 11 major enhancements:
   * Form markup is now namespaced and limited to the structural elements
     (form, container, group, option) and interactive elements (asset,
     selection, password, submission, text)
@@ -22,6 +22,7 @@
   * added f:first(list), f:last(list), f:all-but-first(list), and
     f:all-but-last(list) for working with sequences
   * added basic Type object to manage conversions and type information
+  * library actions can refer to other actions defined in the same library
 
 1 minor enhancement
   * Type converters are now mappings

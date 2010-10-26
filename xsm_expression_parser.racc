@@ -24,6 +24,9 @@ rule
     | for_expr
     | quant_expr
     | with_expr
+    | err_expr
+
+  err_expr: expr ERR expr { result = Fabulator::Expr::ErrExpr.new(val[0], val[2]) }
 
   with_expr: expr WITH expr_set_list { result = Fabulator::Expr::WithExpr.new(val[0], val[2]) }
 
@@ -399,6 +402,8 @@ end
               @token = [ :MOD, 'mod' ]
             when 'div':
               @token = [ :DIV, 'div' ]
+            when 'err':
+              @token = [ :ERR, 'err' ]
             #when '*doh*':
             #  # do nothing
             #  @token = nil
@@ -468,6 +473,8 @@ end
               @token = [ :ELSE, 'else' ]
             when 'with':
               @token = [ :WITH, 'with' ]
+            when 'err':
+              @token = [ :ERR, 'err' ]
             else
               @token = [ :QNAME, qname ]
           end

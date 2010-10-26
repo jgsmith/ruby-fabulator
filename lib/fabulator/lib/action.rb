@@ -49,7 +49,8 @@ module Fabulator
           end
           # we can f:eval($actions) in whatever current context we have
           if action.has_actions?
-            ctx.set_var('actions', ctx.root.anon_node(@actions, [ FAB_NS, 'expression' ]))
+            @actions.use_context(context)
+            ctx.set_var('actions', ctx.root.anon_node( @actions, [ FAB_NS, 'expression' ]))
           end
           ret = action.run(ctx)
         end

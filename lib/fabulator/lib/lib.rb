@@ -8,15 +8,21 @@ module Fabulator
     
     attribute :ns, :static => true
 
-    contains :action, :storage => :hash, :key => :name
-    contains :structural, :storage => :hash, :key => :name
-    contains :function, :storage => :hash, :key => :name
-    contains :mapping, :storage => :hash, :key => :name
-    contains :reduction, :storage => :hash, :key => :name
-    contains :consolidation, :storage => :hash, :key => :name
-    contains :type, :storage => :hash, :key => :name
-    contains :filter, :storage => :hash, :key => :name
-    contains :constraint, :storage => :hash, :key => :name
+    contains :action, :storage => :hash, :key => :name, :delayable => true
+    contains :structural, :storage => :hash, :key => :name, :delayable => true
+    contains :function, :storage => :hash, :key => :name, :delayable => true
+    contains :mapping, :storage => :hash, :key => :name, :delayable => true
+    contains :reduction, :storage => :hash, :key => :name, :delayable => true
+    contains :consolidation, :storage => :hash, :key => :name, :delayable => true
+    contains :type, :storage => :hash, :key => :name, :delayable => true
+    contains :filter, :storage => :hash, :key => :name, :delayable => true
+    contains :constraint, :storage => :hash, :key => :name, :delayable => true
+    contains :format, :storage => :hash, :key => :name
+    contains :transform
+
+    def presentation
+      @presentations ||= Fabulator::TagLib::Presentations.new
+    end
 
     def register_library
       Fabulator::TagLib.namespaces[self.ns] = self
@@ -29,8 +35,12 @@ module Fabulator
     end
 
     def get_action(nom, context)
-      return nil unless @actions.has_key?(nom)
+      return nil unless self.action_exists?(nom)
       @actions[nom]
+    end
+
+    def action_exists?(nom)
+      @actions.has_key?(nom.to_s)
     end
 
     def run_function(context, nom, args)
@@ -119,6 +129,67 @@ module Fabulator
         return ret unless ret.nil?
       end
       false
+    end
+
+  protected
+
+    def setup(xml)
+      ns = xml.attributes.get_attribute_ns(FAB_LIB_NS, 'ns').value
+      Fabulator::TagLib.namespaces[ns] = self
+
+      self.init_attribute_storage
+    
+      possibilities = self.class.structurals
+
+      if !possibilities.nil?
+      
+        our_ns = xml.namespaces.namespace.href
+        our_nom = xml.name
+        delayed = [ ]
+        xml.each_element{ |e| delayed << e }
+        while !delayed.empty?
+          structs = { }
+          new_delayed = [ ]
+          delayed.each do |e|
+            ns = e.namespaces.namespace.href
+            nom = e.name.to_sym
+            allowed = (Fabulator::TagLib.namespaces[our_ns].structural_class(our_nom).accepts_structural?(ns, nom) rescue false)
+            next unless allowed
+            structs[ns] ||= { }
+            structs[ns][nom] ||= [ ]
+            begin
+              structs[ns][nom] << @context.compile_structural(e)
+            rescue => ee
+              new_delayed << e
+            end
+            structs[ns][nom] -= [ nil ]
+          end
+
+          structs.each_pair do |ns, parts|
+            next unless possibilities[ns]
+            parts.each_pair do |nom, objs|
+              next unless possibilities[ns][nom]
+              opts = possibilities[ns][nom]
+              as = "@" + (opts[:as] || nom.to_s.pluralize).to_s
+              if opts[:storage].nil? || opts[:storage] == :array
+                self.instance_variable_set(as.to_sym, self.instance_variable_get(as.to_sym) + objs)
+              else
+                tgt = self.instance_variable_get(as.to_sym)
+                objs.each do |obj|
+                  tgt[obj.send(opts[:key] || :name)] = obj
+                end
+              end
+            end
+          end
+
+          if (new_delayed - delayed).empty? && (delayed - new_delayed).empty?
+            delayed = []
+          else
+            delayed = new_delayed
+          end
+        end
+      end
+
     end
   end
   end

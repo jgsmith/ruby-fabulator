@@ -26,8 +26,8 @@ module Fabulator::Template
 
       begin
         Fabulator::Template::ParseResult.new(r)
-      rescue
-        r
+      rescue => e
+        "<!-- unable to parse XML: #{e} -->" + r
       end
     end
   end

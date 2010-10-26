@@ -77,6 +77,16 @@ module Fabulator
           !(s.root.value.nil? || s.root.value == '' || s.root.value =~ /^\s*$/)
         end
       end
+
+      going_to [ FAB_NS, 'html' ] do
+        weight 1.0
+        converting do |s|
+          s.root.value.gsub(/&/, '&amp;').gsub(/</, '&lt;').gsub(/>/, '&gt;')
+        end
+      end
+    end
+
+    has_type :html do
     end
 
     has_type :uri do

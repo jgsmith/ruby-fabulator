@@ -5,6 +5,11 @@ module Fabulator
         @statements = [ ]
         @ensures = [ ]
         @catches = [ ]
+        @context = nil
+      end
+
+      def use_context(c)
+        @context = c
       end
 
       def add_statement(s)
@@ -28,6 +33,9 @@ module Fabulator
       end
 
       def run(context, autovivify = false)
+        if !@context.nil?
+          context = @context
+        end
         result = [ ]
         begin
           if !@statements.nil?
@@ -79,6 +87,25 @@ module Fabulator
         result = @expr.run(context, autovivify)
         result.each do |r|
           @with.run(context.with_root(r), true)
+        end
+        result
+      end
+    end
+
+    class ErrExpr
+      def initialize(e,c)
+        @expr = e
+        @err_expr = c
+      end
+
+      def run(context, autovivify = false)
+        result = []
+        begin
+          result = @expr.run(context, autovivify)
+        rescue => e
+          ctx = context.merge
+          ctx.set_var('e', e)
+          result = @err_expr.run(ctx)
         end
         result
       end

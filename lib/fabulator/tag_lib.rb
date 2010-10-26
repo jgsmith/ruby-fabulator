@@ -93,7 +93,7 @@ module Fabulator
     end
 
     def self.find_op(t,o)
-      (self.type_handler(t).op_for(o) rescue nil)
+      (self.type_handler(t).get_method(t + o.upcase) rescue nil)
     end
 
     # returns nil if no common type can be found
@@ -157,6 +157,10 @@ module Fabulator
       end
     end
 
+    def action_exists?(nom)
+      self.respond_to?("action:#{nom.to_s}")
+    end
+
     def run_function(context, nom, args, depth=0)
       ret = []
 
@@ -193,7 +197,12 @@ module Fabulator
           end
           rr
         else
-          context.root.anon_node(r) #, self.function_return_type(nom))
+          rt = self.function_return_type(nom)
+          if rt.nil?
+            context.root.anon_node(r) #, self.function_return_type(nom))
+          else
+            context.root.anon_node(r,rt)
+          end
         end
       }
       ret.flatten

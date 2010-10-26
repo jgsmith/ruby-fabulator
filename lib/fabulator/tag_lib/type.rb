@@ -5,6 +5,7 @@ module Fabulator
         @type = t
         @goings = { }
         @comings = { }
+        @methods = { }
       end
 
       def vtype
@@ -33,6 +34,14 @@ module Fabulator
 
       def incoming_conversions
         @comings
+      end
+
+      def method(nom, &block)
+        @methods[@type[0] + nom.to_s] = block
+      end
+
+      def get_method(nom)
+        @methods[nom]
       end
 
       def build_conversion_to(to)

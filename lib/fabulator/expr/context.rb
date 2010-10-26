@@ -397,13 +397,22 @@ module Fabulator
 
   def compile_action(e)
     ns = e.namespaces.namespace.href
-    return unless Fabulator::TagLib.namespaces.include?(ns)
+    return unless Fabulator::TagLib.namespaces.has_key?(ns)
     Fabulator::TagLib.namespaces[ns].compile_action(e, self)
   end
 
   def get_action(ns, nom)
     return unless Fabulator::TagLib.namespaces.include?(ns)
     Fabulator::TagLib.namespaces[ns].get_action(nom, self)
+  end
+
+  def action_exists?(ns, nom)
+    if ns == FAB_NS
+      return true if ['ensure', 'catch'].include?(nom.to_s)
+    end
+
+    return false unless Fabulator::TagLib.namespaces.has_key?(ns)
+    return Fabulator::TagLib.namespaces[ns].action_exists?(nom)
   end
 
   def compile_structurals(xml)
@@ -415,6 +424,7 @@ module Fabulator
       ns = e.namespaces.namespace.href
       nom = e.name.to_sym
       allowed = (Fabulator::TagLib.namespaces[our_ns].structural_class(our_nom).accepts_structural?(ns, nom) rescue false)
+      raise "Unknown or inappropriate tag #{ns} #{nom} in #{our_ns} #{our_nom}" unless allowed || self.action_exists?(ns, nom)
       next unless allowed
       structs[ns] ||= { }
       structs[ns][nom] ||= [ ]

@@ -34,88 +34,109 @@
 
   <xsl:template name="form-content">
     <xsl:param name="form_level">1</xsl:param>
-    <xsl:apply-templates select="f:text|f:asset|f:password|f:selection|f:form|f:group">
-      <xsl:with-param name="form_level"><xsl:value-of select="$form_level" /></xsl:with-param>
-    </xsl:apply-templates>
+    <table class="form-content" border="0" cellspacing="0" cellpadding="0">
+      <xsl:apply-templates select="f:text|f:asset|f:password|f:selection|f:form|f:group">
+        <xsl:with-param name="form_level"><xsl:value-of select="$form_level" /></xsl:with-param>
+      </xsl:apply-templates>
+      <xsl:if test="f:submission|f:reset">
+        <tr><td colspan="2" align="center">
+          <xsl:apply-templates select="f:submission|f:reset" />
+        </td></tr>
+      </xsl:if>
+    </table>
     <xsl:apply-templates select="f:value" />
-    <xsl:if test="f:submission|f:reset">
-      <span class="buttons">
-        <xsl:apply-templates select="f:submission|f:reset" />
-      </span>
-    </xsl:if>
   </xsl:template>
 
   <xsl:template match="f:form/f:form | f:option/f:form">
     <xsl:param name="form_level" />
     <xsl:choose>
       <xsl:when test="frame:caption">
+        <tr><td colspan="2">
         <fieldset>
           <legend><xsl:apply-templates select="caption" /></legend>
           <xsl:call-template name="form-content">
             <xsl:with-param name="form_level"><xsl:value-of select="$form_level + 1"/></xsl:with-param>
           </xsl:call-template>
         </fieldset>
+        </td></tr>
       </xsl:when>
       <xsl:otherwise>
+        <tr><td colspan="2">
         <xsl:call-template name="form-content">
           <xsl:with-param name="form_level"><xsl:value-of select="$form_level + 1" /></xsl:with-param>
         </xsl:call-template>
+        </td></tr>
       </xsl:otherwise>
     </xsl:choose>
   </xsl:template>
 
   <xsl:template match="f:text">
-    <xsl:choose>
-      <xsl:when test="@f:rows > 1">
-        <textarea>
-          <xsl:attribute name="rows"><xsl:value-of select="@f:rows"/></xsl:attribute>
-          <xsl:attribute name="cols">
-            <xsl:choose>
-              <xsl:when test="@f:cols > 132">132</xsl:when>
-              <xsl:when test="@f:cols"><xsl:value-of select="@f:cols" /></xsl:when>
-              <xsl:otherwise>60</xsl:otherwise>
-            </xsl:choose>
-          </xsl:attribute>
-          <xsl:variable name="content"><xsl:apply-templates select="f:default" /></xsl:variable>
-          <xsl:choose>
-            <xsl:when test="$content"><xsl:value-of select="$content" /></xsl:when>
-            <xsl:otherwise> </xsl:otherwise>
-          </xsl:choose>
-        </textarea>
-      </xsl:when>
-      <xsl:otherwise>
-        <input>
-          <xsl:attribute name="type">text</xsl:attribute>
-          <xsl:attribute name="name"><xsl:apply-templates select="." mode="id" /></xsl:attribute>
-          <xsl:attribute name="size">
-            <xsl:choose>
-              <xsl:when test="@f:cols"> 40">40</xsl:when>
-              <xsl:when test="@f:cols"><xsl:value-of select="@f:cols" /></xsl:when>
-              <xsl:otherwise>12</xsl:otherwise>
-            </xsl:choose>
-          </xsl:attribute>
-        </input>
-      </xsl:otherwise>
-    </xsl:choose>
+    <tr><td class="form-caption" valign="top">
+      <xsl:apply-templates select="f:caption" />
+    </td><td class="form-element" valign="top">
+      <xsl:choose>
+        <xsl:when test="@f:rows > 1 or @rows > 1">
+          <textarea>
+            <xsl:attribute name="name"><xsl:apply-templates select="." mode="id" /></xsl:attribute>
+            <xsl:attribute name="rows"><xsl:choose>
+              <xsl:when test="@f:rows"><xsl:value-of select="@f:rows"/></xsl:when>
+              <xsl:when test="@rows"><xsl:value-of select="@rows"/></xsl:when>
+            </xsl:choose></xsl:attribute>
+            <xsl:attribute name="cols">
+              <xsl:choose>
+                <xsl:when test="@f:cols > 132 or @cols > 132">132</xsl:when>
+                <xsl:when test="@f:cols"><xsl:value-of select="@f:cols" /></xsl:when>
+                <xsl:when test="@cols"><xsl:value-of select="@cols" /></xsl:when>
+                <xsl:otherwise>60</xsl:otherwise>
+              </xsl:choose>
+            </xsl:attribute>
+            <xsl:apply-templates select="f:default" />
+            <xsl:text> </xsl:text>
+          </textarea>
+        </xsl:when>
+        <xsl:otherwise>
+          <input>
+            <xsl:attribute name="type">text</xsl:attribute>
+            <xsl:attribute name="name"><xsl:apply-templates select="." mode="id" /></xsl:attribute>
+            <xsl:attribute name="size">
+              <xsl:choose>
+                <xsl:when test="@f:cols > 40 or @cols > 40">40</xsl:when>
+                <xsl:when test="@f:cols"><xsl:value-of select="@f:cols" /></xsl:when>
+                <xsl:when test="@cols"><xsl:value-of select="@cols" /></xsl:when>
+                <xsl:otherwise>12</xsl:otherwise>
+              </xsl:choose>
+            </xsl:attribute>
+            <xsl:attribute name="value"><xsl:apply-templates select="f:default" /></xsl:attribute>
+          </input>
+        </xsl:otherwise>
+      </xsl:choose>
+    </td></tr>
   </xsl:template>
 
   <xsl:template match="f:password">
-    <input>
-      <xsl:attribute name="type">password</xsl:attribute>
-      <xsl:attribute name="name"><xsl:apply-templates select="." mode="id" /></xsl:attribute>
-    </input>
+    <tr><td class="form-caption" valign="top">
+      <xsl:apply-templates select="f:caption" />
+    </td><td class="form-element" valign="top">
+      <input>
+        <xsl:attribute name="type">password</xsl:attribute>
+        <xsl:attribute name="name"><xsl:apply-templates select="." mode="id" /></xsl:attribute>
+      </input>
+    </td></tr>
   </xsl:template>
 
   <xsl:template match="f:asset">
-    <span class="form-fluid-asset"></span>
-    <input>
-      <xsl:attribute name="class">form-asset</xsl:attribute>
-      <xsl:attribute name="type">file</xsl:attribute>
-      <xsl:attribute name="name"><xsl:apply-templates select="." mode="id" /></xsl:attribute>
-      <xsl:if test="@f:accept">
-        <xsl:attribute name="accept"><xsl:value-of select="@f:accept" /></xsl:attribute>
-      </xsl:if>
-    </input>
+    <div class="form-element">
+      <xsl:apply-templates select="f:caption" />
+      <span class="form-fluid-asset"></span>
+      <input>
+        <xsl:attribute name="class">form-asset</xsl:attribute>
+        <xsl:attribute name="type">file</xsl:attribute>
+        <xsl:attribute name="name"><xsl:apply-templates select="." mode="id" /></xsl:attribute>
+        <xsl:if test="@f:accept">
+          <xsl:attribute name="accept"><xsl:value-of select="@f:accept" /></xsl:attribute>
+        </xsl:if>
+      </input>
+    </div>
   </xsl:template>
 
   <xsl:template match="f:selection">
@@ -123,7 +144,7 @@
 
   <xsl:template match="f:group">
      <xsl:param name="form_level" />
-     <xsl:apply-templates select="caption" />
+     <xsl:apply-templates select="f:caption" />
      <xsl:call-template name="form-content">
        <xsl:with-param name="form_level"><xsl:value-of select="$form_level" /></xsl:with-param>
      </xsl:call-template>
@@ -145,7 +166,7 @@
               </xsl:otherwise>
             </xsl:choose>
           </xsl:attribute>
-          <xsl:apply-templates select="caption" />
+          <xsl:apply-templates select="f:caption" />
         </button>
       </xsl:when>
       <xsl:otherwise>
@@ -180,6 +201,7 @@
         <input>
           <xsl:attribute name="type">reset</xsl:attribute>
           <xsl:attribute name="name"><xsl:apply-templates select="." mode="id" /></xsl:attribute>
+          <xsl:attribute name="value"><xsl:value-of select="f:caption" /></xsl:attribute>
         </input>
       </xsl:otherwise>
     </xsl:choose>
@@ -191,6 +213,14 @@
       <xsl:attribute name="name"><xsl:apply-templates select="." mode="id" /></xsl:attribute>
       <xsl:attribute name="value"><xsl:apply-templates select="default" /></xsl:attribute>
     </input>
+  </xsl:template>
+
+  <xsl:template match="f:caption">
+    <span class="caption"><xsl:apply-templates /></span>
+  </xsl:template>
+
+  <xsl:template match="f:default">
+    <xsl:apply-templates />
   </xsl:template>
 
   <xsl:template match="*" mode="id">
