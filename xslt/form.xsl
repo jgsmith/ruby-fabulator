@@ -50,10 +50,10 @@
   <xsl:template match="f:form/f:form | f:option/f:form">
     <xsl:param name="form_level" />
     <xsl:choose>
-      <xsl:when test="frame:caption">
+      <xsl:when test="f:caption">
         <tr><td colspan="2">
         <fieldset>
-          <legend><xsl:apply-templates select="caption" /></legend>
+          <legend><xsl:apply-templates select="f:caption" /></legend>
           <xsl:call-template name="form-content">
             <xsl:with-param name="form_level"><xsl:value-of select="$form_level + 1"/></xsl:with-param>
           </xsl:call-template>
@@ -140,6 +140,44 @@
   </xsl:template>
 
   <xsl:template match="f:selection">
+    <!-- for now, just handle simple selections -->
+    <xsl:param name="form_level"/>
+    <xsl:choose>
+      <xsl:when test="./f:option//f:form//f:selection">
+        <span class="form-element">
+            <xsl:apply-templates select="f:caption"/>
+            <xsl:apply-templates select="f:help"/>
+          <xsl:call-template name="field-selection">
+            <!-- xsl:with-param name="form_id"><xsl:value-of select="$form_id"/></xsl:with-param -->
+            <xsl:with-param name="form_level"><xsl:value-of select="$form_level"/></xsl:with-param>
+          </xsl:call-template>
+        </span>
+      </xsl:when>
+      <xsl:when test="./f:option//f:help|./f:option//f:form">
+        <span class="form-element">
+            <xsl:apply-templates select="f:caption"/>
+            <xsl:apply-templates select="f:help"/>
+          <xsl:call-template name="field-selection">
+            <!-- xsl:with-param name="form_id"><xsl:value-of select="$form_id"/></xsl:with-param -->
+            <xsl:with-param name="form_level"><xsl:value-of select="$form_level" /></xsl:with-param>
+          </xsl:call-template>
+       </span>
+      </xsl:when>
+      <xsl:otherwise>
+        <span class="form-element">
+          <!-- label class="form-element-label">
+            <xsl:attribute name="for">
+              <xsl:apply-templates select="." mode="id"/>
+            </xsl:attribute -->
+            <xsl:apply-templates select="f:caption"/>
+            <xsl:apply-templates select="f:help"/>
+          <!-- /label -->
+          <xsl:call-template name="field-selection">
+            <xsl:with-param name="form_level"><xsl:value-of select="$form_level" /></xsl:with-param>
+          </xsl:call-template>
+        </span>
+      </xsl:otherwise>
+    </xsl:choose>
   </xsl:template>
 
   <xsl:template match="f:group">
@@ -222,6 +260,214 @@
   <xsl:template match="f:default">
     <xsl:apply-templates />
   </xsl:template>
+
+  <xsl:template name="field-selection">
+    <!-- xsl:param name="form_id"/ -->
+    <xsl:param name="form_level"/>
+    <xsl:param name="style">
+      <xsl:if test="f:option//f:form">
+        <xsl:choose>  
+          <xsl:when test="@count = 'multiple'">checkbox</xsl:when>
+          <xsl:otherwise>radio</xsl:otherwise>
+        </xsl:choose>
+      </xsl:if>
+    </xsl:param>
+    <xsl:choose>
+      <xsl:when test="not($style) or $style = ''">
+        <select>
+          <!-- xsl:attribute name="name"><xsl:if test="$form_id != ''"><xsl:value-of select="$form_id"/>.</xsl:if><xsl:value-of select="@id"/></xsl:attribute -->
+          <xsl:attribute name="name"><xsl:apply-templates select="." mode="id"/></xsl:attribute>
+          <xsl:if test="@count = 'multiple'">
+            <xsl:attribute name="multiple"><xsl:text>1</xsl:text></xsl:attribute>
+          </xsl:if>
+          <xsl:apply-templates select="f:option">
+          </xsl:apply-templates>
+        </select>
+      </xsl:when>
+      <xsl:otherwise>
+        <!-- select -->
+          <!-- xsl:attribute name="name"><xsl:if test="$form_id != ''"><xsl:value-of select="$form_id"/>.</xsl:if><xsl:value-of select="@id"/></xsl:attribute -->
+          <!-- xsl:attribute name="name"><xsl:apply-templates select="." mode="id"/></xsl:attribute -->
+          <!-- xsl:if test="@count = 'multiple'">
+            <xsl:attribute name="multiple"/>
+          </xsl:if -->
+          <span class="form-selection-options">
+          <xsl:apply-templates select="f:option">
+            <xsl:with-param name="style" select="$style"/>
+            <xsl:with-param name="form_level" select="$form_level"/>
+            <!-- xsl:with-param name="form_id">
+              <xsl:if test="$form_id != ''"><xsl:value-of select="$form_id"/><xsl:text>.</xsl:text></xsl:if>
+              <xsl:value-of select="@id"/>
+            </xsl:with-param -->
+          </xsl:apply-templates>
+          </span>
+        <!-- /select -->
+      </xsl:otherwise>
+    </xsl:choose>
+  </xsl:template>
+
+    <xsl:template match="f:form/f:selection/f:option|f:form//f:group/f:selection/f:option">
+    <xsl:param name="style"/>
+    <!-- xsl:param name="form_id"/ -->
+    <xsl:param name="form_level"/>
+    <xsl:choose>
+      <xsl:when test="$style = 'radio'">
+        <span class="form-selection-option">
+        <input>
+          <xsl:attribute name="type"><xsl:value-of select="$style"/></xsl:attribute>
+          <!-- xsl:attribute name="name"><xsl:value-of select="$form_id"/></xsl:attribute -->
+          <xsl:attribute name="name"><xsl:apply-templates select="parent::selection[1]" mode="id"/></xsl:attribute>
+          <xsl:attribute name="show">
+            <xsl:choose>
+              <xsl:when test=".//f:form">
+                <xsl:text>rel:</xsl:text>
+                <xsl:apply-templates select="." mode="id"/>
+              </xsl:when>
+              <xsl:otherwise>
+                <xsl:text>none</xsl:text>
+              </xsl:otherwise>
+            </xsl:choose>
+          </xsl:attribute>
+          <xsl:variable name="myid">
+            <xsl:choose>
+              <xsl:when test="@id">
+                <xsl:value-of select="@id"/>
+              </xsl:when>
+              <xsl:otherwise>
+                <xsl:value-of select="."/>
+              </xsl:otherwise>
+            </xsl:choose>
+          </xsl:variable>
+          <xsl:attribute name="value"><xsl:value-of select="$myid"/></xsl:attribute>
+          <xsl:for-each select="../f:default">
+            <xsl:if test=". = $myid">
+              <xsl:attribute name="checked"/>
+            </xsl:if>
+          </xsl:for-each>
+        </input>
+        <xsl:choose>
+          <xsl:when test="f:caption">
+            <xsl:choose>
+              <xsl:when test="f:caption"><xsl:apply-templates select="f:caption"/></xsl:when>
+              <xsl:otherwise><xsl:value-of select="."/></xsl:otherwise>
+            </xsl:choose>
+            <xsl:apply-templates select="f:help"/>
+            <xsl:if test="./f:form">
+                <xsl:apply-templates select="f:form" mode="body">
+                  <!-- xsl:with-param name="form_id"><xsl:value-of select="$form_id"/>.<xsl:value-of select="@id"/></xsl:with-param -->
+                  <xsl:attribute name="name"><xsl:apply-templates select="." mode="id"/></xsl:attribute>
+                  <xsl:with-param name="form_level"><xsl:value-of select="$form_level+1"/></xsl:with-param>
+                </xsl:apply-templates>
+            </xsl:if>
+          </xsl:when>
+          <xsl:when test="f:form">
+            <xsl:if test="f:form/f:caption">
+              <xsl:apply-templates select="f:form/f:caption"/>
+              <xsl:apply-templates select="f:form/f:help"/>
+            </xsl:if>
+            <xsl:apply-templates select="f:form" mode="body">
+              <!-- xsl:with-param name="form_id"><xsl:value-of select="$form_id"/>.<xsl:value-of select="@id"/></xsl:with-param -->
+              <xsl:attribute name="name"><xsl:apply-templates select="." mode="id"/></xsl:attribute>
+              <xsl:with-param name="form_level"><xsl:value-of select="$form_level+1"/></xsl:with-param>
+            </xsl:apply-templates>
+          </xsl:when>
+        </xsl:choose>
+        </span>
+      </xsl:when>
+      <xsl:when test="$style = 'checkbox'">
+        <span class="form-selection-option">
+        <input>
+          <xsl:attribute name="type"><xsl:value-of select="$style"/></xsl:attribute>
+          <!-- xsl:attribute name="name"><xsl:value-of select="$form_id"/></xsl:attribute -->
+          <xsl:attribute name="name"><xsl:apply-templates select="parent::selection[1]" mode="id"/></xsl:attribute>
+          <xsl:attribute name="show">
+            <xsl:choose>
+              <xsl:when test=".//f:form">
+                <xsl:text>rel:</xsl:text>
+                <xsl:apply-templates select="." mode="id"/>
+              </xsl:when>
+              <xsl:otherwise>
+                <xsl:text>none</xsl:text>
+              </xsl:otherwise>
+            </xsl:choose>
+          </xsl:attribute>
+          <xsl:variable name="myid">
+            <xsl:choose>
+              <xsl:when test="@id">
+                <xsl:value-of select="@id"/>
+              </xsl:when>
+              <xsl:otherwise>
+                <xsl:value-of select="."/>
+              </xsl:otherwise>
+            </xsl:choose>
+          </xsl:variable>
+          <xsl:attribute name="value"><xsl:value-of select="$myid"/></xsl:attribute>
+          <xsl:for-each select="../f:default">
+            <xsl:if test=". = $myid">
+              <xsl:attribute name="checked"/>
+            </xsl:if>
+          </xsl:for-each>
+        </input>
+        <xsl:choose>
+          <xsl:when test="f:caption">
+                <xsl:choose>
+                  <xsl:when test="f:caption"><xsl:apply-templates select="f:caption"/></xsl:when>
+                  <xsl:otherwise><xsl:value-of select="."/></xsl:otherwise>
+                </xsl:choose>
+                <xsl:apply-templates select="f:help"/>
+                <xsl:if test="./form">
+                  <xsl:apply-templates select="f:form" mode="body">
+                    <!-- xsl:with-param name="form_id"><xsl:value-of select="$form_id"/>.<xsl:value-of select="@id"/></xsl:with-param -->
+                    <xsl:attribute name="name"><xsl:apply-templates select="." mode="id"/></xsl:attribute>
+                    <xsl:with-param name="form_level"><xsl:value-of select="$form_level+1"/></xsl:with-param>
+                  </xsl:apply-templates>
+                </xsl:if>
+            </xsl:when>
+            <xsl:when test="f:form">
+              <xsl:if test="f:form/f:caption">
+                <xsl:apply-templates select="f:form/f:caption"/>
+                <xsl:apply-templates select="f:form/f:help"/>
+              </xsl:if>
+              <xsl:apply-templates select="f:form" mode="body">
+                <!-- xsl:with-param name="form_id"><xsl:value-of select="$form_id"/>.<xsl:value-of select="@id"/></xsl:with-param -->
+                <xsl:attribute name="name"><xsl:apply-templates select="." mode="id"/></xsl:attribute>
+                <xsl:with-param name="form_level"><xsl:value-of select="$form_level+1"/></xsl:with-param>
+              </xsl:apply-templates>
+            </xsl:when>
+          </xsl:choose>
+        </span>
+      </xsl:when>
+      <xsl:otherwise>
+        <option>
+          <xsl:variable name="myid">
+            <xsl:choose>
+              <xsl:when test="@id">
+                <xsl:value-of select="@id"/>
+              </xsl:when>
+              <xsl:otherwise>
+                <xsl:value-of select="."/>
+              </xsl:otherwise>
+            </xsl:choose>
+          </xsl:variable>
+          <xsl:attribute name="value"><xsl:value-of select="$myid"/></xsl:attribute>
+          <xsl:for-each select="../f:default">
+            <xsl:if test=". = $myid">
+              <xsl:attribute name="selected"/>
+            </xsl:if>
+          </xsl:for-each>
+          <xsl:choose>
+            <xsl:when test="f:caption">
+              <xsl:value-of select="f:caption"/>
+            </xsl:when>
+            <xsl:otherwise>
+              <xsl:value-of select="$myid"/>
+            </xsl:otherwise>
+          </xsl:choose>
+        </option>
+      </xsl:otherwise>
+    </xsl:choose>
+  </xsl:template>
+
 
   <xsl:template match="*" mode="id">
     <xsl:for-each select="ancestor::*[@id != '']">
