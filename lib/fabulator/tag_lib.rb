@@ -93,7 +93,7 @@ module Fabulator
     end
 
     def self.find_op(t,o)
-      (self.type_handler(t).get_method(t + o.upcase) rescue nil)
+      ( self.type_handler(t).get_method(t[0] + o.to_s.upcase) rescue nil )
     end
 
     # returns nil if no common type can be found

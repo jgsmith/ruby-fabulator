@@ -64,7 +64,7 @@ module Fabulator
 
         case @c_type
           when nil, '':
-            return sense.call(paths) if select.nil?
+            return sense.call(paths) if @select.nil?
             opts = @select.run(ctx).collect { |o| o.to_s } 
             if !opts.include?(ctx.root.to_s)
               invalidate_path(paths, ctx.root)
