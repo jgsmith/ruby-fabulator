@@ -47,7 +47,7 @@ module Fabulator
       def build_conversion_to(to)
         return [] if to.nil? || self == to
         ut = self._unify_types(to, true)
-        return [] if ut.nil? || ut[:t].join('') != to.join('')
+        return [] if ut.nil? || ut[:t].nil? || ut[:t].vtype.join('') != to.join('')
         return ut[:convert]
       end
 
@@ -71,24 +71,26 @@ module Fabulator
         while added
           added = false
           [d1, d2].each do |d|
-            d.keys.each do |t|   
-              d[t][:t].outgoing_conversions.each_pair do |conv_key, conv|
-                #conv_key = conv.vtype.join('')
-                w = d[t][:w] * conv.weight
-                if d.has_key?(conv_key)
-                  if d[conv_key][:w] < w
-                    d[conv_key][:w] = w
-                    d[conv_key][:path] = d[t][:path] + [ conv.vtype ]
-                    d[conv_key][:convert] = d[t][:convert] + [ conv ] - [nil]
+            d.keys.each do |t|
+              if !d[t][:t].nil?
+                d[t][:t].outgoing_conversions.each_pair do |conv_key, conv|
+                  #conv_key = conv.vtype.join('')
+                  w = d[t][:w] * conv.weight
+                  if d.has_key?(conv_key)
+                    if d[conv_key][:w] < w
+                      d[conv_key][:w] = w
+                      d[conv_key][:path] = d[t][:path] + [ conv.vtype ]
+                      d[conv_key][:convert] = d[t][:convert] + [ conv ] - [nil]
+                    end
+                  else
+                    added = true
+                    d[conv_key] = {
+                      :t => conv.vtype.is_a?(Array) ? Fabulator::TagLib.type_handler(conv.vtype) : conv.vtype,
+                      :w => w,
+                      :path => d[t][:path] + [ conv.vtype ],
+                      :convert => d[t][:convert] + [ conv ] - [nil],
+                    }
                   end
-                else
-                  added = true
-                  d[conv_key] = {
-                    :t => conv.vtype,
-                    :w => w,
-                    :path => d[t][:path] + [ conv.vtype ],
-                    :convert => d[t][:convert] + [ conv ] - [nil],
-                  }
                 end
               end
             end
@@ -108,7 +110,7 @@ module Fabulator
                   else
                     added = true
                     d[to_key] = {
-                      :t => [ ns, ct ],
+                      :t => Fabulator::TagLib.type_handler([ ns, ct ]),
                       :w => w * 95.0 / 100.0,
                       :path => d[from_key][:path] + [ conv.vtype ],
                       :convert => d[from_key][:convert] + [ conv ],
