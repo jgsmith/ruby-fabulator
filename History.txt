@@ -1,3 +1,12 @@
+=== 0.0.12
+
+* 1 major enhancement:
+  * Added <template /> element to libraries
+
+* 2 minor enhancements:
+  * Fixed various XSLT issues with form markup
+  * Fixed scope issue that caused <for-each /> failure with @as
+
 === 0.0.11 2010-11-11
 
 * 1 bug fix
