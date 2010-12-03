@@ -232,7 +232,7 @@ end
     @yydebug = true
 
     @last_token = nil
-      
+
     do_parse
   end
 

@@ -14,6 +14,7 @@ module Fabulator
     contains :mapping, :storage => :hash, :key => :name, :delayable => true
     contains :reduction, :storage => :hash, :key => :name, :delayable => true
     contains :consolidation, :storage => :hash, :key => :name, :delayable => true
+    contains :template, :storage => :hash, :key => :name, :delayable => true
     contains :type, :storage => :hash, :key => :name, :delayable => true
     contains :filter, :storage => :hash, :key => :name, :delayable => true
     contains :constraint, :storage => :hash, :key => :name, :delayable => true
@@ -72,6 +73,10 @@ module Fabulator
         if fctn.nil?
           fctn = @reductions[nom]
           fctn_type = :reduction
+        end
+        if fctn.nil?
+          fctn = @templates[nom]
+          fctn_type = :function
         end
       end
 

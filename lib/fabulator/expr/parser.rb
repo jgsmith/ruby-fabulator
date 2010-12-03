@@ -48,7 +48,7 @@ module_eval(<<'...end xsm_expression_parser.racc/module_eval...', 'xsm_expressio
     @yydebug = true
 
     @last_token = nil
-      
+
     do_parse
   end
 

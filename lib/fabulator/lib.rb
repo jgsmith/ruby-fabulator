@@ -62,6 +62,7 @@ module Fabulator
     structural :mapping, Mapping
     structural :reduction, Reduction
     structural :consolidation, Consolidation
+    structural :template, Template
     #structural :type, Type
     #structural :filter, Filter
     #structural :constraint, Constraint
