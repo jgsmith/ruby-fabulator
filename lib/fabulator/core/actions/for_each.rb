@@ -13,19 +13,37 @@ module Fabulator
 
     def run(context, autovivify = false)
       @context.with(context) do |ctx|
-        items = self.select(ctx) #@select.run(ctx)
+        items = self.select(ctx)
         res = nil
         ctx.in_context do |c|
           if !@sorts.empty?
-            items = items.sort_by{ |i| 
-              c.set_var(self.as, i) unless self.as.nil? 
-              @sorts.collect{|s| s.run(c.with_root(i)) }.join("\0") 
-            }
+            if self.as.nil?
+              items = items.sort_by{ |i| 
+                @sorts.collect{|s| s.run(c.with_root(i)) }.join("\0") 
+              }
+            else
+              items = items.sort_by{ |i| 
+                r = nil
+                c.in_context do |cc|
+                  cc.set_var(self.as, i)
+                  r = @sorts.collect{|s| s.run(cc.with_root(i)) }.join("\0") 
+                end
+                r
+              }
+            end
           end
           res = [ ]
-          items.each do |i|
-            c.set_var(self.as, i) unless self.as.nil?
-            res = res + self.run_actions(c.with_root(i))
+          if self.as.nil?
+            items.each do |i|
+              res = res + self.run_actions(c.with_root(i))
+            end
+          else
+            items.each do |i|
+              c.in_context do |cc|
+                cc.set_var(self.as, i) unless self.as.nil?
+                res = res + self.run_actions(cc.with_root(i))
+              end
+            end
           end
         end
         return res
