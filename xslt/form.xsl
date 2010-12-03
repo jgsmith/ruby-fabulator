@@ -51,7 +51,7 @@
     <xsl:param name="form_level" />
     <xsl:choose>
       <xsl:when test="f:caption">
-        <tr><td colspan="2">
+        <tr><td colspan="2" class="form-subform">
         <fieldset>
           <legend><xsl:apply-templates select="f:caption" /></legend>
           <xsl:call-template name="form-content">
@@ -71,9 +71,8 @@
   </xsl:template>
 
   <xsl:template match="f:text">
-    <tr><td class="form-caption" valign="top">
-      <xsl:apply-templates select="f:caption" />
-    </td><td class="form-element" valign="top">
+    <tr><xsl:call-template name="form-caption" />
+    <td class="form-element" valign="top">
       <xsl:choose>
         <xsl:when test="@f:rows > 1 or @rows > 1">
           <textarea>
@@ -114,9 +113,8 @@
   </xsl:template>
 
   <xsl:template match="f:password">
-    <tr><td class="form-caption" valign="top">
-      <xsl:apply-templates select="f:caption" />
-    </td><td class="form-element" valign="top">
+    <tr><xsl:call-template name="form-caption" />
+    <td class="form-element" valign="top">
       <input>
         <xsl:attribute name="type">password</xsl:attribute>
         <xsl:attribute name="name"><xsl:apply-templates select="." mode="id" /></xsl:attribute>
@@ -125,8 +123,8 @@
   </xsl:template>
 
   <xsl:template match="f:asset">
-    <div class="form-element">
-      <xsl:apply-templates select="f:caption" />
+    <tr><xsl:call-template name="form-caption" />
+    <td class="form-element" valign="top">
       <span class="form-fluid-asset"></span>
       <input>
         <xsl:attribute name="class">form-asset</xsl:attribute>
@@ -136,56 +134,28 @@
           <xsl:attribute name="accept"><xsl:value-of select="@f:accept" /></xsl:attribute>
         </xsl:if>
       </input>
-    </div>
+    </td></tr>
   </xsl:template>
 
   <xsl:template match="f:selection">
     <!-- for now, just handle simple selections -->
     <xsl:param name="form_level"/>
-    <xsl:choose>
-      <xsl:when test="./f:option//f:form//f:selection">
-        <span class="form-element">
-            <xsl:apply-templates select="f:caption"/>
-            <xsl:apply-templates select="f:help"/>
-          <xsl:call-template name="field-selection">
-            <!-- xsl:with-param name="form_id"><xsl:value-of select="$form_id"/></xsl:with-param -->
-            <xsl:with-param name="form_level"><xsl:value-of select="$form_level"/></xsl:with-param>
-          </xsl:call-template>
-        </span>
-      </xsl:when>
-      <xsl:when test="./f:option//f:help|./f:option//f:form">
-        <span class="form-element">
-            <xsl:apply-templates select="f:caption"/>
-            <xsl:apply-templates select="f:help"/>
-          <xsl:call-template name="field-selection">
-            <!-- xsl:with-param name="form_id"><xsl:value-of select="$form_id"/></xsl:with-param -->
-            <xsl:with-param name="form_level"><xsl:value-of select="$form_level" /></xsl:with-param>
-          </xsl:call-template>
-       </span>
-      </xsl:when>
-      <xsl:otherwise>
-        <span class="form-element">
-          <!-- label class="form-element-label">
-            <xsl:attribute name="for">
-              <xsl:apply-templates select="." mode="id"/>
-            </xsl:attribute -->
-            <xsl:apply-templates select="f:caption"/>
-            <xsl:apply-templates select="f:help"/>
-          <!-- /label -->
-          <xsl:call-template name="field-selection">
-            <xsl:with-param name="form_level"><xsl:value-of select="$form_level" /></xsl:with-param>
-          </xsl:call-template>
-        </span>
-      </xsl:otherwise>
-    </xsl:choose>
+    <tr><xsl:call-template name="form-caption" />
+    <td class="form-element" valign="top">
+      <xsl:call-template name="field-selection">
+        <xsl:with-param name="form_level"><xsl:value-of select="$form_level"/></xsl:with-param>
+      </xsl:call-template>
+    </td></tr>
   </xsl:template>
 
   <xsl:template match="f:group">
-     <xsl:param name="form_level" />
-     <xsl:apply-templates select="f:caption" />
+   <xsl:param name="form_level" />
+   <tr><xsl:call-template name="form-caption" />
+     <td class="form-element" valign="top">
      <xsl:call-template name="form-content">
        <xsl:with-param name="form_level"><xsl:value-of select="$form_level" /></xsl:with-param>
      </xsl:call-template>
+    </td></tr>
   </xsl:template>
 
   <xsl:template match="f:submission">
@@ -467,6 +437,13 @@
       </xsl:otherwise>
     </xsl:choose>
   </xsl:template>
+
+  <xsl:template name="form-caption">
+    <td class="form-caption" valign="top">
+      <xsl:apply-templates select="f:caption" />
+    </td>
+  </xsl:template>
+
 
 
   <xsl:template match="*" mode="id">
