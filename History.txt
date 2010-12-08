@@ -1,9 +1,11 @@
 === 0.0.13 2010-12-08
 
-* 3 minor enhancements:
+* 4 minor enhancements:
   * Fixed f:substring and f:starts-with?
   * Added f:random(n) to return a random integer in (1,n)
   * Fix escaping of single and double quotes in expressions
+  * Fix where we look for non-inherited attributes in actions defined
+    in a library
 
 === 0.0.12 2010-12-03
 

@@ -11,6 +11,7 @@ module Fabulator
 
       attribute :name, :static => true
       attribute 'has-actions', :static => true, :as => :has_actions, :type => :boolean
+      attribute 'has-select', :static => true, :as => :has_select, :type => :boolean
 
       contains :attribute
 
@@ -31,7 +32,7 @@ module Fabulator
         @action = defining_action
         @actions = actions
         @static_attributes = { }
-        @context.get_action(@action.first, @action.last).attributes.collect{ |a| a.is_static? }.each do |a|
+        @context.get_action(@action.first, @action.last).attributes.select{ |a| a.is_static? }.each do |a|
           @static_attributes[a.name] = a.value(@context)
         end
       end
@@ -44,13 +45,16 @@ module Fabulator
           end
 # These can be passed to f:eval to get their value
           action = ctx.get_action(@action.first, @action.last)
-          action.attributes.collect{ |a| !a.is_static? }.each do |attr|
-            ctx.set_var(attr.name, attr.value(ctx))
+          action.attributes.select{ |a| !a.is_static? }.each do |attr|
+            ctx.set_var(attr.name, attr.value(@context))
           end
           # we can f:eval($actions) in whatever current context we have
           if action.has_actions?
             @actions.use_context(context)
             ctx.set_var('actions', ctx.root.anon_node( @actions, [ FAB_NS, 'expression' ]))
+          end
+          if action.has_select?
+            ctx.set_var('select', ctx.root.anon_node( @select, [ FAB_NS, 'expression' ]))
           end
           ret = action.run(ctx)
         end
