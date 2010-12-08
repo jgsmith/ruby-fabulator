@@ -13,8 +13,10 @@ module Fabulator::Template
       interactives = { }
 
       Fabulator::TagLib.namespaces.each_pair do |ns, ob|
-        structurals[ns] = ob.presentation.structurals
-        interactives[ns] = ob.presentation.interactives
+        x = ob.presentation.structurals || []
+        structurals[ns] = x unless x.nil? || x.empty?
+        x = ob.presentation.interactives || []
+        interactives[ns] = x unless x.nil? || x.empty?
       end
 
       @namespaces = { }
@@ -28,12 +30,14 @@ module Fabulator::Template
       interactive_xpaths = []
       interesting_xpaths = [ ]
       @fab_prefix = ''
+
       @namespaces.keys.each do |p|
         @fab_prefix = p if @namespaces[p] == Fabulator::FAB_NS
         structural_xpaths += structurals[@namespaces[p]].collect{ |e| "ancestor::#{p}:#{e}" }
         interactive_xpaths += interactives[@namespaces[p]].collect{ |e| "//#{p}:#{e}" }
         interesting_xpaths += structurals[@namespaces[p]].collect{ |e| "//#{p}:#{e}" }
       end
+
       @structural_xpath = structural_xpaths.join("[@id != ''] | ") + "[@id != '']"
       @interactive_xpath = interactive_xpaths.join(" | ")
 

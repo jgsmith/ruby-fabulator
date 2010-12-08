@@ -1,12 +1,13 @@
 === 0.0.13 2010-12-08
 
-* 5 minor enhancements:
+* 6 minor enhancements:
   * Fixed f:substring and f:starts-with?
   * Added f:random(n) to return a random integer in (1,n)
   * Fix escaping of single and double quotes in expressions
   * Fix where we look for non-inherited attributes in actions defined
     in a library
   * Fix handling of attributes that need to be passed through f:eval
+  * Fix template interaction with libraries that don't have form elements
 
 === 0.0.12 2010-12-03
 
