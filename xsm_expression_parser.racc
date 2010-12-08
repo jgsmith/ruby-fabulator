@@ -480,15 +480,16 @@ end
           end
         elsif !res[6].nil?
           s = res[6]
-          s = s[1..s.length-2]
           @curpos = @curpos + s.length
           @col = @col + s.length
+          s = s[1..s.length-2]
           s.gsub!(/\\n/, "\n")
+          s.gsub!(/\\'/, "'")
+          s.gsub!(/\\"/, '"')
+          @line += s.split(/\n/).count
           @curpos = @curpos - s.length
           @col = @col - s.length
           @token = [ :LITERAL, s ]
-          @curpos = @curpos + 2  # the quotes
-          @col = @col + 2
         elsif !res[7].nil?
           @token = [ :NUMBER, res[7] ]
         elsif !res[8].nil?
