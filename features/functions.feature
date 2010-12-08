@@ -167,3 +167,19 @@ Feature: Function calls and lists
     When I run the expression (let xmlns:ff:="http://dh.tamu.edu/ns/fabulator/1.0#"; ff:not(ff:true()))
     Then I should get 1 item
       And item 0 should be [f:false()]
+
+  @rand
+  Scenario: Random numbers
+    Given a context
+     And the prefix f as "http://dh.tamu.edu/ns/fabulator/1.0#"
+    When I run the expression (f:random(5) < 5)
+    Then I should get 1 item
+     And item 0 should be [f:true()]
+
+  @strings
+  Scenario: Starts with
+    Given a context
+     And the prefix f as "http://dh.tamu.edu/ns/fabulator/1.0#"
+    When I run the expression (f:starts-with?('$bar', '$'))
+    Then I should get 1 item
+     And item 0 should be [f:true()]
