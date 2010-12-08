@@ -165,6 +165,15 @@ module Fabulator
       arg.to(NUMERIC).value.to_d.floor.to_r
     end
 
+    mapping 'random' do |ctx, arg|
+      v = arg.to(NUMERIC).value.to_i
+      if v <= 0
+        (0.0).to_d.to_r
+      else
+        (1.0*rand(v) + 1.0).floor.to_r
+      end
+    end
+
     reduction 'sum', { :scaling => :log } do |ctx, args|
       zero = TagLib.find_op(args.first.vtype, :zero)
       if(zero && zero[:proc])
@@ -297,9 +306,9 @@ module Fabulator
       first = args[1].first.value
       if args.size == 3
         last = args[2].first.value
-        return [ args[0].collect{ |src| src.value.to_s.substr(first-1, last-1) } ]
+        return [ args[0].collect{ |src| s = src.value.to_s; s.length > first + last - 2 ? s[first-1, s.length-1] : s[first-1, first + last - 2] } ]
       else
-        return [ args[0].collect{ |src| src.value.to_s.substr(first-1) } ]
+        return [ args[0].collect{ |src| s = src.value.to_s; s[first-1, s.length-1] } ]
       end
     end
 
@@ -334,7 +343,7 @@ module Fabulator
 
     function 'starts-with?' do |ctx, args|
       tgt = (args[1].first.to_s rescue '')
-      tgt_len = tgt.size - 1
+      tgt_len = tgt.size
       return args[0].collect{ |a| (a.to_s[0,tgt_len] == tgt rescue false) }
     end
 
@@ -358,7 +367,21 @@ module Fabulator
 
       return args[0].collect{ |a| a.to_s.include?(tgt) ? (a.to_s.split(tgt))[-1] : "" }
     end
-    
+
+    function 'index-of' do |ctx, args|
+      tgt = (args[1].first.to_s rescue ' ')
+      start = (args[2].first.to(NUMERIC, ctx).value.to_i rescue 0)
+      ret = [ ]
+      args[0].collect{ |a| 
+        as = a.to_s
+        ret << as.index(tgt, start)
+        while !ret.last.nil?
+          ret << as.index(tgt, ret.last)
+        end
+        ret -= [ nil ]
+      }
+      ret
+    end
 
     ###
     ### Regexes
@@ -433,11 +456,11 @@ module Fabulator
     mapping 'eval' do |ctx, arg|
       p = Fabulator::Expr::Parser.new
       if arg.vtype.join('') == FAB_NS+'expression'
-        return arg.value.run(ctx)
+        return arg.value.run(ctx, true)
       else
         e = arg.to_s
         pe = e.nil? ? nil : p.parse(e,ctx)
-        return pe.nil? ? [] : pe.run(ctx)
+        return pe.nil? ? [] : pe.run(ctx, true)
       end
     end
 
