@@ -286,13 +286,14 @@ module Fabulator
       src = nil
       if !v.nil?
         src = v.is_a?(Fabulator::Expr::Node) ? [ v ] : ( v.is_a?(Array) ? v : v.run(self) )
+        src = src.select{ |s| !s.value.nil? || s.children.count > 0 }
       end 
 
       tgts.each do |tgt|
         tgt.prune
         if src.nil? || src.empty?
-          tgt.value = nil
-          ret << tgt
+          #tgt.value = nil
+          #ret << tgt
         elsif src.size == 1
           tgt.copy(src.first)
           ret << tgt

@@ -347,6 +347,8 @@ module Fabulator
         if block
           define_method("action:#{name.to_s}", block)
         elsif !klass.nil?
+          Fabulator::TagLib.structural_classes[self.name] ||= {}
+          Fabulator::TagLib.structural_classes[self.name][name.to_sym] = klass
           action(name) { |e,c|
             r = klass.new
             r.compile_xml(e,c)

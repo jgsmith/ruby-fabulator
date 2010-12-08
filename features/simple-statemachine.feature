@@ -191,6 +191,34 @@ Feature: Simple state machines
      And the expression (/foo) should equal ['bar']
      And the expression (/bar) should equal ['baz']
 
+  @choose
+  Scenario: simple machine with a <choose />
+    Given the statemachine
+      """
+        <f:application xmlns:f="http://dh.tamu.edu/ns/fabulator/1.0#">
+          <f:choose>
+            <f:when f:test="f:true()">
+              <f:value f:path="/foo" f:select="3" />
+            </f:when>
+            <f:otherwise>
+              <f:value f:path="/foo" f:select="2" />
+            </f:otherwise>
+          </f:choose>
+          <f:value f:path="/bar">
+            <f:choose>
+              <f:when f:test="f:true()">
+                <f:value-of f:select="3" />
+              </f:when>
+              <f:otherwise>
+                <f:value-of f:select="2" />
+              </f:otherwise>
+            </f:choose>
+          </f:value>
+        </f:application>
+      """
+    Then the expression (/foo) should equal [3]
+    Then the expression (/bar) should equal [3]
+
   @var
   Scenario: simple machine with a <variable /> and <value />
     Given the statemachine

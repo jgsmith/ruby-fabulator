@@ -139,8 +139,8 @@ module Fabulator
   protected
 
     def setup(xml)
-      ns = xml.attributes.get_attribute_ns(FAB_LIB_NS, 'ns').value
-      Fabulator::TagLib.namespaces[ns] = self
+      @ns = xml.attributes.get_attribute_ns(FAB_LIB_NS, 'ns').value
+      Fabulator::TagLib.namespaces[@ns] = self
 
       self.init_attribute_storage
     
