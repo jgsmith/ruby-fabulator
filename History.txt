@@ -1,3 +1,11 @@
+=== 0.0.14 2010-12-09
+
+* 1 major enhancement:
+  * Added implementation classes for 'and' and 'or' in expressions
+
+* 1 minor enhancement:
+  * Fleshed out basic test environment to enable future unit testing
+
 === 0.0.13 2010-12-08
 
 * 7 minor enhancements:

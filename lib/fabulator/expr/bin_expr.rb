@@ -118,6 +118,26 @@ module Fabulator
       end
     end
 
+    class AndExpr < BoolBinExpr
+      def op
+        :and
+      end
+
+      def calculate(a,b)
+        a && b
+      end
+    end
+
+    class OrExpr < BoolBinExpr
+      def op
+        :or
+      end
+
+      def calculate(a,b)
+        a || b
+      end
+    end
+
     class MpyExpr < BinExpr
       def op
         :times
