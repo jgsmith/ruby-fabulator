@@ -1,6 +1,7 @@
+require 'rubygems'
 require 'stringio'
 require 'test/unit'
-require 'xml/libxml'
+#require 'xml/libxml'
 #require 'fabulator'
 
 # already required by Rakefile
