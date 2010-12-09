@@ -160,6 +160,7 @@ Feature: Function calls and lists
     When I run the expression (f:not(f:true()))
     Then I should get 1 item
       And item 0 should be [f:false()]
+
   @ns
   Scenario: Negating logic
     Given a context
