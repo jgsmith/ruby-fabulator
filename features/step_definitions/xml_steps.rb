@@ -11,6 +11,19 @@ Given /the statemachine/ do |doc_xml|
   @sm.init_context(@context)
 end
 
+Given /the library/ do |doc_xml|
+  @context ||= Fabulator::Expr::Context.new
+  @compiler ||= Fabulator::Compiler.new
+
+  if @library.nil?
+    @library = @compiler.compile(doc_xml)
+  else
+    @library.compile_xml(doc_xml, @context)
+  end
+
+  @library.register_library
+end
+
 When /I run it with the following params:/ do |param_table|
   params = { }
   param_table.hashes.each do |hash|
