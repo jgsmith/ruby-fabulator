@@ -20,6 +20,9 @@ Feature: Libraries
           <l:function l:name="fctn">
             <f:value-of f:select="$1 - $2" />
           </l:function>
+          <l:function l:name="fctn2">
+            <f:value-of f:select="my:fctn($2, $1)" />
+          </l:function>
           <l:action l:name="actn" l:has-actions="true">
             <l:attribute l:name="foo" />
             <f:value-of f:select="f:eval($actions) * 3" />
@@ -60,6 +63,7 @@ Feature: Libraries
     Then the expression (/actn3) should equal [3]
      And the expression (/actn4foo) should equal ['bar']
      And the expression (m:fctn(3,2)) should equal [1]
+     And the expression (m:fctn2(2,3)) should equal [1]
      And the expression (f:normalize-space(m:tmpl())) should equal ['Foo']
      And the expression (f:normalize-space(m:tmpl2('Foo'))) should equal ['Foo']
      And the expression (f:normalize-space(m:tmpl3('Foo'))) should equal ['<p> Foo </p>']

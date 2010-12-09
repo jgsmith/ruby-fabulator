@@ -28,14 +28,14 @@ module Fabulator
   class Variable < Fabulator::Action
     namespace Fabulator::FAB_NS
     attribute :name, :eval => false, :static => true
-    has_select
+    has_select nil
     has_actions
 
     def run(context, autovivify = false)
       return [] if self.name.nil?
       res = [ ]
       @context.with(context) do |ctx|
-        if @select
+        if !@select.nil?
           res = self.select(ctx)
         else
           res = self.run_actions(ctx)

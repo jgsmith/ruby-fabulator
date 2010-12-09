@@ -214,10 +214,23 @@ Feature: Simple state machines
               </f:otherwise>
             </f:choose>
           </f:value>
+          <f:value f:path="/post/filter" f:select="'Markdown'" />
+          <f:variable f:name="filter">
+            <f:choose>
+              <f:when f:test="/post/filter = 'nil'">
+                <f:value-of f:select="''" />
+              </f:when>
+              <f:otherwise>
+                <f:value-of f:select="/post/filter" />
+              </f:otherwise>
+            </f:choose>
+          </f:variable>
+          <f:value f:path="/new-post/filter" f:select="$filter" />
         </f:application>
       """
     Then the expression (/foo) should equal [3]
     Then the expression (/bar) should equal [3]
+    Then the expression (/new-post/filter) should equal ['Markdown']
 
   @var
   Scenario: simple machine with a <variable /> and <value />
