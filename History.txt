@@ -1,12 +1,16 @@
+=== 0.0.15 2010-12-09
+
+* 1 minor enhancement:
+  * Fixed bug causing <variable /> elements to ignore actions when no
+    select attribute
+
 === 0.0.14 2010-12-09
 
 * 1 major enhancement:
   * Added implementation classes for 'and' and 'or' in expressions
 
-* 2 minor enhancements:
+* 1 minor enhancement:
   * Fleshed out basic test environment to enable future unit testing
-  * Fixed bug causing <variable /> elements to ignore actions when no
-    select attribute
 
 === 0.0.13 2010-12-08
 
