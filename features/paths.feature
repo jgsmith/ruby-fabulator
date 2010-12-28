@@ -89,3 +89,12 @@ Feature: Path expressions
      And item 1 should be ['ccc']
      And item 2 should be ['dd']
 
+  @array
+  Scenario: Predicates after function calls
+    Given a context
+     And the prefix f as "http://dh.tamu.edu/ns/fabulator/1.0#"
+    When I run the expression (f:split('The brown faux fox fur', ' ')[f:starts-with?(., 'f')])
+    Then I should get 3 items
+     And item 0 should be ['faux']
+     And item 1 should be ['fox']
+     And item 2 should be ['fur']

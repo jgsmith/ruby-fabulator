@@ -226,11 +226,14 @@ Feature: Simple state machines
             </f:choose>
           </f:variable>
           <f:value f:path="/new-post/filter" f:select="$filter" />
+          <f:variable f:name="fillter" f:select="$filter" />
+          <f:value f:path="/new-post/fillter" f:select="$fillter" />
         </f:application>
       """
     Then the expression (/foo) should equal [3]
     Then the expression (/bar) should equal [3]
     Then the expression (/new-post/filter) should equal ['Markdown']
+    Then the expression (/new-post/fillter) should equal ['Markdown']
 
   @var
   Scenario: simple machine with a <variable /> and <value />

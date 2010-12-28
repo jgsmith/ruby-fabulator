@@ -10,7 +10,7 @@ module Fabulator
         # we want to run through all of the predicates and return true if
         # they all return true
         result = [ ]
-        possible = @axis.run(context, autovivify)
+        possible = @axis.nil? ? [ context.root ] : @axis.run(context, autovivify)
         return possible if @predicates.nil? || @predicates.empty?
         @predicates.each do |p|
           n_p = [ ]

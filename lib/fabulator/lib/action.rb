@@ -24,6 +24,10 @@ module Fabulator
         end
         ret
       end
+
+      def has_select?
+        @has_select
+      end
     end
 
     class ActionRef
@@ -54,7 +58,9 @@ module Fabulator
             ctx.set_var('actions', ctx.root.anon_node( @actions, [ FAB_NS, 'expression' ]))
           end
           if action.has_select?
-            ctx.set_var('select', ctx.root.anon_node( @select, [ FAB_NS, 'expression' ]))
+            v = @context.attribute(Fabulator::FAB_NS, 'select', { :eval => true })
+
+            ctx.set_var('select', ctx.root.anon_node( v, [ FAB_NS, 'expression' ]))
           end
           ret = action.run(ctx)
         end

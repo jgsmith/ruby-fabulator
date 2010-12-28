@@ -114,7 +114,7 @@ rule
     | union_expr_x PIPE path_expr { result = val[0] + [ val[2] ] }
 
   path_expr: location_path { result = Fabulator::Expr::PathExpr.new(nil, [], val[0]) } #result = Fabulator::Expr::PathExpr.new(nil, [], val[0]) }
-    | primary_expr predicates segment { result = Fabulator::Expr::PathExpr.new(val[0], val[1], val[2]) }
+    | primary_expr predicates segment { result = ((val[1].nil? || val[1].empty?) && (val[2].nil? || val[2].empty?)) ? val[0] : Fabulator::Expr::PathExpr.new(val[0], val[1], val[2]) }
 
   segment:
     | SLASH relative_location_path { result = val[1] }

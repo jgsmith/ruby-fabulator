@@ -173,7 +173,7 @@ Feature: Function calls and lists
   Scenario: Random numbers
     Given a context
      And the prefix f as "http://dh.tamu.edu/ns/fabulator/1.0#"
-    When I run the expression (f:random(5) < 5)
+    When I run the expression (f:random(5) < 6)
     Then I should get 1 item
      And item 0 should be [f:true()]
 

@@ -38,6 +38,9 @@ Feature: Libraries
             <l:attribute l:name="foo" l:eval="false" />
             <f:value f:path="/actn4foo" f:select="f:eval($foo)" />
           </l:action>
+          <l:action l:name="test-select" l:has-select="true">
+            <f:value f:path="/test-select" f:select="f:eval($select)" />
+          </l:action>
           <l:template l:name="tmpl">
             Foo
           </l:template>
@@ -58,12 +61,14 @@ Feature: Libraries
         >
           <m:actn3 m:path="/actn3" />
           <m:actn4 m:foo="bar" />
+          <m:test-select f:select="123" />
         </f:application>
       """
     Then the expression (/actn3) should equal [3]
      And the expression (/actn4foo) should equal ['bar']
+     And the expression (/test-select) should equal [123]
      And the expression (m:fctn(3,2)) should equal [1]
      And the expression (m:fctn2(2,3)) should equal [1]
-     And the expression (f:normalize-space(m:tmpl())) should equal ['Foo']
-     And the expression (f:normalize-space(m:tmpl2('Foo'))) should equal ['Foo']
-     And the expression (f:normalize-space(m:tmpl3('Foo'))) should equal ['<p> Foo </p>']
+     And the expression (m:tmpl()) should equal ['Foo']
+     And the expression (m:tmpl2('Foo')) should equal ['Foo']
+     And the expression (f:normalize-space(m:tmpl3('Foo'))) should equal ['<p>Foo</p>']

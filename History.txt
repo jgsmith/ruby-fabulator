@@ -1,3 +1,10 @@
+=== 0.0.16 2010-12-28
+
+* 3 minor enhancements:
+  * Template functions dedent their text.
+  * Functions can be immediately followed by predicates
+  * Actions defined in a library can have a f:select attribute now
+
 === 0.0.15 2010-12-09
 
 * 1 minor enhancement:

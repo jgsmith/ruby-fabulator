@@ -3,7 +3,7 @@ module Fabulator
     class PathExpr
       def initialize(pe, predicates, segment)
         @primary_expr = pe
-        @predicates = predicates
+        @predicates = Fabulator::Expr::Predicates.new(nil, predicates)
         @segment = (segment.is_a?(Array) ? segment : [ segment ]) - [nil]
       end
 
@@ -24,15 +24,8 @@ module Fabulator
 
         possible.each do |e|
           next if e.nil?
-          not_pass = false
-          @predicates.each do |p|
-            if !p.test(context.with_root(e))
-              not_pass = true
-              break
-            end
-          end
-          next if not_pass
-          pos = [ e ]
+          pos = @predicates.run(context.with_root(e), autovivify)
+          next if pos.empty?
           @segment.each do |s|
             pos = pos.collect{ |p| 
               s.run(context.with_root(p), autovivify) 

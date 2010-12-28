@@ -103,6 +103,14 @@ module Fabulator
             end
           end
         end
+        s.gsub!(/^\s+/, '')
+        s.gsub!(/\s+$/, '')
+# we want to see if we need to remove a whitespace prefix
+        indent = s.
+                 split(/[\x0a\0x0d]/).
+                 map{|l| (v=l[/^([\s]+)/].to_s.length; v==0)? nil : v }.
+                 compact.min
+        s.gsub!(/^#{' '*indent.to_i}/, '')
         s = @wrapper.first + s + @wrapper.last
         return [ context.root.anon_node(s, [ FAB_NS, 'string' ]) ]
       end

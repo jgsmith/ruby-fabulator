@@ -1396,7 +1396,7 @@ module_eval(<<'.,.,', 'xsm_expression_parser.racc', 115)
 
 module_eval(<<'.,.,', 'xsm_expression_parser.racc', 116)
   def _reduce_63(val, _values, result)
-     result = Fabulator::Expr::PathExpr.new(val[0], val[1], val[2]) 
+     result = ((val[1].nil? || val[1].empty?) && (val[2].nil? || val[2].empty?)) ? val[0] : Fabulator::Expr::PathExpr.new(val[0], val[1], val[2]) 
     result
   end
 .,.,
