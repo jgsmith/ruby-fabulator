@@ -8,8 +8,6 @@ module Fabulator
 
     # Calls the right compiler object based on the root element
     def compile(xml)
-      XML.default_line_numbers = true
-
       doc = nil
 
       if xml.is_a?(String)

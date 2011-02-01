@@ -1,3 +1,9 @@
+=== 0.0.17
+
+* 2 minor enhancements:
+  * Use nokogiri for XML/XSLT
+  * Use 1.9-style switch statements
+
 === 0.0.16 2010-12-28
 
 * 3 minor enhancements:
