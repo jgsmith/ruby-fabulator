@@ -1,5 +1,4 @@
 require 'yaml'
-require 'xml/libxml'
 
 module Fabulator
   class StateChangeException < Exception

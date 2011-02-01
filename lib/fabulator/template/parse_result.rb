@@ -1,4 +1,4 @@
-require 'xml/libxml'
+require 'nokogiri'
 
 module Fabulator::Template
   class ParseResult
@@ -43,23 +43,21 @@ module Fabulator::Template
 
       @interesting_xpath = (interactive_xpaths + interesting_xpaths).join(" | ")
 
-      @namespaces = @namespaces.collect{ |k,v| "#{k}:#{v}" }
-
       ## We also may do our dependency tree -- namespaces in the
       ## root element of the stylesheet will be run after the current
       ## stylesheet
 
-      @doc = LibXML::XML::Document.string text
+      @doc = Nokogiri::XML::Document.parse(text)
 
       @fab_ns = nil
-      @doc.root.namespaces.each do |ns|
+      @doc.root.namespace_definitions.each do |ns|
         if ns.href == Fabulator::FAB_NS
           @fab_ns = ns
         end
       end
 
       if @fab_ns.nil?
-        @fab_ns = XML::Namespace.new(@doc.root, @fab_prefix, Fabulator::FAB_NS)
+        @fab_ns = Nokogiri::XML::Namespace.new(@doc.root, @fab_prefix, Fabulator::FAB_NS)
       end
     end
 
@@ -73,7 +71,7 @@ module Fabulator::Template
         next if own_id.nil? || own_id.to_s == ''
 
         default = nil
-        default = el.find("./#{@fab_prefix}:default", @namespaces).to_a
+        default = el.xpath("./#{@fab_prefix}:default", @namespaces).to_a
 
         id = el_id(el)
         ids = id.split('/')
@@ -129,13 +127,13 @@ module Fabulator::Template
         is_grid = false
         if el.name == 'grid'
         else
-          cap = el.find_first("./#{@fab_prefix}:caption", @namespaces)
+          cap = el.xpath("./#{@fab_prefix}:caption", @namespaces).first
           if cap.nil?
             el << text_node('caption', caption)
           else
             cap.content = caption
             cap.parent << text_node('caption', caption)
-            cap.remove!
+            cap.remove
           end
         end
       end
@@ -182,7 +180,7 @@ module Fabulator::Template
       if opts[:form]
         ret = res.to_s.gsub(/^\s*<\?xml\s+.*?\?>\s*/, '').gsub(/xmlns(:\S+)?=['"][^'"]*['"]/, '').gsub(/\s+/, ' ').gsub(/\s+>/, '>')
       else
-        ret = res.find('//form/*').collect{ |e| e.to_s}.join('').gsub(/^\s*<\?xml\s+.*?\?>\s*/, '').gsub(/xmlns(:\S+)?=['"][^'"]*['"]/, '').gsub(/\s+/, ' ').gsub(/\s+>/, '>')
+        ret = res.xpath('//form/*').collect{ |e| e.to_s}.join('').gsub(/^\s*<\?xml\s+.*?\?>\s*/, '').gsub(/xmlns(:\S+)?=['"][^'"]*['"]/, '').gsub(/\s+/, ' ').gsub(/\s+>/, '>')
 
       end
 
@@ -194,13 +192,13 @@ module Fabulator::Template
 protected
 
     def each_element(&block)
-      @doc.root.find(@interesting_xpath, @namespaces).each do |el|
+      @doc.root.xpath(@interesting_xpath, @namespaces).each do |el|
         yield el
       end
     end
 
     def each_form_element(&block)
-      @doc.root.find(@interactive_xpath, @namespaces).each do |el|
+      @doc.root.xpath(@interactive_xpath, @namespaces).each do |el|
         yield el
       end
 #      @doc.root.find(%{
@@ -228,17 +226,16 @@ protected
 #        | ancestor::form[@id != '']
 #        | ancestor::container[@id != '']
 #      })
-      ancestors = el.find(@structural_xpath, @namespaces)
+      ancestors = el.xpath(@structural_xpath, @namespaces)
       ids = ancestors.collect{|a| a.attributes['id']}.select{|a| !a.nil? }
       ids << own_id
       ids.collect{|i| i.to_s}.join('/')
     end
 
     def text_node(n,t)
-      e = XML::Node.new(n, nil)
-      e.namespaces.namespace = @fab_ns
-      e << t
-      e
+      @doc.create_element(n, t) { |node|
+        node.namespace = @fab_ns
+      }
     end
   end
 end
