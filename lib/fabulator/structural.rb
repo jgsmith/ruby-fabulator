@@ -38,7 +38,7 @@ module Fabulator
       @@structurals[self.name][ns] ||= { }
       @@structurals[self.name][ns][nom.to_sym] = opts
       self.module_eval {
-        attr_accessor (opts[:as] || nom.to_s.pluralize).to_sym
+        attr_accessor((opts[:as] || nom.to_s.pluralize).to_sym)
       }
     end
 
