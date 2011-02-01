@@ -1,3 +1,5 @@
+require 'nokogiri'
+
 module Fabulator
   class Structural < Action
 
@@ -8,12 +10,11 @@ module Fabulator
     end
 
     def compile_xml(xml, context = nil)
-      XML.default_line_numbers = true
       if xml.is_a?(String)
-        xml = LibXML::XML::Document.string xml
-      end
-      if xml.is_a?(LibXML::XML::Document)
-        xml = xml.root
+        doc = Nokogiri::XML::Document.parse(xml)
+        doc = doc.root
+      elsif xml.is_a?(Nokogiri::XML::Document)
+        doc = xml.root
       end
 
       if context.nil?
