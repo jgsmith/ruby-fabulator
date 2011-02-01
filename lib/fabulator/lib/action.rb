@@ -20,7 +20,7 @@ module Fabulator
       def compile_action(e, context)
         ret = nil
         context.with(e) do |ctx|
-          ret = ActionRef.new([ e.namespaces.namespace.href, e.name ], ctx, ctx.compile_actions(e))
+          ret = ActionRef.new([ e.namespace.href, e.name ], ctx, ctx.compile_actions(e))
         end
         ret
       end

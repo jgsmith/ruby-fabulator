@@ -7,8 +7,7 @@ begin
     gem.email = "jgsmith@tamu.edu"
     gem.homepage = "http://github.com/jgsmith/ruby-fabulator"
     gem.authors = ["James Smith"]
-    gem.add_dependency(%q<libxml-ruby>, [">= 1.1.3"])
-    gem.add_dependency(%q<libxslt-ruby>, [">= 0.9.7"])
+    gem.add_dependency(%q<nokogiri>, [">= 1.4.0"])
     gem.add_dependency(%q<radius>, [">= 0.6.1"]) 
     gem.add_dependency(%q<RedCloth>, [">= 4.2.0"])
     gem.add_dependency(%q<activesupport>, [">=2.3.0"])

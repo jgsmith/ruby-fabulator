@@ -29,13 +29,13 @@ module Fabulator
       super
 
       case @required.downcase
-        when 'yes':
+        when 'yes'
           @required = true
-        when 'true':
+        when 'true'
           @required = true
-        when 'no':
+        when 'no'
           @required = false
-        when 'false':
+        when 'false'
           @required = false
       end
     end

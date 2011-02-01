@@ -1,5 +1,4 @@
-require 'xml/libxml'
-require 'libxslt'
+require 'nokogiri'
 
 module Fabulator
   class TagLib
@@ -37,7 +36,7 @@ module Fabulator
 
       def transform(doc, opts)
         if !@xslt.nil?
-          @xslt.apply(doc, opts) 
+          @xslt.transform(doc) #, opts.to_a) 
         else
           doc
         end
@@ -45,8 +44,7 @@ module Fabulator
 
       def xslt_from_file(fpath)
         @xslt_file = fpath
-        @xslt_doc = LibXML::XML::Document.file(@xslt_file)
-        @xslt = LibXSLT::XSLT::Stylesheet.new(@xslt_doc)
+        @xslt = Nokogiri::XSLT(File.read(@xslt_file))
       end
 
       def get_root_namespaces

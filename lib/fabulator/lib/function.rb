@@ -40,28 +40,29 @@ module Fabulator
       def compile_xml(xml, context)
         super
 
+
         @actions = [ ]
         @wrapper = [ ]
 
         if !xml.nil?
           ctx = nil
-          if xml.name == 'template' && xml.namespaces.namespace.href == FAB_LIB_NS
+          if xml.name == 'template' && xml.namespace.href == FAB_LIB_NS
             ctx = @context.merge(xml)
             @wrapper = [ '', '' ]
           else
             ctx = @context.merge
             # we need to set @wrapper to [ begin, end ]
             s = ""
-            if (xml.namespaces.namespace.prefix rescue nil)
-              s += xml.namespaces.namespace.prefix + ":"
+            if (xml.namespace.prefix rescue nil)
+              s += xml.namespace.prefix + ":"
             end
             s += xml.name
             e = "</" + s + ">"
             s = "<" + s
-            xml.each_attr do |attr|
+            xml.attribute_nodes.each do |attr|
               s += " "
-              if attr.ns?
-                s += attr.ns.prefix + ":"
+              if !attr.namespace.nil?
+                s += attr.namespace.prefix + ":"
               end
               s += attr.name + "="
               if attr.value =~ /"/
@@ -73,9 +74,9 @@ module Fabulator
             s += ">"
             @wrapper = [ s, e ]
           end
-          xml.each_child do |node|
+          xml.children.each do |node|
             if node.element?
-              if ctx.action_exists?((node.namespaces.namespace.href rescue nil), node.name)
+              if ctx.action_exists?((node.namespace.href rescue nil), node.name)
                 @actions << ctx.compile_action(node)
               else 
                 a = self.class.new

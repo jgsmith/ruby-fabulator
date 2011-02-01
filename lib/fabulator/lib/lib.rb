@@ -85,15 +85,15 @@ module Fabulator
         context.in_context do |ctx|
           args = args.flatten
           case fctn_type
-            when :function:
+            when :function
               args.size.times do |i|
                 ctx.set_var((i+1).to_s, args[i])
               end
               ctx.set_var('0', args)
               res = fctn.run(ctx)
-            when :mapping:
+            when :mapping
               res = args.collect{ |a| fctn.run(ctx.with_root(a)) }.flatten
-            when :reduction:
+            when :reduction
               ctx.set_var('0', args.flatten)
               res = fctn.run(ctx)
           end
@@ -139,7 +139,10 @@ module Fabulator
   protected
 
     def setup(xml)
-      @ns = xml.attributes.get_attribute_ns(FAB_LIB_NS, 'ns').value
+      xml.attribute_nodes.each do |attr|
+        @ns = attr.value if attr.namespace.href == FAB_LIB_NS && attr.name == 'ns'
+      end
+      #@ns = xml.attribute_with_ns(FAB_LIB_NS, 'ns').value
       Fabulator::TagLib.namespaces[@ns] = self
 
       self.init_attribute_storage
@@ -148,15 +151,15 @@ module Fabulator
 
       if !possibilities.nil?
       
-        our_ns = xml.namespaces.namespace.href
+        our_ns = xml.namespace.href
         our_nom = xml.name
         delayed = [ ]
-        xml.each_element{ |e| delayed << e }
+        xml.children.select{|e| e.element? }.each{ |e| delayed << e }
         while !delayed.empty?
           structs = { }
           new_delayed = [ ]
           delayed.each do |e|
-            ns = e.namespaces.namespace.href
+            ns = e.namespace.href
             nom = e.name.to_sym
             allowed = (Fabulator::TagLib.namespaces[our_ns].structural_class(our_nom).accepts_structural?(ns, nom) rescue false)
             next unless allowed

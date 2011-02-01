@@ -1,3 +1,5 @@
+require 'nokogiri'
+
 module Fabulator
   module Expr
     class Context
@@ -24,23 +26,24 @@ module Fabulator
       if xml.is_a?(self.class)
         @run_time_parent = xml
       else
-        @line_num = xml.line_num
+        @line_num = xml.line
 
         parser = Fabulator::Expr::Parser.new
 
         xml.namespaces.each do |ns|
-          @ns[ns.prefix] = ns.href
+          ns[0] =~ /xmlns:(.*)/
+          @ns[$1] = ns[1]
         end
         begin
-          @ns[''] = xml.namespaces.default.href
+          @ns[''] = xml.namespace[1]
         rescue
         end
 
-        xml.each_attr do |attr|
+        xml.attribute_nodes.each do |attr|
           v = attr.value
           if !v.nil?
-            @attributes[attr.ns.href.to_s] ||= {}
-            @attributes[attr.ns.href.to_s][attr.name.to_s] = v
+            @attributes[attr.namespace.href] ||= {}
+            @attributes[attr.namespace.href][attr.name] = v
           end
         end
       end
@@ -119,15 +122,15 @@ module Fabulator
           value = value.first
         end
         case opts[:type]
-          when :boolean:
+          when :boolean
             if value =~ /^[YyTt1]/ || value =~ /^on/i
               value = true
             else
               value = false
             end
-          when :numeric:
+          when :numeric
             value = value.to_f
-          when :integer:
+          when :integer
             value = value.to_i
         end
       end
@@ -382,8 +385,9 @@ module Fabulator
     return actions if xml.nil?
 
     local_ctx = self.merge(xml)
-    xml.each_element do |e|
-      ns = e.namespaces.namespace.href
+    xml.children.each do |e|
+      next unless e.element?
+      ns = e.namespace.href
       next unless Fabulator::TagLib.namespaces.include?(ns)
       if ns == FAB_NS && e.name == 'ensure'
         actions.add_ensure(local_ctx.compile_actions(e))
@@ -397,7 +401,7 @@ module Fabulator
   end
 
   def compile_action(e)
-    ns = e.namespaces.namespace.href
+    ns = e.namespace.href
     return unless Fabulator::TagLib.namespaces.has_key?(ns)
     Fabulator::TagLib.namespaces[ns].compile_action(e, self)
   end
@@ -419,10 +423,11 @@ module Fabulator
   def compile_structurals(xml)
     #local_ctx = self.merge(xml)
     structs = { }
-    our_ns = xml.namespaces.namespace.href
+    our_ns = xml.namespace.href
     our_nom = xml.name
-    xml.each_element do |e|
-      ns = e.namespaces.namespace.href
+    xml.children.each do |e|
+      next unless e.element?
+      ns = e.namespace.href
       nom = e.name.to_sym
       allowed = (Fabulator::TagLib.namespaces[our_ns].structural_class(our_nom).accepts_structural?(ns, nom) rescue false)
       raise "Unknown or inappropriate tag #{ns} #{nom} in #{our_ns} #{our_nom}" unless allowed || self.action_exists?(ns, nom)
@@ -436,7 +441,7 @@ module Fabulator
   end
 
   def compile_structural(e)
-    ns = e.namespaces.namespace.href
+    ns = e.namespace.href
     return unless Fabulator::TagLib.namespaces.include?(ns)
     Fabulator::TagLib.namespaces[ns].compile_structural(e, self)
   end

@@ -186,39 +186,39 @@ module_eval(<<'...end xsm_expression_parser.racc/module_eval...', 'xsm_expressio
         if @source[@curpos..@source.length-1] =~ /^(#{@@regex[:ncname]})/
           ncname = $1
           case ncname
-            when 'for':
+            when 'for'
               @token = [ :FOR, 'for' ]
-            when 'return':
+            when 'return'
               @token = [ :RETURN, 'return' ]
-            when 'in':
+            when 'in'
               @token = [ :IN, 'in' ]
-            when 'let':
+            when 'let'
               @token = [ :LET, 'let' ]
-            when 'except':
+            when 'except'
               @token = [ :EXCEPT, 'except' ]
-            when 'every':
+            when 'every'
               @token = [ :EVERY, 'every' ]
-            when 'some':
+            when 'some'
               @token = [ :SOME, 'some' ]
-            when 'satisfies':
+            when 'satisfies'
               @token = [ :SATISFIES, 'satisfies' ]
-            when 'if':
+            when 'if'
               @token = [ :IF, 'if' ]
-            when 'then':
+            when 'then'
               @token = [ :THEN, 'then' ]
-            when 'else':
+            when 'else'
               @token = [ :ELSE, 'else' ]
-            when 'to':
+            when 'to'
               @token = [ :TO, 'to' ]
-            when 'and':
+            when 'and'
               @token = [ :AND, 'and' ]
-            when 'or':
+            when 'or'
               @token = [ :OR, 'or' ]
-            when 'mod':
+            when 'mod'
               @token = [ :MOD, 'mod' ]
-            when 'div':
+            when 'div'
               @token = [ :DIV, 'div' ]
-            when 'err':
+            when 'err'
               @token = [ :ERR, 'err' ]
             #when '*doh*':
             #  # do nothing
@@ -265,31 +265,31 @@ module_eval(<<'...end xsm_expression_parser.racc/module_eval...', 'xsm_expressio
         elsif !res[5].nil?
           qname = res[5]
           case qname
-            when 'for':
+            when 'for'
               @token = [ :FOR, 'for' ]
-            when 'return':
+            when 'return'
               @token = [ :RETURN, 'return' ]
-            when 'in':
+            when 'in'
               @token = [ :IN, 'in' ]
-            when 'let':
+            when 'let'
               @token = [ :LET, 'let' ]
-            when 'except':
+            when 'except'
               @token = [ :EXCEPT, 'except' ]
-            when 'every':
+            when 'every'
               @token = [ :EVERY, 'every' ]
-            when 'some':
+            when 'some'
               @token = [ :SOME, 'some' ]   
-            when 'satisfies':
+            when 'satisfies'
               @token = [ :SATISFIES, 'satisfies' ]
-            when 'if':
+            when 'if'
               @token = [ :IF, 'if' ]
-            when 'then':
+            when 'then'
               @token = [ :THEN, 'then' ]
-            when 'else':
+            when 'else'
               @token = [ :ELSE, 'else' ]
-            when 'with':
+            when 'with'
               @token = [ :WITH, 'with' ]
-            when 'err':
+            when 'err'
               @token = [ :ERR, 'err' ]
             else
               @token = [ :QNAME, qname ]

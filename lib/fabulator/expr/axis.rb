@@ -3,15 +3,15 @@ module Fabulator
     class Axis
       def initialize(axis, n = nil)
         case axis
-          when 'attribute':
+          when 'attribute'
             @axis = AxisAttribute.new(n)
-          when 'child':
+          when 'child'
             @axis = AxisChild.new(n)
-          when 'child-or-self':
-          when 'descendent':
-          when 'descendent-or-self':
+          when 'child-or-self'
+          when 'descendent'
+          when 'descendent-or-self'
             @axis = AxisDescendentOrSelf.new(n)
-          when 'parent':
+          when 'parent'
             @axis = AxisParent.new(n)
           else
             @root = axis

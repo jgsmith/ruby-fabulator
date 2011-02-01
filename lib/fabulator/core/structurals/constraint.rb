@@ -29,15 +29,15 @@ module Fabulator
           next unless e.namespaces.namespace.href == FAB_NS
           e_ctx = @context.merge(e)
           case e.name
-            when 'param':
+            when 'param'
               pname = e_ctx.attribute(FAB_NS, 'name')
               if !pname.nil?
                 v = e_ctx.attribute(FAB_NS, 'value', { :default => e_ctx.get_select })
                 @params[pname] = v unless v.nil?
               end
-            when 'constraint':
+            when 'constraint'
               @constraints << Constraint.new.compile_xml(e, @context)
-            when 'value':
+            when 'value'
               v = e_ctx.get_select
               if v.nil?
                 v = e.content
@@ -63,21 +63,21 @@ module Fabulator
         not_sense = inv ? Proc.new { |r| r } : Proc.new { |r| r.reverse }
 
         case @c_type
-          when nil, '':
+          when nil, ''
             return sense.call(paths) if @select.nil?
             opts = @select.run(ctx).collect { |o| o.to_s } 
             if !opts.include?(ctx.root.to_s)
               invalidate_path(paths, ctx.root)
             end
             return sense.call(paths)
-          when 'all':
+          when 'all'
             # we have enclosed constraints
             @constraints.each do |c|
               r = c.test_constraint(ctx)
               return sense.call(r) unless r[1].empty?
             end
             return not_sense.call(r)
-          when 'any':
+          when 'any'
             if @values.empty?
               @constraints.each do |c|
                 r = c.test_constraint(ctx)
@@ -98,7 +98,7 @@ module Fabulator
               end
               return sense.call(paths)
             end
-          when 'range':
+          when 'range'
             fl = (@params['floor'].run(ctx) rescue nil)
             ce = (@params['ceiling'].run(ctx) rescue nil)
             if !fl.nil? && fl > c.value || !ce.nil? && ce < c.value

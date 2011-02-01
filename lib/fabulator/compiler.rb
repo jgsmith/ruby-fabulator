@@ -1,4 +1,4 @@
-require 'xml/libxml'
+require 'nokogiri'
 
 module Fabulator
   class Compiler
@@ -13,9 +13,9 @@ module Fabulator
       doc = nil
 
       if xml.is_a?(String)
-        doc = LibXML::XML::Document.string xml
+        doc = Nokogiri::XML::Document.parse(xml)
         doc = doc.root
-      elsif xml.is_a?(LibXML::XML::Document)
+      elsif xml.is_a?(Nokogiri::XML::Document)
         doc = xml.root
       else
         doc = xml

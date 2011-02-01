@@ -394,13 +394,13 @@ module Fabulator
       replacement = args.size > 2 ? args[2].first.to_s : ' '
       classes = args[1].collect { |a|
         case a.to_s
-          when 'alpha': 'a-zA-Z'
-          when 'lower': 'a-z'
-          when 'upper': 'A-Z'
-          when 'numeric': '0-9'
-          when 'space': ' '
-          when 'punctuation': ''
-          when 'control': ''
+          when 'alpha' then 'a-zA-Z'
+          when 'lower' then 'a-z'
+          when 'upper' then 'A-Z'
+          when 'numeric' then '0-9'
+          when 'space' then ' '
+          when 'punctuation' then ''
+          when 'control' then ''
           else ''
         end
       }.join('')

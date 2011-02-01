@@ -110,9 +110,9 @@ module Fabulator
       @actions = nil
       if @@has_actions[klass]
         case @@has_actions[klass]
-          when :simple:
+          when :simple
             @actions = @context.compile_actions(xml)
-          when :super:
+          when :super
             @actions = TagLib.current_super
         end
       end
