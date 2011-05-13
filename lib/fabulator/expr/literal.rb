@@ -13,6 +13,7 @@ module Fabulator
       def run(context, autovivify = false)
         return [ context.root.anon_node(@lit, @type) ]
       end
+    end
 
     class Var
       def initialize(v)
