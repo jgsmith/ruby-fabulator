@@ -157,13 +157,13 @@ rule
     | LB num_list RB { result = val[1] }
 
       #Fabulator::Expr::IndexPredicate.new(val[1]) 
-    
 
     #| '<' expr '>'
   primary_expr:
     DOLLAR_QNAME { result = Fabulator::Expr::Var.new(val[0]) }
     | LP expr RP { result = val[1] }
     | list
+    | bag
     | tuple
     | LITERAL { result = Fabulator::Expr::Literal.new(val[0], [ Fabulator::FAB_NS, 'string' ]) }
     | NUMBER { result = Fabulator::Expr::Literal.new(val[0] =~ /\./ ? val[0].to_d.to_r : val[0].to_i.to_r, [ Fabulator::FAB_NS, 'numeric' ]) }
@@ -178,7 +178,13 @@ rule
     }
 
   list: LP opt_args RP { result = Fabulator::Expr::List.new(val[1]) }
+  
+  bag: LP_LC bag_kv_pairs RC_RP { result = Fabulator::Expr::Bag.new(val[1]) }
+  
+  bag_kv_pairs: bag_kv_pair { result = [ val[0] ] }
+    | bag_kv_pairs COMMA bag_kv_pair { result = val[0] + [ val[2] ] }
 
+  bag_kv_pair: CONST_PATH expr { result = [ val[0], val[1] ] }
 
   opt_args: { result = [ ] }
     | args 
@@ -244,7 +250,7 @@ end
 
 
   @@regex = {
-    :simple_tokens => %r{\.\.|::|!=|>=|<=|\/\/|:=|\.|@|[*]|\(|\)|\[|\]|\{|\}|\/|\||\+|-|=|>|<|&|,|;},
+    :simple_tokens => %r{\.\.|::|!=|>=|<=|\/\/|:=|\(\{|\}\)|\.|@|[*]|\(|\)|\[|\]|\{|\}|\/|\||\+|-|=|>|<|&|,|;},
     :ncname => %r{(?:[a-zA-Z_][-a-zA-Z0-9_.]*)},
     :event_type => %r{(?:processing-instruction|comment|text|node)},
     :axis_name => %r{(?:attribute|child|child-or-self|descendant|descendant-or-self|method|self)},
@@ -256,6 +262,8 @@ end
   @@regex[:axis] = %r{(#{@@regex[:ncname]})\s*(?=::)}
   @@regex[:name_colon_star] = %r{(#{@@regex[:ncname]}:\*)}
   @@regex[:qname] = %r{((?:#{@@regex[:ncname]}:)?#{@@regex[:ncname]})}
+  @@regex[:ncname_or_int] = %r{(?:#{@@regex[:ncname]}|\d+)}
+  @@regex[:const_path] = %r{((?:#{@@regex[:ncname_or_int]}/)*#{@@regex[:ncname_or_int]}):\s}
   @@regex[:xmlns] = %r{((?:xmlns:)#{@@regex[:ncname]})}
   @@regex[:dollar_qname] = %r{\$#{@@regex[:qname]}}
   @@regex[:dollar_int] = %r{\$([0-9]+)}
@@ -269,6 +277,8 @@ end
     '<=' => :LTE,
     '//' => :SLASH_SLASH,
     ':=' => :COLON_EQUAL,
+    '({' => :LP_LC,
+    '})' => :RC_RP,
     '.'  => :DOT,
     '@'  => :AT,
     '*'  => :STAR,
@@ -299,8 +309,9 @@ end
     == & && ||
   }.split(/\s*/), '[', ',', '$' ].each { |t| @@preceding_tokens[t] = true }
 
-  @@regex[:general] = Regexp.compile(%{^(?:#{@@regex[:xmlns]}|#{@@regex[:function_name]}|#{@@regex[:axis]}|#{@@regex[:name_colon_star]}|#{@@regex[:qname]}|#{@@regex[:literal]}|#{@@regex[:number]}|#{@@regex[:dollar_qname]}|#{@@regex[:dollar_int]}|(#{@@regex[:simple_tokens]}))})
-
+  @@regex[:general] = Regexp.compile(%{^(?:#{@@regex[:const_path]}|#{@@regex[:xmlns]}|#{@@regex[:function_name]}|#{@@regex[:axis]}|#{@@regex[:name_colon_star]}|#{@@regex[:qname]}|#{@@regex[:literal]}|#{@@regex[:number]}|#{@@regex[:dollar_qname]}|#{@@regex[:dollar_int]}|(#{@@regex[:simple_tokens]}))})
+  
+  
   def next_token  
     @token = nil
     white_space = 0
@@ -431,23 +442,26 @@ end
         raise "Failed to parse '#{@source}' at #{@curpos}': #{@source[@curpos..@source.length-1]}"
       else
         if !res[1].nil?
-          @token = [ :XMLNS_COLON_NCNAME, res[1] ]
+          @token = [ :CONST_PATH, res[1].gsub(/:\s^/, '') ]
+          @curpos += 2
         elsif !res[2].nil?
-          if res[2] == 'if'
+          @token = [ :XMLNS_COLON_NCNAME, res[2] ]
+        elsif !res[3].nil?
+          if res[3] == 'if'
             @token = [ :IF, 'if' ]
           else
-            if @source[@curpos+res[2].length .. @curpos+res[2].length + 1] =~ /^(\??\*?)/
-              @token = [ :FUNCTION_NAME, res[2]+$1 ]
+            if @source[@curpos+res[3].length .. @curpos+res[3].length + 1] =~ /^(\??\*?)/
+              @token = [ :FUNCTION_NAME, res[3]+$1 ]
             else
-              @token = [ :FUNCTION_NAME, res[2] ]
+              @token = [ :FUNCTION_NAME, res[3] ]
             end
           end
-        elsif !res[3].nil?
-          @token = [ res[3] == 'method' ? :AXIS_METHOD : :AXIS_NAME, res[3] ]
         elsif !res[4].nil?
-          @token = [ :NAME_COLON_STAR, res[4] ]
+          @token = [ res[4] == 'method' ? :AXIS_METHOD : :AXIS_NAME, res[4] ]
         elsif !res[5].nil?
-          qname = res[5]
+          @token = [ :NAME_COLON_STAR, res[5] ]
+        elsif !res[6].nil?
+          qname = res[6]
           case qname
             when 'for'
               @token = [ :FOR, 'for' ]
@@ -478,8 +492,8 @@ end
             else
               @token = [ :QNAME, qname ]
           end
-        elsif !res[6].nil?
-          s = res[6]
+        elsif !res[7].nil?
+          s = res[7]
           @curpos = @curpos + s.length
           @col = @col + s.length
           s = s[1..s.length-2]
@@ -490,18 +504,18 @@ end
           @curpos = @curpos - s.length
           @col = @col - s.length
           @token = [ :LITERAL, s ]
-        elsif !res[7].nil?
-          @token = [ :NUMBER, res[7] ]
         elsif !res[8].nil?
-          @curpos = @curpos + 1
-          @col = @col + 1
-          @token = [ :DOLLAR_QNAME, res[8] ]
+          @token = [ :NUMBER, res[8] ]
         elsif !res[9].nil?
           @curpos = @curpos + 1
           @col = @col + 1
           @token = [ :DOLLAR_QNAME, res[9] ]
         elsif !res[10].nil?
-          @token = [ @@ops[res[10]] || res[10], res[10] ]
+          @curpos = @curpos + 1
+          @col = @col + 1
+          @token = [ :DOLLAR_QNAME, res[10] ]
+        elsif !res[11].nil?
+          @token = [ @@ops[res[11]] || res[11], res[11] ]
         else
           raise "Failed to parse '#{@source}' at #{@curpos}: #{@source[@curpos..@source.length-1]}"
         end
@@ -512,6 +526,7 @@ end
       @curpos = @curpos + @token[1].length
       @col = @col + @token[1].length
     end
+    #puts "#{@token.first} => #{@token.last}"
     @last_token = @token
     return @token
   end

@@ -14,6 +14,22 @@ module Fabulator
         return [ context.root.anon_node(@lit, @type) ]
       end
     end
+    
+    class Bag
+      def initialize(b)
+        @bag = b
+      end
+      
+      def run(context, autovivify = false)
+        root = context.root.anon_node(nil)
+        ctx = context.with_root(root)
+        @bag.each do |setting|
+          ctx.set_value(setting.first, setting.last)
+        end
+        #puts YAML::dump(ctx.root.to_h)
+        return [ ctx.root ]
+      end
+    end
 
     class Var
       def initialize(v)
