@@ -20,13 +20,13 @@ module Fabulator
         @c_type = 'any'
         @values << xml.content
       else
-        xml.each_attr do |attr|
-          next unless attr.ns.href == FAB_NS
+        xml.attribute_nodes.each do |attr|
+          next unless attr.namespace.href == FAB_NS
           next if attr.name == 'name' || attr.name == 'invert'
           @attributes[attr.name] = attr.value
         end
-        xml.each_element do |e|
-          next unless e.namespaces.namespace.href == FAB_NS
+        xml.children.each do |e|
+          next unless e.namespace.href == FAB_NS
           e_ctx = @context.merge(e)
           case e.name
             when 'param'

@@ -5,7 +5,11 @@ module Fabulator
 
       attribute :name, :static => true
 
-      has_actions
+      has_select nil
+      
+      def run(context, autovivify = false)
+        self.select(@context.merge(context))
+      end
     end
 
     class Mapping < Fabulator::Structural
@@ -13,7 +17,11 @@ module Fabulator
 
       attribute :name, :static => true
 
-      has_actions
+      has_select nil
+      
+      def run(context, autovivify = false)
+        self.select(@context.merge(context))
+      end
     end
 
     class Reduction < Fabulator::Structural
@@ -21,7 +29,11 @@ module Fabulator
 
       attribute :name, :static => true
 
-      has_actions
+      has_select nil
+      
+      def run(context, autovivify = false)
+        self.select(@context.merge(context))
+      end
     end
 
     class Consolidation < Fabulator::Structural
@@ -29,7 +41,11 @@ module Fabulator
 
       attribute :name, :static => true
 
-      has_actions
+      has_select nil
+      
+      def run(context, autovivify = false)
+        self.select(@context.merge(context))
+      end
     end
 
     class Template < Fabulator::Structural
@@ -57,7 +73,7 @@ module Fabulator
               s += xml.namespace.prefix + ":"
             end
             s += xml.name
-            e = "</" + s + ">"
+            e = "\n</" + s + ">"
             s = "<" + s
             xml.attribute_nodes.each do |attr|
               s += " "
@@ -71,7 +87,7 @@ module Fabulator
                 s += '"' + attr.value.gsub(/&/, '&amp;').gsub(/</, '&lt;') + '"'
               end
             end
-            s += ">"
+            s += ">\n"
             @wrapper = [ s, e ]
           end
           xml.children.each do |node|
@@ -104,11 +120,19 @@ module Fabulator
             end
           end
         end
-        s.gsub!(/^\s+/, '')
-        s.gsub!(/\s+$/, '')
 # we want to see if we need to remove a whitespace prefix
+       
+        
+        s = s.split(/[\x0a\x0d\n]/).collect{ |l| (l =~ /^\s*$/) ? '' : l}
+        if s.first == ''
+          s.shift
+        end
+        if s.last == ''
+          s.pop
+        end
+        s = s.join("\n")
         indent = s.
-                 split(/[\x0a\0x0d]/).
+                 split(/[\n]/m).
                  map{|l| (v=l[/^([\s]+)/].to_s.length; v==0)? nil : v }.
                  compact.min
         s.gsub!(/^#{' '*indent.to_i}/, '')

@@ -14,15 +14,9 @@ Feature: Libraries
                    l:ns="http://example.com/ns/library"
                    xmlns:my="http://example.com/ns/library"
         >
-          <l:mapping l:name="double">
-            <f:value-of f:select=". * 2" />
-          </l:mapping>
-          <l:function l:name="fctn">
-            <f:value-of f:select="$1 - $2" />
-          </l:function>
-          <l:function l:name="fctn2">
-            <f:value-of f:select="my:fctn($2, $1)" />
-          </l:function>
+          <l:mapping l:name="double" f:select=". * 2" />
+          <l:function l:name="fctn" f:select="$1 - $2" />
+          <l:function l:name="fctn2" f:select="my:fctn($2, $1)" />
           <l:action l:name="actn" l:has-actions="true">
             <l:attribute l:name="foo" />
             <f:value-of f:select="f:eval($actions) * 3" />
@@ -71,4 +65,4 @@ Feature: Libraries
      And the expression (m:fctn2(2,3)) should equal [1]
      And the expression (m:tmpl()) should equal ['Foo']
      And the expression (m:tmpl2('Foo')) should equal ['Foo']
-     And the expression (f:normalize-space(m:tmpl3('Foo'))) should equal ['<p>Foo</p>']
+     And the expression (f:normalize-space(m:tmpl3('Foo'))) should equal ['<p> Foo </p>']
