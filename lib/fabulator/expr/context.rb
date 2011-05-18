@@ -3,7 +3,7 @@ require 'nokogiri'
 module Fabulator
   module Expr
     class Context
-
+  
   def initialize(parent_context = nil, xml = nil)
     @parent = parent_context
     @run_time_parent = nil
