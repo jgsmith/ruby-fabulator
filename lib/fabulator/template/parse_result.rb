@@ -87,7 +87,8 @@ module Fabulator::Template
       end
     end
 
-    def add_missing_values(missing = [ ])
+    def add_missing_values(missing = nil)
+      return if missing.nil?
       each_form_element do |el|
         id = el_id(el)
         next if id == ''
@@ -96,7 +97,8 @@ module Fabulator::Template
       end
     end
 
-    def add_errors(errors = { })
+    def add_errors(errors = nil)
+      return if errors.nil?
       each_form_element do |el|
         id = el_id(el)
         next if id == ''
