@@ -35,17 +35,18 @@ module Fabulator
       @groups = nil
     end
 
-    def apply_filters(context)
+    def apply_filters(context, filters = [ ])
       filtered = [ ]
- 
+      filters = filters + @filters
       @context.with(context) do |ctx|
 
         self.get_context(ctx).each do |root|
           @params.each do |param|
-            @filters.each do |f|
-              filtered = filtered + f.run(ctx.with_root(root))
-            end
-            filtered = filtered + param.apply_filters(ctx.with_root(root))
+            filtered = filtered + param.apply_filters(ctx, filters)
+#            @filters.each do |f|
+#              filtered = filtered + f.run(ctx.with_root(root))
+#            end
+#            filtered = filtered + param.apply_filters(ctx.with_root(root))
           end
         end
       end

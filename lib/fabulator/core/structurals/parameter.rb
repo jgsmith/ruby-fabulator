@@ -45,10 +45,11 @@ module Fabulator
       context.collect{ |c| c.traverse_path(@name) }.flatten
     end
 
-    def apply_filters(context)
+    def apply_filters(context, filters = [ ])
       filtered = [ ]
+      filters = filters + @filters
       @context.with(context) do |ctx|
-        @filters.each do |f|
+        filters.each do |f|
           self.get_context(ctx).each do |cc|
             filtered = filtered + f.run(ctx.with_root(cc))
           end
