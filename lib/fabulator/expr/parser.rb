@@ -42,7 +42,7 @@ module_eval(<<'...end xsm_expression_parser.racc/module_eval...', 'xsm_expressio
     @source = text
     @curpos = 0
     @context = context.merge
-    @line = 0
+    @line = context.line_num-1 || 0
     @col = 0
 
     @yydebug = true

@@ -430,7 +430,7 @@ module Fabulator
       ns = e.namespace.href
       nom = e.name.to_sym
       allowed = (Fabulator::TagLib.namespaces[our_ns].structural_class(our_nom).accepts_structural?(ns, nom) rescue false)
-      raise "Unknown or inappropriate tag #{ns} #{nom} in #{our_ns} #{our_nom}" unless allowed || self.action_exists?(ns, nom)
+      raise "Unknown or inappropriate tag #{ns} #{nom} in #{our_ns} #{our_nom} near line #{xml.line}" unless allowed || self.action_exists?(ns, nom)
       next unless allowed
       structs[ns] ||= { }
       structs[ns][nom] ||= [ ]

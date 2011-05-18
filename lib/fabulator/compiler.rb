@@ -11,7 +11,11 @@ module Fabulator
       doc = nil
 
       if xml.is_a?(String)
-        doc = Nokogiri::XML::Document.parse(xml)
+        doc = Nokogiri::XML::Document.parse(xml, nil, nil,
+                Nokogiri::XML::ParseOptions::STRICT
+                |Nokogiri::XML::ParseOptions::PEDANTIC
+                |Nokogiri::XML::ParseOptions::NONET
+              )
         doc = doc.root
       elsif xml.is_a?(Nokogiri::XML::Document)
         doc = xml.root
