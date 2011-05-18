@@ -43,7 +43,7 @@ module Fabulator
         self.get_context(ctx).each do |root|
           @params.each do |param|
             @filters.each do |f|
-              filtered = filtered + f.apply_filter(ctx.with_root(root))
+              filtered = filtered + f.run(ctx.with_root(root))
             end
             filtered = filtered + param.apply_filters(ctx.with_root(root))
           end
