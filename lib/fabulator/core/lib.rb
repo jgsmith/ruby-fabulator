@@ -146,6 +146,82 @@ module Fabulator
         end
       end
     end
+    
+    has_type "date-time".to_sym do
+      coming_from [ FAB_NS, 'string' ] do
+        weight 1.0
+        converting do |e|
+          DateTime.parse(e.root.value)
+        end
+      end
+      
+      going_to [ FAB_NS, 'string' ] do
+        weight 1.0
+        converting do |e|
+        end
+      end
+      
+      method :PLUS, { :types => [ :duration ] } do |ctx, args|
+        ctx.root.anon_node(args.first.value + args.last.value, [ FAB_NS, 'date-time' ])
+      end
+      
+      method :MINUS do |ctx, args|
+      end
+      
+      method :LT do |ctx, args|
+      end
+      
+      method :GT do |ctx, args|
+      end
+      
+      method :LTE do |ctx, args|
+      end
+      
+      method :GTE do |ctx, args|
+      end
+      
+      method :EQ do |ctx, args|
+      end
+      
+      method :NEQ do |ctx, args|
+      end
+    end
+    
+    has_type :duration do
+      coming_from [ FAB_NS, 'string' ] do
+        weight 1.0
+        converting do |e|
+        end
+      end
+      
+      going_to [ FAB_NS, 'string' ] do
+        weight 1.0
+        converting do |e|
+        end
+      end
+      
+      coming_from [ FAB_NS, 'numeric' ] do
+        weight 1.0
+        converting do |e|
+          e.root.value
+        end
+      end
+      
+      going_to [ FAB_NS, 'numeric' ] do
+        weight 1.0
+        converting do |e|
+          e.root.value
+        end
+      end
+      
+      method :PLUS, { :types => [ 'date-time' ] } do |ctx, args|
+        ctx.root.anon_node(args.first.value + args.last.value, args.last.vtype)
+      end
+      
+      method :MINUS do |ctx, args|
+        ctx.root.anon_node(args.first.value - args.last.value, args.last.vtype)
+      end
+    end
 
     ###
     ### Numeric functions
@@ -274,7 +350,75 @@ module Fabulator
       end
       ret
     end
+    
+    ###
+    ### Date functions
+    ###
+    
+    function 'now' do |ctx, args|
+      ctx.root.anon_node(Time.now(), [ FAB_NS, 'date-time' ])
+    end
+    
+    function 'today' do |ctx, args|
+      ctx.root.anon_node(Time.now(), [ FAB_NS, 'date-time'])
+    end
+    
+    mapping 'years-from-duration' do |ctx, arg|
+      
+    end
 
+    mapping 'months-from-duration' do |ctx, arg|
+    end
+    
+    mapping 'days-from-duration' do |ctx, arg|
+    end
+    
+    mapping 'hours-from-duration' do |ctx, arg|
+    end
+    
+    mapping 'minutes-from-duration' do |ctx, arg|
+    end
+    
+    mapping 'seconds-from-duration' do |ctx, arg|
+    end
+    
+    mapping 'hours-from-time' do |ctx, arg|
+    end
+    
+    mapping 'minutes-from-time' do |ctx, arg|
+    end
+    
+    mapping 'seconds-from-time' do |ctx, arg|
+    end
+    
+    mapping 'year-from-date' do |ctx, arg|
+    end
+    
+    mapping 'month-from-date' do |ctx, arg|
+    end
+    
+    mapping 'day-from-date' do |ctx, arg|
+    end
+    
+    mapping 'timezone' do |ctx, arg|
+    end
+    
+    mapping 'day-duration' do |ctx, arg|
+      ctx.root.anon_node(arg.to([FAB_NS, 'numeric']).value.to_f, [ FAB_NS, :duration ])
+    end
+    
+    mapping 'hour-duration' do |ctx, arg|
+      ctx.root.anon_node(arg.to([FAB_NS, 'numeric']).value.to_f / 24.0, [ FAB_NS, :duration ])
+    end
+    
+    mapping 'minute-duration' do |ctx, arg|
+      ctx.root.anon_node(arg.to([FAB_NS, 'numeric']).value.to_f / (24.0 * 60.0), [ FAB_NS, :duration ])
+    end
+    
+    mapping 'second-duration' do |ctx, arg|
+      ctx.root.anon_node(arg.to([FAB_NS, 'numeric']).value.to_f / (24.0 * 60.0 * 60.0), [ FAB_NS, :duration ])
+    end
+    
     ###
     ### String functions
     ###

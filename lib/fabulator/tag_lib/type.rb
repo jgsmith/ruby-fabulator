@@ -36,8 +36,13 @@ module Fabulator
         @comings
       end
 
-      def method(nom, &block)
-        @methods[@type[0] + nom.to_s] = block
+      def method(nom, options = {}, &block)
+        @methods[@type[0] + nom.to_s] = {
+          :proc => block,
+          :types => (options[:types] || []).collect{ |t| 
+            t.is_a?(Array) ? t.collect{|tt| tt.to_s}.join('') : self.vtype.first + t.to_s 
+          }
+        }
       end
 
       def get_method(nom)

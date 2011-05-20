@@ -23,10 +23,14 @@ module Fabulator
 
         l.each do |i|
           r.each do |j|
-            ut = Fabulator::TagLib.unify_types([ i.vtype, j.vtype ])
-            op = TagLib.find_op(ut, self.op)
+            # we need to handle multi-methods
+            op = Fabulator::TagLib.find_op(i.vtype, self.op)
+            if op.nil? || !op[:types].include?(j.vtype.join('')) && i.vtype.join('') != j.vtype.join('')
+              ut = Fabulator::TagLib.unify_types([ i.vtype, j.vtype ])
+              op = Fabulator::TagLib.find_op(ut, self.op)
+            end
             if(op && op[:proc])
-              calc = op[:proc].call(i.to(ut), j.to(ut))
+              calc = op[:proc].call(context, [ i.to(ut), j.to(ut) ])
             else
               calc = self.calculate(i.to(ut).value,j.to(ut).value)
             end
