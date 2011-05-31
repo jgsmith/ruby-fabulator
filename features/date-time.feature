@@ -13,3 +13,8 @@ Feature: Dates and Times
      And the expression (/c/@type) should equal [f:uri('f:date-time')]
      And the expression (/e) should equal [f:date-time("2010-01-01 12:00:00")]
      And the expression (/e/@type) should equal [f:uri('f:date-time')]
+     And the expression (f:hours-from-duration(/d)) should equal [12]
+     And the expression (f:days-from-duration(/d)) should equal [0]
+     And the expression (f:month-from-date(/a)) should equal [1]
+     And the expression (f:year-from-date(/a)) should equal [2010]
+     And the expression (f:day-from-date(/c)) should equal [2]

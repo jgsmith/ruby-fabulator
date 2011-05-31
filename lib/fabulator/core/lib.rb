@@ -250,7 +250,7 @@ module Fabulator
       end
     end
 
-    reduction 'sum', { :scaling => :log } do |ctx, args|
+    reduction 'sum', { :scaling => :log, :consolidation => :sum } do |ctx, args|
       zero = TagLib.find_op(args.first.vtype, :zero)
       if(zero && zero[:proc])
         res = zero[:proc].call(ctx)
@@ -287,7 +287,7 @@ module Fabulator
       end
     end
 
-    reduction 'max', { :scaling => :log } do |ctx, args|
+    reduction 'max', { :scaling => :log, :consolidation => :max } do |ctx, args|
       res = nil
       args.each do |a|
         res = a.to(NUMERIC).value if res.nil? || a.to(NUMERIC).value > res
@@ -296,7 +296,7 @@ module Fabulator
       [ctx.root.anon_node(res, NUMERIC)]
     end
 
-    reduction 'min', { :scaling => :log } do |ctx, args|
+    reduction 'min', { :scaling => :log, :consolidation => :min } do |ctx, args|
       res = nil
       args.each do |a|
         res = a.to(NUMERIC).value if res.nil? || a.to(NUMERIC).value < res
@@ -364,43 +364,86 @@ module Fabulator
     end
     
     mapping 'years-from-duration' do |ctx, arg|
-      
+      d = arg.to([FAB_NS, 'duration'])
+      return 0 if d.nil?
+      (d.value / 365).floor
     end
 
     mapping 'months-from-duration' do |ctx, arg|
+      d = arg.to([FAB_NS, 'duration'])
+      return 0 if d.nil?
+      ((d.value - 365*(d.value/365).floor)/30.0).floor
     end
     
     mapping 'days-from-duration' do |ctx, arg|
+      d = arg.to([FAB_NS, 'duration'])
+      return 0 if d.nil?
+      m = ((d.value - 365*(d.value/365).floor)/30.0)
+      ((m - m.floor)*30.0).floor
     end
     
     mapping 'hours-from-duration' do |ctx, arg|
+      d = arg.to([FAB_NS, 'duration'])
+      return 0 if d.nil?
+      h = d.value - d.value.floor
+      (h*24.0).floor
     end
     
     mapping 'minutes-from-duration' do |ctx, arg|
+      d = arg.to([FAB_NS, 'duration'])
+      return 0 if d.nil?
+      h = d.value - d.value.floor
+      ((h*24.0 - (h*24.0).floor)*60.0).floor
     end
     
     mapping 'seconds-from-duration' do |ctx, arg|
+      d = arg.to([FAB_NS, 'duration'])
+      return 0 if d.nil?
+      h = d.value - d.value.floor
+      m = ((h*24.0 - (h*24.0).floor)*60.0)
+      (m - m.floor)*60.0
     end
     
     mapping 'hours-from-time' do |ctx, arg|
+      t = arg.to([FAB_NS, 'date-time'])
+      return 0 if t.nil?
+      t.value.hour
     end
     
     mapping 'minutes-from-time' do |ctx, arg|
+      t = arg.to([FAB_NS, 'date-time'])
+      return 0 if t.nil?
+      t.value.min
     end
     
     mapping 'seconds-from-time' do |ctx, arg|
+      t = arg.to([FAB_NS, 'date-time'])
+      return 0 if t.nil?
+      t.value.sec + t.value.sec_fraction
     end
     
     mapping 'year-from-date' do |ctx, arg|
+      t = arg.to([FAB_NS, 'date-time'])
+      return 0 if t.nil?
+      t.value.year
     end
     
     mapping 'month-from-date' do |ctx, arg|
+      t = arg.to([FAB_NS, 'date-time'])
+      return 0 if t.nil?
+      t.value.mon
     end
     
     mapping 'day-from-date' do |ctx, arg|
+      t = arg.to([FAB_NS, 'date-time'])
+      return 0 if t.nil?
+      t.value.mday
     end
     
     mapping 'timezone' do |ctx, arg|
+      t = arg.to([FAB_NS, 'date-time'])
+      return 0 if t.nil?
+      t.value.offset * 24
     end
     
     mapping 'day-duration' do |ctx, arg|
@@ -429,7 +472,7 @@ module Fabulator
     #
     # f:concat(node-set) => node
     #
-    reduction 'concat', { :scaling => :log } do |ctx, args|
+    reduction 'concat', { :scaling => :log, :consolidation => :concat } do |ctx, args|
       return '' if args.empty?
       [ args.collect{ |a| a.value.to_s}.join('') ]
     end
@@ -613,11 +656,29 @@ module Fabulator
     ###
 
     reduction 'empty?' do |ctx, arg|
-      arg.nil? || !arg.is_a?(Array) || arg.empty?
+      ctx.root.anon_node(arg.nil? || !arg.is_a?(Array) || arg.empty?, [ FAB_NS, 'boolean' ])
+    end
+    
+    consolidation 'empty?' do |ctx, arg|
+      arg.each do |a| 
+        if !a.to([FAB_NS, 'boolean']).value
+          return [ ctx.root.anon_node(false, [ FAB_NS, 'boolean' ] ) ]
+        end
+      end
+      return [ ctx.root.anon_node(true, [ FAB_NS, 'boolean' ] ) ]
     end
 
     reduction 'exists?' do |ctx, arg|
-      !(arg.nil? || !arg.is_a?(Array) || arg.empty?)
+      ctx.root.anon_node(!(arg.nil? || !arg.is_a?(Array) || arg.empty?), [ FAB_NS, 'boolean' ])
+    end
+    
+    consolidation 'exists?' do |ctx, arg|
+      arg.each do |a| 
+        if !a.to([FAB_NS, 'boolean']).value
+          return [ ctx.root.anon_node(false, [ FAB_NS, 'boolean' ] ) ]
+        end
+      end
+      return [ ctx.root.anon_node(true, [ FAB_NS, 'boolean' ] ) ]
     end
 
     function 'reverse' do |ctx, args|
@@ -631,9 +692,18 @@ module Fabulator
     reduction 'one-or-more?' do |ctx, arg|
       arg.is_a?(Array) && arg.size >= 1
     end
+    
+    consolidation 'one-or-more?' do |ctx, arg|
+      arg.each do |a| 
+        if !a.to([FAB_NS, 'boolean']).value
+          return [ ctx.root.anon_node(false, [ FAB_NS, 'boolean' ] ) ]
+        end
+      end
+      return [ ctx.root.anon_node(true, [ FAB_NS, 'boolean' ] ) ]
+    end
 
     reduction 'only-one?' do |ctx, arg|
-      arg.is_a?(Array) && arg.size == 1
+      [ ctx.root.anon_node(arg.is_a?(Array) && arg.size == 1, [FAB_NS, 'boolean']) ]
     end
 
     reduction 'count', { :consolidation => :sum } do |ctx, args|

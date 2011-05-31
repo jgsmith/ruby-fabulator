@@ -184,3 +184,19 @@ Feature: Function calls and lists
     When I run the expression (f:starts-with?('$bar', '$'))
     Then I should get 1 item
      And item 0 should be [f:true()]
+
+  Scenario: String concatenation
+    Given a context
+     And the prefix f as "http://dh.tamu.edu/ns/fabulator/1.0#"
+    When I run the expression (f:concat('foo' | '-' | 'bar'))
+    Then I should get 1 item
+     And item 0 should be ['foo-bar']
+
+  Scenario: String concatenation
+    Given a context
+     And the prefix f as "http://dh.tamu.edu/ns/fabulator/1.0#"
+    When I run the expression (f:concat*('foo' | '-' | 'bar'))
+    Then I should get 1 item
+     And item 0 should be ['foo-bar']
+
+
